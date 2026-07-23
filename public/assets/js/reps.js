@@ -56,4 +56,39 @@
     );
     document.querySelectorAll("video[data-autoplay-on-view]").forEach((v) => io.observe(v));
   }
+
+  // Mobile sticky Apply — hide while hero or apply section is in view
+  const sticky = document.querySelector("[data-sticky-apply]");
+  const applySection = document.querySelector("#apply");
+  const heroSection = document.querySelector(".hero");
+  const mqMobile = window.matchMedia("(max-width: 859px)");
+  if (sticky && applySection && "IntersectionObserver" in window) {
+    let applyVisible = false;
+    let heroVisible = true;
+    const syncSticky = () => {
+      const show = mqMobile.matches && !applyVisible && !heroVisible;
+      sticky.hidden = !show;
+      document.body.classList.toggle("has-sticky-apply", show);
+    };
+    const applyIo = new IntersectionObserver(
+      (entries) => {
+        applyVisible = entries.some((e) => e.isIntersecting);
+        syncSticky();
+      },
+      { rootMargin: "0px 0px -12% 0px", threshold: 0.12 }
+    );
+    applyIo.observe(applySection);
+    if (heroSection) {
+      const heroIo = new IntersectionObserver(
+        (entries) => {
+          heroVisible = entries.some((e) => e.isIntersecting && e.intersectionRatio > 0.35);
+          syncSticky();
+        },
+        { threshold: [0, 0.35, 0.6, 1] }
+      );
+      heroIo.observe(heroSection);
+    }
+    mqMobile.addEventListener("change", syncSticky);
+    syncSticky();
+  }
 })();

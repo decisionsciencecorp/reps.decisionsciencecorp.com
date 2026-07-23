@@ -62,9 +62,9 @@ $canonical = 'https://reps.decisionsciencecorp.com/';
       <div class="hero-stage">
         <p id="hero-brand" class="hero-brand">Reps</p>
         <h1 class="hero-line">Record what you do.<br>Earn while you work.</h1>
-        <p class="hero-sub">Capture everyday tasks with a headset. Get paid for every accepted upload — through Decision Science Corp.</p>
+        <p class="hero-sub">Capture everyday tasks with a headset. You get paid for every <em>accepted</em> upload after quality review — through Decision Science Corp.</p>
         <div class="hero-actions">
-          <a class="btn btn-solid" href="#apply">Apply in 1 minute</a>
+          <a class="btn btn-solid" href="#apply" data-track="hero_cta">Apply in 1 minute</a>
           <a class="btn btn-ghost" href="#quality">See real capture</a>
         </div>
         <div class="rec-frame">
@@ -75,10 +75,11 @@ $canonical = 'https://reps.decisionsciencecorp.com/';
       </div>
     </section>
 
-    <section class="trust" aria-label="Highlights">
-      <div class="trust-inner">
-        <p><strong>Decision Science Corp</strong> operates Reps as a branded capture network for real-world work footage.</p>
-        <p>Built for people already on the job — and for companies that want their teams earning on every shift.</p>
+    <section class="proof-strip" aria-label="How pay works">
+      <div class="proof-strip-inner">
+        <p><strong>Accepted uploads</strong> — paid on a regular cycle after review</p>
+        <p><strong>Headset after eligibility</strong> — gear ships once you’re cleared</p>
+        <p><strong>DSC-operated</strong> — Reps is a Decision Science Corp program</p>
       </div>
     </section>
 
@@ -213,7 +214,7 @@ $canonical = 'https://reps.decisionsciencecorp.com/';
           <span class="step-num">02</span>
           <div>
             <h3>Get your headset</h3>
-            <p>Order the approved recording headset and have it shipped to your door.</p>
+            <p>After eligibility, order the approved recording headset — shipped to your door.</p>
           </div>
         </li>
         <li>
@@ -234,7 +235,7 @@ $canonical = 'https://reps.decisionsciencecorp.com/';
           <span class="step-num">05</span>
           <div>
             <h3>Get paid</h3>
-            <p>Earn for every accepted upload, paid out on a regular cycle — directly to you.</p>
+            <p>Each upload is quality-reviewed. Accepted sessions pay out on a regular cycle — directly to you. Timing is confirmed in onboarding.</p>
           </div>
         </li>
       </ol>
@@ -252,38 +253,35 @@ $canonical = 'https://reps.decisionsciencecorp.com/';
           <li>Your employees capture on the job as Reps operators</li>
           <li>Ops visibility for hours, quality, and team health</li>
         </ul>
-        <a class="btn btn-solid" href="mailto:hello@decisionsciencecorp.com?subject=Reps%20for%20companies">Talk to DSC about your team</a>
+        <a class="btn btn-ghost" href="mailto:hello@decisionsciencecorp.com?subject=Reps%20for%20companies" data-track="companies_cta">Talk to DSC about your team</a>
       </div>
     </section>
 
     <section class="faq" id="faq" aria-labelledby="faq-title">
       <div class="section-head">
-        <h2 id="faq-title">Frequently asked questions</h2>
+        <h2 id="faq-title">Before you apply</h2>
+        <p>Quick answers to the questions people ask right before they submit.</p>
       </div>
       <div class="faq-list">
         <details>
-          <summary>What is Reps?</summary>
-          <p>Reps is Decision Science Corp’s branded capture program. You record everyday work with a headset and app; accepted uploads are paid. The name came from Athena — short for the reps you put in on the job.</p>
-        </details>
-        <details>
           <summary>Is this a job?</summary>
           <p>It’s paid capture work you control. You choose when to record, within quality guidelines. Many people do it alongside an existing job or at home.</p>
+        </details>
+        <details>
+          <summary>When and how do I get paid?</summary>
+          <p>You earn for every <strong>accepted</strong> upload after quality review. Payouts run on a regular cycle; exact timing and method are confirmed during onboarding. We don’t quote a fake hourly rate here — acceptance quality drives earnings.</p>
+        </details>
+        <details>
+          <summary>Do I have to buy a headset first?</summary>
+          <p>No. Apply first. After eligibility, you’ll order the approved headset and have it shipped. Gear terms are covered in onboarding.</p>
         </details>
         <details>
           <summary>Do I set my own schedule?</summary>
           <p>Yes. Record when the work is happening — on shift or during routine tasks at home.</p>
         </details>
         <details>
-          <summary>How much time is required?</summary>
-          <p>There’s no fixed shift length. More accepted capture hours generally means more pay. Quality matters more than volume alone.</p>
-        </details>
-        <details>
           <summary>What am I expected to film?</summary>
           <p>Hands-on, everyday tasks: cooking, cleaning, trades, warehouse work, assembly, and similar real-world activity. The app coaches you on angles and session length.</p>
-        </details>
-        <details>
-          <summary>When are payments made?</summary>
-          <p>Accepted uploads are paid on a regular cycle after quality review. Exact timing is confirmed during onboarding.</p>
         </details>
         <details>
           <summary>How is my data protected?</summary>
@@ -293,13 +291,22 @@ $canonical = 'https://reps.decisionsciencecorp.com/';
           <summary>Can I stop anytime?</summary>
           <p>Yes. You can pause or leave the program. Return gear per the headset terms if you exit.</p>
         </details>
+        <details>
+          <summary>What is Reps?</summary>
+          <p>Reps is Decision Science Corp’s branded capture program. You record everyday work with a headset and app; accepted uploads are paid. The name came from Athena — short for the reps you put in on the job.</p>
+        </details>
       </div>
     </section>
 
     <section class="apply" id="apply" aria-labelledby="apply-title">
       <div class="apply-panel">
         <h2 id="apply-title">Apply to Reps</h2>
-        <p>Takes about a minute. We’ll follow up with eligibility and gear next steps.</p>
+        <p>Takes about a minute. We’ll follow up with eligibility, then headset next steps.</p>
+        <ul class="apply-proof" aria-label="What happens after you apply">
+          <li>We review eligibility and reply</li>
+          <li>Approved operators get headset + app setup</li>
+          <li>Accepted uploads pay on a regular cycle</li>
+        </ul>
         <form class="apply-form" method="post" action="https://decisionsciencecorp.com/api/inbound-contact.php" novalidate>
           <input type="hidden" name="channel" value="reps">
           <input type="hidden" name="return_url" value="https://reps.decisionsciencecorp.com/#apply">
@@ -348,6 +355,10 @@ $canonical = 'https://reps.decisionsciencecorp.com/';
       <p class="foot-copy">© <?= date('Y') ?> Decision Science Corp. Reps is a DSC capture program.</p>
     </div>
   </footer>
+
+  <div class="sticky-apply" data-sticky-apply hidden>
+    <a class="btn btn-solid sticky-apply-btn" href="#apply" data-track="sticky_apply">Apply now</a>
+  </div>
 
   <script src="/assets/js/reps.js" defer></script>
 </body>

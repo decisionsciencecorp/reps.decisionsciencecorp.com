@@ -400,7 +400,63 @@ a {
   }
 }
 
-/* Trust */
+.hero-sub em {
+  font-style: normal;
+  color: var(--lime);
+  font-weight: 600;
+}
+
+/* Trust / proof strip under hero */
+.proof-strip {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--ink-2);
+}
+
+.proof-strip-inner {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 1.25rem var(--pad);
+  display: grid;
+  gap: 0.85rem;
+  color: var(--text-dim);
+}
+
+.proof-strip-inner p {
+  margin: 0;
+  padding-left: 1.1rem;
+  position: relative;
+}
+
+.proof-strip-inner p::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 0.45rem;
+  height: 0.45rem;
+  background: var(--lime);
+}
+
+.proof-strip-inner strong {
+  color: var(--text);
+}
+
+@media (min-width: 800px) {
+  .proof-strip-inner {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+
+  .proof-strip-inner p {
+    padding-left: 0;
+  }
+
+  .proof-strip-inner p::before {
+    display: none;
+  }
+}
+
 .trust {
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
@@ -768,8 +824,33 @@ a {
 }
 
 .apply-panel > p {
-  margin: 0.65rem 0 1.4rem;
+  margin: 0.65rem 0 1rem;
   color: var(--text-dim);
+}
+
+.apply-proof {
+  margin: 0 0 1.4rem;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+  color: var(--concrete);
+  font-size: 0.95rem;
+}
+
+.apply-proof li {
+  padding-left: 1.1rem;
+  position: relative;
+}
+
+.apply-proof li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 0.4rem;
+  height: 0.4rem;
+  background: var(--signal);
 }
 
 .apply-form {
@@ -887,6 +968,39 @@ a {
   margin: 0;
   color: var(--steel);
   font-size: 0.85rem;
+}
+
+.companies-panel .btn-ghost {
+  border-color: rgba(244, 247, 250, 0.28);
+}
+
+/* Mobile sticky Apply — load-bearing conversion pattern */
+.sticky-apply {
+  display: none;
+}
+
+@media (max-width: 859px) {
+  .sticky-apply:not([hidden]) {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    padding: 0.75rem var(--pad) max(0.75rem, env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, transparent, rgba(12, 16, 20, 0.92) 28%, rgba(12, 16, 20, 0.98));
+    pointer-events: none;
+  }
+
+  .sticky-apply-btn {
+    pointer-events: auto;
+    width: 100%;
+    box-shadow: 0 0.35rem 1.25rem rgba(0, 0, 0, 0.45);
+  }
+
+  body.has-sticky-apply {
+    padding-bottom: 5.5rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

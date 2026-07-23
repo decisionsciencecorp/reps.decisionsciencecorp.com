@@ -1,0 +1,285 @@
+<?php
+declare(strict_types=1);
+$page_title = 'Reps — Capture work. Get paid.';
+$page_description = 'Reps is Decision Science Corp’s capture network. Record everyday work with a headset, upload accepted sessions, and get paid. Companies enroll their teams under the DSC brand.';
+$canonical = 'https://reps.decisionsciencecorp.com/';
+?><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><?= htmlspecialchars($page_title, ENT_QUOTES, 'UTF-8') ?></title>
+  <meta name="description" content="<?= htmlspecialchars($page_description, ENT_QUOTES, 'UTF-8') ?>">
+  <link rel="canonical" href="<?= htmlspecialchars($canonical, ENT_QUOTES, 'UTF-8') ?>">
+  <meta property="og:title" content="Reps by Decision Science Corp">
+  <meta property="og:description" content="<?= htmlspecialchars($page_description, ENT_QUOTES, 'UTF-8') ?>">
+  <meta property="og:url" content="<?= htmlspecialchars($canonical, ENT_QUOTES, 'UTF-8') ?>">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/reps.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="top">
+    <div class="top-inner">
+      <a class="brand" href="/" aria-label="Reps home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-word">Reps</span>
+      </a>
+      <nav class="top-nav" aria-label="Primary">
+        <a href="#how">How it works</a>
+        <a href="#companies">For companies</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <a class="btn btn-solid top-cta" href="#apply">Apply now</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-brand">
+      <div class="hero-atmosphere" aria-hidden="true">
+        <div class="hero-grid"></div>
+        <div class="hero-bloom"></div>
+        <div class="hero-scan"></div>
+      </div>
+      <div class="hero-stage">
+        <p id="hero-brand" class="hero-brand">Reps</p>
+        <h1 class="hero-line">Record what you do.<br>Earn while you work.</h1>
+        <p class="hero-sub">Capture everyday tasks with a headset. Get paid for every accepted upload — through Decision Science Corp.</p>
+        <div class="hero-actions">
+          <a class="btn btn-solid" href="#apply">Apply in 1 minute</a>
+          <a class="btn btn-ghost" href="#how">See how it works</a>
+        </div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="rec-frame">
+          <span class="rec-dot"></span>
+          <span class="rec-label">REC</span>
+          <span class="rec-timer" data-rec-timer>00:00:00</span>
+        </div>
+        <div class="hero-workstrip">
+          <span>Kitchen prep</span>
+          <span>Warehouse pick</span>
+          <span>Line cook</span>
+          <span>Assembly</span>
+          <span>Cleaning</span>
+          <span>Maintenance</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="trust" aria-label="Highlights">
+      <div class="trust-inner">
+        <p><strong>Decision Science Corp</strong> operates Reps as a branded capture network for real-world work footage.</p>
+        <p>Built for people already on the job — and for companies that want their teams earning on every shift.</p>
+      </div>
+    </section>
+
+    <section class="trades" aria-labelledby="trades-title">
+      <div class="section-head">
+        <h2 id="trades-title">Almost anyone qualifies. No experience needed.</h2>
+        <p>From kitchens to construction sites, everyday trades are eligible. Record the work you already do — and get paid for it.</p>
+      </div>
+      <div class="marquee" data-marquee>
+        <div class="marquee-track">
+          <?php
+          $trades = [
+            'Household & Domestic · Laundry',
+            'Restaurant & Kitchen · Plating',
+            'Restaurant & Kitchen · Prep',
+            'Automotive · Diagnostics',
+            'Construction · Material handling',
+            'Agriculture · Harvesting',
+            'Renovation · Surface prep',
+            'Industrial · Welding',
+            'Facilities · Cleaning',
+            'Crafts · Assembly',
+            'Warehouse · Picking',
+            'Retail · Stocking',
+          ];
+          foreach (array_merge($trades, $trades) as $t): ?>
+            <span class="marquee-item"><?= htmlspecialchars($t, ENT_QUOTES, 'UTF-8') ?></span>
+          <?php endforeach; ?>
+        </div>
+      </div>
+      <div class="section-cta">
+        <a class="btn btn-solid" href="#apply">Apply now</a>
+      </div>
+    </section>
+
+    <section class="ways" id="ways" aria-labelledby="ways-title">
+      <div class="section-head">
+        <h2 id="ways-title">Two ways to earn.</h2>
+        <p>Both are valid — pick whichever fits your life.</p>
+      </div>
+      <div class="ways-grid">
+        <article class="way">
+          <h3>1. Record on the job</h3>
+          <p>Work in a trade, kitchen, warehouse, or shop? Your daily professional tasks are exactly what capture buyers want. Earn supplemental income on top of what you already do.</p>
+          <a class="text-link" href="#apply">Apply now</a>
+        </article>
+        <article class="way">
+          <h3>2. Record at home</h3>
+          <p>Cooking, cleaning, laundry, repairs — home tasks are just as valuable. No special experience. If it’s part of your routine, it can qualify.</p>
+          <a class="text-link" href="#apply">Apply now</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="how" id="how" aria-labelledby="how-title">
+      <div class="section-head">
+        <h2 id="how-title">How to join — five simple steps.</h2>
+        <p>From sign-up to your first paycheck.</p>
+      </div>
+      <ol class="steps">
+        <li>
+          <span class="step-num">01</span>
+          <div>
+            <h3>Fill out the form</h3>
+            <p>Apply in a few minutes — we’ll confirm eligibility and next steps.</p>
+          </div>
+        </li>
+        <li>
+          <span class="step-num">02</span>
+          <div>
+            <h3>Get your headset</h3>
+            <p>Order the approved recording headset and have it shipped to your door.</p>
+          </div>
+        </li>
+        <li>
+          <span class="step-num">03</span>
+          <div>
+            <h3>Install the app</h3>
+            <p>Set up on Android or iPhone and complete onboarding in minutes.</p>
+          </div>
+        </li>
+        <li>
+          <span class="step-num">04</span>
+          <div>
+            <h3>Start recording</h3>
+            <p>Capture everyday tasks at home or at work. The app guides what to film.</p>
+          </div>
+        </li>
+        <li>
+          <span class="step-num">05</span>
+          <div>
+            <h3>Get paid</h3>
+            <p>Earn for every accepted upload, paid out on a regular cycle — directly to you.</p>
+          </div>
+        </li>
+      </ol>
+      <div class="section-cta">
+        <a class="btn btn-solid" href="#apply">Apply now — takes 1 minute</a>
+      </div>
+    </section>
+
+    <section class="companies" id="companies" aria-labelledby="companies-title">
+      <div class="companies-panel">
+        <h2 id="companies-title">For companies</h2>
+        <p class="companies-lead">Put your workforce on Reps. Decision Science Corp enrolls shops and teams, handles operator onboarding under our brand, and keeps capture flowing to the buyers who pay for real-world work data.</p>
+        <ul class="companies-list">
+          <li>One partner relationship — DSC runs the affiliate layer</li>
+          <li>Your employees capture on the job as Reps operators</li>
+          <li>Ops visibility for hours, quality, and team health</li>
+        </ul>
+        <a class="btn btn-solid" href="mailto:hello@decisionsciencecorp.com?subject=Reps%20for%20companies">Talk to DSC about your team</a>
+      </div>
+    </section>
+
+    <section class="faq" id="faq" aria-labelledby="faq-title">
+      <div class="section-head">
+        <h2 id="faq-title">Frequently asked questions</h2>
+      </div>
+      <div class="faq-list">
+        <details>
+          <summary>What is Reps?</summary>
+          <p>Reps is Decision Science Corp’s branded capture program. You record everyday work with a headset and app; accepted uploads are paid. The name came from Athena — short for the reps you put in on the job.</p>
+        </details>
+        <details>
+          <summary>Is this a job?</summary>
+          <p>It’s paid capture work you control. You choose when to record, within quality guidelines. Many people do it alongside an existing job or at home.</p>
+        </details>
+        <details>
+          <summary>Do I set my own schedule?</summary>
+          <p>Yes. Record when the work is happening — on shift or during routine tasks at home.</p>
+        </details>
+        <details>
+          <summary>How much time is required?</summary>
+          <p>There’s no fixed shift length. More accepted capture hours generally means more pay. Quality matters more than volume alone.</p>
+        </details>
+        <details>
+          <summary>What am I expected to film?</summary>
+          <p>Hands-on, everyday tasks: cooking, cleaning, trades, warehouse work, assembly, and similar real-world activity. The app coaches you on angles and session length.</p>
+        </details>
+        <details>
+          <summary>When are payments made?</summary>
+          <p>Accepted uploads are paid on a regular cycle after quality review. Exact timing is confirmed during onboarding.</p>
+        </details>
+        <details>
+          <summary>How is my data protected?</summary>
+          <p>Uploads go through secured capture pipelines. Avoid filming faces, screens with personal data, or private documents when possible — the app includes guidance.</p>
+        </details>
+        <details>
+          <summary>Can I stop anytime?</summary>
+          <p>Yes. You can pause or leave the program. Return gear per the headset terms if you exit.</p>
+        </details>
+      </div>
+    </section>
+
+    <section class="apply" id="apply" aria-labelledby="apply-title">
+      <div class="apply-panel">
+        <h2 id="apply-title">Apply to Reps</h2>
+        <p>Takes about a minute. We’ll follow up with eligibility and gear next steps.</p>
+        <form class="apply-form" method="post" action="/apply.php" novalidate>
+          <label>
+            <span>Full name</span>
+            <input type="text" name="name" required autocomplete="name" maxlength="120">
+          </label>
+          <label>
+            <span>Phone</span>
+            <input type="tel" name="phone" required autocomplete="tel" maxlength="40">
+          </label>
+          <label>
+            <span>Email</span>
+            <input type="email" name="email" required autocomplete="email" maxlength="160">
+          </label>
+          <label>
+            <span>How will you capture?</span>
+            <select name="path" required>
+              <option value="">Select…</option>
+              <option value="on_job">On the job</option>
+              <option value="at_home">At home</option>
+              <option value="company">I’m enrolling a company / team</option>
+            </select>
+          </label>
+          <label class="full">
+            <span>Anything we should know? (optional)</span>
+            <textarea name="notes" rows="3" maxlength="2000"></textarea>
+          </label>
+          <input type="text" name="company_website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="btn btn-solid" type="submit">Submit application</button>
+        </form>
+        <p class="apply-alt">Or email <a href="mailto:hello@decisionsciencecorp.com?subject=Reps%20application">hello@decisionsciencecorp.com</a></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="foot-inner">
+      <div class="foot-brand">
+        <span class="foot-reps">Reps</span>
+        <span class="foot-by">by</span>
+        <a class="foot-dsc" href="https://decisionsciencecorp.com/" rel="noopener">
+          <img src="/assets/img/dsc-logo-white.svg" alt="Decision Science Corp" width="160" height="28">
+        </a>
+      </div>
+      <p class="foot-copy">© <?= date('Y') ?> Decision Science Corp. Reps is a DSC capture program.</p>
+    </div>
+  </footer>
+
+  <script src="/assets/js/reps.js" defer></script>
+</body>
+</html>

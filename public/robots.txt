@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://reps.decisionsciencecorp.com/sitemap.xml

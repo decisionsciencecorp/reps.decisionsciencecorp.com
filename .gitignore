@@ -1,0 +1,5 @@
+db/applications.jsonl
+db/*.jsonl
+.DS_Store
+tools/design-smoke/output/
+node_modules/

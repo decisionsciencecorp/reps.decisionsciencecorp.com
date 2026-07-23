@@ -7,7 +7,7 @@ $canonical = 'https://reps.decisionsciencecorp.com/';
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title><?= htmlspecialchars($page_title, ENT_QUOTES, 'UTF-8') ?></title>
   <meta name="description" content="<?= htmlspecialchars($page_description, ENT_QUOTES, 'UTF-8') ?>">
   <link rel="canonical" href="<?= htmlspecialchars($canonical, ENT_QUOTES, 'UTF-8') ?>">

@@ -300,7 +300,9 @@ $canonical = 'https://reps.decisionsciencecorp.com/';
       <div class="apply-panel">
         <h2 id="apply-title">Apply to Reps</h2>
         <p>Takes about a minute. We’ll follow up with eligibility and gear next steps.</p>
-        <form class="apply-form" method="post" action="/apply.php" novalidate>
+        <form class="apply-form" method="post" action="https://decisionsciencecorp.com/api/inbound-contact.php" novalidate>
+          <input type="hidden" name="channel" value="reps">
+          <input type="hidden" name="return_url" value="https://reps.decisionsciencecorp.com/#apply">
           <label>
             <span>Full name</span>
             <input type="text" name="name" required autocomplete="name" maxlength="120">

@@ -2,11 +2,14 @@
 
 Marketing site for **Reps**, Decision Science Corp’s branded capture network (Athena-named). Apes the Shift consumer pitch under DSC brand.
 
-## Stack
+## Apply form
 
-- Static/PHP under `public/`
-- Apply form → `public/apply.php` appends JSONL under site `db/` (outside web root on multihost: `/var/www/reps.decisionsciencecorp.com/db/`)
-- No `.htaccess`; app-level only
+Posts to DSC central contact intake:
+
+`POST https://decisionsciencecorp.com/api/inbound-contact.php` with `channel=reps`
+
+Land in **Admin → Messages → Reps** tab on decisionsciencecorp.com (same inbox as General contact, separate channel).
+
 
 ## Local preview
 

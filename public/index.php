@@ -30,6 +30,7 @@ $canonical = 'https://reps.decisionsciencecorp.com/';
         <span class="brand-word">Reps</span>
       </a>
       <nav class="top-nav" aria-label="Primary">
+        <a href="#quality">Capture quality</a>
         <a href="#how">How it works</a>
         <a href="#companies">For companies</a>
         <a href="#faq">FAQ</a>
@@ -40,10 +41,23 @@ $canonical = 'https://reps.decisionsciencecorp.com/';
 
   <main id="main">
     <section class="hero" aria-labelledby="hero-brand">
+      <div class="hero-media" aria-hidden="true">
+        <video
+          class="hero-video"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          poster="/assets/video/web/hands-poster.jpg"
+        >
+          <source src="/assets/video/web/hands-0.mp4" type="video/mp4">
+        </video>
+        <div class="hero-media-shade"></div>
+      </div>
       <div class="hero-atmosphere" aria-hidden="true">
         <div class="hero-grid"></div>
         <div class="hero-bloom"></div>
-        <div class="hero-scan"></div>
       </div>
       <div class="hero-stage">
         <p id="hero-brand" class="hero-brand">Reps</p>
@@ -51,22 +65,12 @@ $canonical = 'https://reps.decisionsciencecorp.com/';
         <p class="hero-sub">Capture everyday tasks with a headset. Get paid for every accepted upload — through Decision Science Corp.</p>
         <div class="hero-actions">
           <a class="btn btn-solid" href="#apply">Apply in 1 minute</a>
-          <a class="btn btn-ghost" href="#how">See how it works</a>
+          <a class="btn btn-ghost" href="#quality">See real capture</a>
         </div>
-      </div>
-      <div class="hero-visual" aria-hidden="true">
         <div class="rec-frame">
           <span class="rec-dot"></span>
           <span class="rec-label">REC</span>
           <span class="rec-timer" data-rec-timer>00:00:00</span>
-        </div>
-        <div class="hero-workstrip">
-          <span>Kitchen prep</span>
-          <span>Warehouse pick</span>
-          <span>Line cook</span>
-          <span>Assembly</span>
-          <span>Cleaning</span>
-          <span>Maintenance</span>
         </div>
       </div>
     </section>
@@ -82,6 +86,33 @@ $canonical = 'https://reps.decisionsciencecorp.com/';
       <div class="section-head">
         <h2 id="trades-title">Almost anyone qualifies. No experience needed.</h2>
         <p>From kitchens to construction sites, everyday trades are eligible. Record the work you already do — and get paid for it.</p>
+      </div>
+      <div class="filmstrip" aria-label="Example capture footage">
+        <?php
+        $strip = [
+          ['src' => 'record-0.mp4', 'poster' => 'record-poster.jpg', 'label' => 'Real work'],
+          ['src' => 'camera-0.mp4', 'poster' => 'camera-poster.jpg', 'label' => 'Clear view'],
+          ['src' => 'hands-1.mp4', 'poster' => 'hands-poster.jpg', 'label' => 'Hands in frame'],
+          ['src' => 'task-0.mp4', 'poster' => 'task-poster.jpg', 'label' => 'Active task'],
+          ['src' => 'camera-1.mp4', 'poster' => 'camera-poster.jpg', 'label' => 'Steady capture'],
+          ['src' => 'hands-2.mp4', 'poster' => 'hands-poster.jpg', 'label' => 'Two-handed work'],
+        ];
+        foreach ($strip as $clip): ?>
+          <figure class="film-cell">
+            <video
+              class="film-video"
+              muted
+              loop
+              playsinline
+              preload="none"
+              poster="/assets/video/web/<?= htmlspecialchars($clip['poster'], ENT_QUOTES, 'UTF-8') ?>"
+              data-autoplay-on-view
+            >
+              <source src="/assets/video/web/<?= htmlspecialchars($clip['src'], ENT_QUOTES, 'UTF-8') ?>" type="video/mp4">
+            </video>
+            <figcaption><?= htmlspecialchars($clip['label'], ENT_QUOTES, 'UTF-8') ?></figcaption>
+          </figure>
+        <?php endforeach; ?>
       </div>
       <div class="marquee" data-marquee>
         <div class="marquee-track">
@@ -107,6 +138,42 @@ $canonical = 'https://reps.decisionsciencecorp.com/';
       </div>
       <div class="section-cta">
         <a class="btn btn-solid" href="#apply">Apply now</a>
+      </div>
+    </section>
+
+    <section class="quality" id="quality" aria-labelledby="quality-title">
+      <div class="section-head">
+        <h2 id="quality-title">What good capture looks like.</h2>
+        <p>Same coaching we use for operators — clear camera, hands visible, continuous real work.</p>
+      </div>
+      <div class="quality-grid">
+        <figure class="quality-shot">
+          <video muted loop playsinline preload="none" poster="/assets/video/web/camera-poster.jpg" data-autoplay-on-view>
+            <source src="/assets/video/web/camera-0.mp4" type="video/mp4">
+          </video>
+          <figcaption>
+            <strong>Camera quality</strong>
+            <span>Bright, sharp, unobstructed view of the work.</span>
+          </figcaption>
+        </figure>
+        <figure class="quality-shot">
+          <video muted loop playsinline preload="none" poster="/assets/video/web/hands-poster.jpg" data-autoplay-on-view>
+            <source src="/assets/video/web/hands-0.mp4" type="video/mp4">
+          </video>
+          <figcaption>
+            <strong>Hand visibility</strong>
+            <span>Both hands in frame as much as possible.</span>
+          </figcaption>
+        </figure>
+        <figure class="quality-shot">
+          <video muted loop playsinline preload="none" poster="/assets/video/web/task-poster.jpg" data-autoplay-on-view>
+            <source src="/assets/video/web/task-0.mp4" type="video/mp4">
+          </video>
+          <figcaption>
+            <strong>Task quality</strong>
+            <span>Continuous, natural work — not idle time.</span>
+          </figcaption>
+        </figure>
       </div>
     </section>
 

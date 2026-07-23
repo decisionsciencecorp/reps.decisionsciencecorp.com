@@ -30,4 +30,30 @@
     note.style.color = "var(--signal)";
     panel.insertBefore(note, panel.querySelector("form"));
   }
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const hero = document.querySelector(".hero-video");
+  if (hero && reduceMotion) {
+    hero.pause();
+    hero.removeAttribute("autoplay");
+  }
+
+  if (!reduceMotion && "IntersectionObserver" in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const v = entry.target;
+          if (!(v instanceof HTMLVideoElement)) continue;
+          if (entry.isIntersecting) {
+            const p = v.play();
+            if (p && typeof p.catch === "function") p.catch(() => {});
+          } else {
+            v.pause();
+          }
+        }
+      },
+      { rootMargin: "80px 0px", threshold: 0.35 }
+    );
+    document.querySelectorAll("video[data-autoplay-on-view]").forEach((v) => io.observe(v));
+  }
 })();

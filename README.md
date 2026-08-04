@@ -11,6 +11,15 @@ Posts to DSC central contact intake:
 Land in **Admin → Messages → Reps** tab on decisionsciencecorp.com (same inbox as General contact, separate channel).
 
 
+## Dashboard (`/dashboard`)
+
+Login platform for DSC Reps ops + affiliate seats. PRD: Tasks Doc **#990**.
+
+- Slice A (now): visual shell + skins + mock data — no real Shift poll yet.
+- Later: auth, schema, Shift sync, JSON API, SDK, SMCP.
+
+Local: open `http://127.0.0.1:8787/dashboard/login.php` after the preview server below.
+
 ## Local preview
 
 ```bash

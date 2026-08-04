@@ -1,0 +1,116 @@
+<?php
+declare(strict_types=1);
+
+if (!defined('REPS_DASH_LOADED')) {
+    die('Direct access not permitted');
+}
+
+function repsDashPill(string $kind): string
+{
+    return match (strtolower($kind)) {
+        'active', 'accepted', 'done', 'signed' => 'done',
+        'pitched', 'pending', 'doing', 'invited' => 'doing',
+        'rejected', 'paused', 'blocked' => 'blocked',
+        'prospect', 'todo' => 'todo',
+        default => 'info',
+    };
+}
+
+function repsDashRenderPageHeader(string $title, string $subtitle = '', string $actionsHtml = ''): void
+{
+    ?>
+    <div class="page-header">
+      <div class="page-header__title">
+        <h1><?php echo htmlspecialchars($title); ?></h1>
+        <?php if ($subtitle !== ''): ?>
+          <div class="subtitle"><?php echo htmlspecialchars($subtitle); ?></div>
+        <?php endif; ?>
+      </div>
+      <?php if ($actionsHtml !== ''): ?>
+        <div class="page-header__actions"><?php echo $actionsHtml; ?></div>
+      <?php endif; ?>
+    </div>
+    <?php
+}
+
+function repsDashRenderHeader(string $title = '', string $active = 'home'): void
+{
+    $user = repsDashCurrentUser();
+    $safeTitle = htmlspecialchars($title !== '' ? $title . ' · ' . REPS_DASH_NAME : REPS_DASH_NAME);
+    $skin = repsDashSkinEffectiveSlug(is_array($user) ? $user : null);
+    $navLight = in_array($skin, ['hey', 'ledger'], true);
+    $navThemeClass = $navLight ? 'navbar-light' : 'navbar-dark';
+
+    $nav = [
+        'home' => ['Home', '/dashboard/', 'bi-speedometer2'],
+        'shops' => ['Shops', '/dashboard/shops.php', 'bi-shop'],
+        'operators' => ['Operators', '/dashboard/operators.php', 'bi-people'],
+        'sessions' => ['Sessions', '/dashboard/sessions.php', 'bi-camera-reels'],
+        'money' => ['Money', '/dashboard/money.php', 'bi-cash-coin'],
+    ];
+    if ($user && repsDashIsAdmin($user)) {
+        $nav['users'] = ['Users', '/dashboard/users.php', 'bi-person-gear'];
+    }
+    $nav['settings'] = ['Settings', '/dashboard/settings.php', 'bi-gear'];
+    ?>
+<!DOCTYPE html>
+<html lang="en" data-skin-comp="<?php echo htmlspecialchars($skin); ?>">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><?php echo $safeTitle; ?></title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="/dashboard/assets/css/dashboard.css?v=1" rel="stylesheet">
+  <link href="<?php echo htmlspecialchars(repsDashSkinStylesheetHref($skin)); ?>" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <nav class="navbar navbar-expand-lg <?php echo htmlspecialchars($navThemeClass); ?> admin-nav<?php echo $navLight ? '' : ' bg-dark'; ?>">
+    <div class="container-fluid px-3 px-lg-4">
+      <a class="navbar-brand fw-semibold d-inline-flex align-items-center gap-2" href="/dashboard/">
+        <i class="bi bi-broadcast-pin"></i>
+        <span>Reps</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#rdNavbar" aria-controls="rdNavbar" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="rdNavbar">
+        <?php if ($user): ?>
+        <div class="d-flex flex-column flex-lg-row flex-lg-nowrap gap-2 ms-lg-auto align-items-stretch align-items-lg-center py-3 py-lg-0">
+          <?php foreach ($nav as $key => [$label, $href, $icon]): ?>
+            <a class="btn btn-outline-light text-center text-lg-start <?php echo $active === $key ? 'active' : ''; ?>" href="<?php echo htmlspecialchars($href); ?>">
+              <i class="bi <?php echo htmlspecialchars($icon); ?> me-1"></i><?php echo htmlspecialchars($label); ?>
+            </a>
+          <?php endforeach; ?>
+          <span class="navbar-text small px-2 text-nowrap">
+            <?php echo htmlspecialchars($user['display_name']); ?>
+            <span class="badge text-bg-secondary ms-1"><?php echo htmlspecialchars($user['role']); ?></span>
+          </span>
+          <a class="btn btn-outline-light" href="/dashboard/logout.php"><i class="bi bi-box-arrow-right me-1"></i>Sign out</a>
+        </div>
+        <?php endif; ?>
+      </div>
+    </div>
+  </nav>
+  <main class="dk-shell">
+    <?php
+}
+
+function repsDashRenderFooter(): void
+{
+    ?>
+  </main>
+  <footer class="container-fluid px-3 px-lg-4 pb-4">
+    <p class="text-muted small mb-0">Reps Dashboard · Slice A mock data · Partner code display C6N9T7 · <a href="/">Marketing site</a></p>
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+    <?php
+}
+
+function repsDashStatusPill(string $status): void
+{
+    $pill = repsDashPill($status);
+    echo '<span class="status-pill status-pill--' . htmlspecialchars($pill) . '">' . htmlspecialchars($status) . '</span>';
+}

@@ -126,7 +126,7 @@ function repsDashRenderMoneyAdmin(array $user, array $shops): void
           $shopOps = $opsBy[(int) $s['id']] ?? [];
           ?>
         <tr>
-          <td class="fw-semibold"><?php echo htmlspecialchars($s['name']); ?></td>
+          <td class="fw-semibold"><a class="text-decoration-none" href="<?php echo htmlspecialchars(repsDashShopHref((int) $s['id'])); ?>"><?php echo htmlspecialchars($s['name']); ?></a></td>
           <td><?php repsDashStatusPill($s['status']); ?></td>
           <td class="small"><code><?php echo htmlspecialchars((string) ($s['assigned_sales_rep'] ?? '—')); ?></code></td>
           <td class="small text-muted"><?php echo $e['internal'] ? 'internal' : 'affiliate split'; ?></td>
@@ -236,7 +236,7 @@ function repsDashRenderMoneyOps(array $user, array $shops): void
                 : 'High reject rate';
             ?>
           <tr>
-            <td class="fw-semibold"><?php echo htmlspecialchars($s['name']); ?></td>
+            <td class="fw-semibold"><a class="text-decoration-none" href="<?php echo htmlspecialchars(repsDashShopHref((int) $s['id'])); ?>"><?php echo htmlspecialchars($s['name']); ?></a></td>
             <td><?php repsDashStatusPill($s['status']); ?></td>
             <td><?php echo htmlspecialchars((string) $r['e']['hours']); ?></td>
             <td><?php echo htmlspecialchars((string) round((float) $s['reject_rate'] * 100)); ?>%</td>
@@ -265,7 +265,7 @@ function repsDashRenderMoneyOps(array $user, array $shops): void
           $s = $r['shop'];
           ?>
         <tr>
-          <td><?php echo htmlspecialchars($s['name']); ?></td>
+          <td><a class="text-decoration-none" href="<?php echo htmlspecialchars(repsDashShopHref((int) $s['id'])); ?>"><?php echo htmlspecialchars($s['name']); ?></a></td>
           <td><?php echo htmlspecialchars((string) $r['e']['hours']); ?></td>
           <td><?php echo htmlspecialchars((string) round((float) $s['reject_rate'] * 100)); ?>%</td>
           <td>
@@ -435,7 +435,7 @@ function repsDashRenderMoneySales(array $user, array $shops): void
   <div class="surface p-3 mb-3">
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
       <div>
-        <h2 class="h5 mb-1"><?php echo htmlspecialchars($shop['name']); ?></h2>
+        <h2 class="h5 mb-1"><a class="text-decoration-none" href="<?php echo htmlspecialchars(repsDashShopHref((int) $shop['id'])); ?>"><?php echo htmlspecialchars($shop['name']); ?></a></h2>
         <div class="d-flex flex-wrap gap-2 align-items-center">
           <?php repsDashStatusPill($shop['status']); ?>
           <span class="small text-muted"><?php echo (int) count($block['ops']); ?> operators</span>
@@ -541,7 +541,7 @@ function repsDashRenderMoneyOwner(array $user, array $shops): void
     <div class="surface p-3 h-100">
       <h2 class="h5 mb-3">This period</h2>
       <dl class="row small mb-0">
-        <dt class="col-6">Shop</dt><dd class="col-6"><?php echo htmlspecialchars($shop['name']); ?></dd>
+        <dt class="col-6">Shop</dt><dd class="col-6"><a href="<?php echo htmlspecialchars(repsDashShopHref((int) $shop['id'])); ?>"><?php echo htmlspecialchars($shop['name']); ?></a></dd>
         <dt class="col-6">Status</dt><dd class="col-6"><?php repsDashStatusPill($shop['status']); ?></dd>
         <dt class="col-6">Gross at rate</dt><dd class="col-6">$<?php echo number_format($e['gross'], 2); ?></dd>
         <dt class="col-6">Your keep</dt><dd class="col-6"><strong>$<?php echo number_format($e['shop_pay'], 2); ?></strong></dd>

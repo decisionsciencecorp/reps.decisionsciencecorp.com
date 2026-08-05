@@ -14,6 +14,11 @@ function repsDashOperatorHref(int $id): string
     return '/dashboard/operator.php?id=' . $id;
 }
 
+function repsDashShopHref(int $id): string
+{
+    return '/dashboard/shop.php?id=' . $id;
+}
+
 function repsDashDayHref(string $day, ?int $operatorId = null): string
 {
     $q = 'date=' . rawurlencode($day);

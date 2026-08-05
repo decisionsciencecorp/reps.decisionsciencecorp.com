@@ -34,6 +34,7 @@ $pathMap = [
     '/dashboard/' => 'home',
     '/dashboard/index.php' => 'home',
     '/dashboard/shops.php' => 'shops',
+    '/dashboard/shop.php' => 'shop',
     '/dashboard/operators.php' => 'operators',
     '/dashboard/sessions.php' => 'sessions',
     '/dashboard/money.php' => 'money',
@@ -47,10 +48,17 @@ $pathMap = [
     '/dashboard/day.php' => 'day',
 ];
 $key = $pathMap[$path] ?? null;
-if (in_array($key, ['access', 'operator', 'day', 'education'], true)) {
+if (in_array($key, ['access', 'operator', 'day', 'education', 'shop'], true)) {
     // drill-downs / matrix / education — re-check after switch; bounce home if out of scope
     if ($key === 'education' && !in_array('education', $navKeys, true)) {
         $return = '/dashboard/';
+    }
+    if ($key === 'shop') {
+        parse_str((string) (parse_url($return, PHP_URL_QUERY) ?? ''), $q);
+        $sid = (int) ($q['id'] ?? 0);
+        if ($sid <= 0 || !$user || !repsDashCanViewShop($user, $sid)) {
+            $return = in_array('shops', $navKeys, true) ? '/dashboard/shops.php' : '/dashboard/';
+        }
     }
     if ($key === 'operator' || $key === 'day') {
         $oid = 0;

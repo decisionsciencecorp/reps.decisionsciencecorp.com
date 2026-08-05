@@ -200,7 +200,11 @@ repsDashRenderPageHeader('Home', $subtitle);
           <?php endif; ?>
           <?php foreach ($shops as $shop): ?>
             <tr>
-              <td><?php echo htmlspecialchars($shop['name']); ?></td>
+              <td>
+                <a class="text-decoration-none fw-semibold" href="<?php echo htmlspecialchars(repsDashShopHref((int) $shop['id'])); ?>">
+                  <?php echo htmlspecialchars($shop['name']); ?>
+                </a>
+              </td>
               <td><?php repsDashStatusPill($shop['status']); ?></td>
               <td><?php echo htmlspecialchars((string) $shop['accepted_hours_7d']); ?></td>
               <td><?php echo htmlspecialchars((string) round($shop['reject_rate'] * 100)) . '%'; ?></td>

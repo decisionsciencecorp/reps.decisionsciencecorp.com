@@ -67,6 +67,18 @@ function repsDashDbMigrate(PDO $pdo): void
         $pdo->prepare('INSERT INTO schema_migrations (version) VALUES (?)')->execute(['001_users']);
     }
 
+    if (!in_array('002_shop_notes', $applied, true)) {
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS shop_notes (
+                shop_id INTEGER PRIMARY KEY,
+                notes TEXT NOT NULL DEFAULT \'\',
+                updated_by_user_id INTEGER,
+                updated_at TEXT NOT NULL DEFAULT (datetime(\'now\'))
+            )'
+        );
+        $pdo->prepare('INSERT INTO schema_migrations (version) VALUES (?)')->execute(['002_shop_notes']);
+    }
+
     repsDashDbSeedUsers($pdo);
 }
 
@@ -369,4 +381,28 @@ function repsDashPersistUserSkin(int $userId, string $skinSlug): void
         'UPDATE users SET skin_slug = ?, updated_at = datetime(\'now\') WHERE id = ?'
     );
     $stmt->execute([$skinSlug, $userId]);
+}
+
+/** @return array<int, string> shop_id => notes */
+function repsDashShopNotesMap(): array
+{
+    $rows = repsDashDb()->query('SELECT shop_id, notes FROM shop_notes')->fetchAll();
+    $out = [];
+    foreach ($rows as $row) {
+        $out[(int) $row['shop_id']] = (string) $row['notes'];
+    }
+    return $out;
+}
+
+function repsDashSaveShopNotes(int $shopId, string $notes, ?int $updatedByUserId = null): void
+{
+    $stmt = repsDashDb()->prepare(
+        'INSERT INTO shop_notes (shop_id, notes, updated_by_user_id, updated_at)
+         VALUES (?, ?, ?, datetime(\'now\'))
+         ON CONFLICT(shop_id) DO UPDATE SET
+           notes = excluded.notes,
+           updated_by_user_id = excluded.updated_by_user_id,
+           updated_at = datetime(\'now\')'
+    );
+    $stmt->execute([$shopId, $notes, $updatedByUserId]);
 }

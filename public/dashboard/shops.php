@@ -7,9 +7,9 @@ repsDashRequireNavKey('shops', $user);
 $shops = repsDashShopsForUser($user);
 
 $subtitle = match ((string) $user['role']) {
-    'admin', 'ops' => 'All shops in the Reps book (mock)',
-    'business_owner' => 'Your shop only — status and notes (mock)',
-    default => 'Your assigned shops plus the unassigned pool (mock)',
+    'admin', 'ops' => 'All shops in the Reps book — open a shop for notes and team',
+    'business_owner' => 'Your shop — open it to update notes',
+    default => 'Your assigned shops plus the unassigned pool — open a shop for notes and team',
 };
 $title = (string) $user['role'] === 'business_owner' ? 'My shop' : 'Shops';
 
@@ -32,9 +32,21 @@ repsDashRenderPageHeader($title, $subtitle);
         </tr>
       </thead>
       <tbody>
+      <?php if ($shops === []): ?>
+        <tr><td colspan="7" class="text-muted p-3">No shops in scope for this seat.</td></tr>
+      <?php endif; ?>
       <?php foreach ($shops as $shop): ?>
+        <?php
+        $href = repsDashShopHref((int) $shop['id']);
+        $notes = trim((string) $shop['notes']);
+        $notesPreview = $notes === ''
+            ? 'Add notes…'
+            : (strlen($notes) > 72 ? substr($notes, 0, 72) . '…' : $notes);
+        ?>
         <tr>
-          <td class="fw-semibold"><?php echo htmlspecialchars($shop['name']); ?></td>
+          <td class="fw-semibold">
+            <a href="<?php echo htmlspecialchars($href); ?>"><?php echo htmlspecialchars($shop['name']); ?></a>
+          </td>
           <td><?php repsDashStatusPill($shop['status']); ?></td>
           <td><?php echo htmlspecialchars((string) ($shop['assigned_sales_rep'] ?? '— unassigned')); ?></td>
           <td>
@@ -45,7 +57,11 @@ repsDashRenderPageHeader($title, $subtitle);
           </td>
           <td><?php echo (int) $shop['operators']; ?></td>
           <td><?php echo htmlspecialchars((string) $shop['accepted_hours_7d']); ?></td>
-          <td class="small text-muted" style="max-width:16rem"><?php echo htmlspecialchars($shop['notes']); ?></td>
+          <td class="small" style="max-width:16rem">
+            <a class="text-decoration-none <?php echo $notes === '' ? 'text-muted fst-italic' : 'text-body'; ?>" href="<?php echo htmlspecialchars($href); ?>#shop-notes">
+              <?php echo htmlspecialchars($notesPreview); ?>
+            </a>
+          </td>
         </tr>
       <?php endforeach; ?>
       </tbody>

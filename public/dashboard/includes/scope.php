@@ -165,6 +165,26 @@ function repsDashCanViewOperator(array $user, int $operatorId): bool
     return false;
 }
 
+function repsDashCanViewShop(array $user, int $shopId): bool
+{
+    foreach (repsDashShopsForUser($user) as $shop) {
+        if ((int) $shop['id'] === $shopId) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/** Pipeline / operational notes — admin, ops, sales (in book), owner (own shop). */
+function repsDashCanEditShopNotes(array $user, int $shopId): bool
+{
+    $role = (string) ($user['role'] ?? '');
+    if (!in_array($role, ['admin', 'ops', 'sales', 'business_owner'], true)) {
+        return false;
+    }
+    return repsDashCanViewShop($user, $shopId);
+}
+
 /** Book-wide /day.php?date=… (no operator_id) — not for sales or agent. */
 function repsDashCanOpenBookWideDay(array $user): bool
 {

@@ -47,7 +47,13 @@ function repsDashOperatorShopCell(array $op): string
             : 'no affiliate source';
         return 'Individual · ' . $src;
     }
-    return htmlspecialchars((string) $op['shop']);
+    $shopId = (int) ($op['shop_id'] ?? 0);
+    $name = (string) $op['shop'];
+    if ($shopId > 0) {
+        return '<a class="text-decoration-none" href="' . htmlspecialchars(repsDashShopHref($shopId)) . '">'
+            . htmlspecialchars($name) . '</a>';
+    }
+    return htmlspecialchars($name);
 }
 
 /**

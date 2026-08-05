@@ -13,7 +13,23 @@ if (!defined('REPS_DASH_LOADED')) {
 /** @return list<array<string, mixed>> */
 function repsDashAllShops(): array
 {
-    return repsDashMockShops();
+    $shops = repsDashMockShops();
+    try {
+        $overlays = repsDashShopNotesMap();
+    } catch (Throwable $e) {
+        return $shops;
+    }
+    if ($overlays === []) {
+        return $shops;
+    }
+    foreach ($shops as &$shop) {
+        $id = (int) $shop['id'];
+        if (array_key_exists($id, $overlays)) {
+            $shop['notes'] = $overlays[$id];
+        }
+    }
+    unset($shop);
+    return $shops;
 }
 
 /** @return list<array<string, mixed>> */

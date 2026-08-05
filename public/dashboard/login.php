@@ -10,16 +10,28 @@ if (repsDashCurrentUser()) {
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    repsDashRequireCsrf();
     $username = trim((string) ($_POST['username'] ?? ''));
-    if ($username !== '' && repsDashLoginDemo($username)) {
+    $password = (string) ($_POST['password'] ?? '');
+    $devPick = trim((string) ($_POST['dev_username'] ?? ''));
+
+    if ($devPick !== '' && repsDashIsDevMode()) {
+        if (repsDashLoginDemo($devPick)) {
+            header('Location: /dashboard/');
+            exit;
+        }
+        $error = 'Unknown Dev Mode seat.';
+    } elseif ($username !== '' && $password !== '' && repsDashLogin($username, $password)) {
         header('Location: /dashboard/');
         exit;
+    } else {
+        $error = 'Invalid username or password.';
     }
-    $error = 'Unknown demo account.';
 }
 
 $skin = repsDashSkinEffectiveSlug(null);
 $navLight = in_array($skin, ['hey', 'ledger'], true);
+$devMode = repsDashIsDevMode();
 ?>
 <!DOCTYPE html>
 <html lang="en" data-skin-comp="<?php echo htmlspecialchars($skin); ?>">
@@ -38,11 +50,11 @@ $navLight = in_array($skin, ['hey', 'ledger'], true);
       <a class="navbar-brand fw-semibold" href="/"><i class="bi bi-broadcast-pin me-1"></i>Reps</a>
     </div>
   </nav>
-  <main class="dk-shell" style="max-width:640px">
+  <main class="dk-shell" style="max-width:480px">
     <div class="page-header">
       <div class="page-header__title">
         <h1>Dashboard sign-in</h1>
-        <div class="subtitle">Slice A demo — pick a seat to audit flow and scoping. No real passwords yet.</div>
+        <div class="subtitle">Team seats for DSC Partner work. Password required.</div>
       </div>
     </div>
 
@@ -51,12 +63,31 @@ $navLight = in_array($skin, ['hey', 'ledger'], true);
     <?php endif; ?>
 
     <div class="surface p-3 mb-3">
-      <p class="mb-3 text-muted">Choose who you are for this walkthrough:</p>
+      <form method="post" class="d-grid gap-3">
+        <?php echo repsDashCsrfField(); ?>
+        <div>
+          <label class="form-label" for="username">Username</label>
+          <input class="form-control" type="text" name="username" id="username" autocomplete="username" required>
+        </div>
+        <div>
+          <label class="form-label" for="password">Password</label>
+          <input class="form-control" type="password" name="password" id="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Sign in</button>
+      </form>
+      <p class="small text-muted mt-3 mb-0">Forgot password? Ask an admin to reset it on the Users page.</p>
+    </div>
+
+    <?php if ($devMode): ?>
+    <div class="surface p-3 mb-3 border border-warning">
+      <p class="mb-2 fw-semibold"><i class="bi bi-tools me-1"></i>Dev Mode seat picker</p>
+      <p class="small text-muted mb-3">Enabled via <code>REPS_DASH_DEV_MODE=1</code>. Not production login.</p>
       <div class="d-grid gap-2">
         <?php foreach (repsDashDemoAccounts() as $acct): ?>
           <form method="post" class="m-0">
-            <input type="hidden" name="username" value="<?php echo htmlspecialchars($acct['username']); ?>">
-            <button type="submit" class="btn btn-outline-primary w-100 text-start d-flex justify-content-between align-items-center">
+            <?php echo repsDashCsrfField(); ?>
+            <input type="hidden" name="dev_username" value="<?php echo htmlspecialchars($acct['username']); ?>">
+            <button type="submit" class="btn btn-outline-warning w-100 text-start d-flex justify-content-between align-items-center">
               <span>
                 <strong><?php echo htmlspecialchars($acct['display_name']); ?></strong>
                 <span class="text-muted small ms-2">@<?php echo htmlspecialchars($acct['username']); ?></span>
@@ -67,6 +98,7 @@ $navLight = in_array($skin, ['hey', 'ledger'], true);
         <?php endforeach; ?>
       </div>
     </div>
+    <?php endif; ?>
 
     <p class="small text-muted">Skin preview:
       <?php foreach (repsDashSkinAvailableSlugs() as $slug): ?>

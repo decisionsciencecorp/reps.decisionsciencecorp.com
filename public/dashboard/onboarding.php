@@ -11,6 +11,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+repsDashRequireCsrf();
+
 if (!repsDashUsesLearnerChrome((string) $user['role'])) {
     header('Location: ' . $return);
     exit;

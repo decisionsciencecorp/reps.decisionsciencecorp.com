@@ -15,16 +15,28 @@ Land in **Admin → Messages → Reps** tab on decisionsciencecorp.com (same inb
 
 Login platform for DSC Reps ops + affiliate seats. PRD: Tasks Doc **#990**.
 
-- Slice A (now): visual shell + skins + mock data — no real Shift poll yet.
-- Later: auth, schema, Shift sync, JSON API, SDK, SMCP.
+- Slice A: visual shell + skins + mock data.
+- Slice B (now): real session auth, SQLite users, admin provisioning, CSRF, Dev Mode env-gated.
+- Later: Shift sync (C), JSON API (D), SDK/SMCP (E).
+
+### Auth (Slice B)
+
+| Item | Value |
+|------|--------|
+| DB | `db/dashboard.sqlite` (sibling of `public/` / multihost `html/`) |
+| Override | `REPS_DASH_DB_PATH` |
+| Dev Mode | off unless `REPS_DASH_DEV_MODE=1` |
+| Seed password | `reps-demo` (all demo seats; change via Users) |
+| Login | username + password at `/dashboard/login.php` |
 
 ### Code layout (`public/dashboard/includes/`)
 
 | File | Role |
 |------|------|
-| `mock-data.php` | Fixtures only |
+| `config.php` / `db.php` / `csrf.php` / `auth.php` | Config, SQLite users, CSRF, sessions |
+| `mock-data.php` | Fixtures only (until Slice C) |
 | `repository.php` | Data access seam (Slice C swaps here) |
-| `scope.php` | Seat ACL (`*ForUser`, `CanView*`); sales book = shops ∪ sourced individuals (`assigned_sales_rep` on solo ops) |
+| `scope.php` | Seat ACL (`*ForUser`, `CanView*`); sales book = shops ∪ sourced individuals |
 | `economics.php` | Hourly rate + shop splits |
 | `rollups.php` | Worker/day stats + URL helpers |
 | `partials.php` | Shared session/operator table HTML |

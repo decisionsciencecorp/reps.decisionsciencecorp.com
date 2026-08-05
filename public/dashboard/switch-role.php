@@ -16,6 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+repsDashRequireCsrf();
+
 $username = trim((string) ($_POST['username'] ?? ''));
 $return = repsDashSafeReturnPath((string) ($_POST['return'] ?? ($_SERVER['HTTP_REFERER'] ?? '')));
 

@@ -11,7 +11,14 @@ declare(strict_types=1);
  */
 
 $root = dirname(__DIR__);
+$tmpDb = sys_get_temp_dir() . '/reps-dash-scope-smoke-' . getmypid() . '.sqlite';
+@unlink($tmpDb);
+putenv('REPS_DASH_DB_PATH=' . $tmpDb);
+putenv('REPS_DASH_DEV_MODE=0');
 require_once $root . '/public/dashboard/includes/bootstrap.php';
+register_shutdown_function(static function () use ($tmpDb): void {
+    @unlink($tmpDb);
+});
 
 /** @var list<string> $failures */
 $failures = [];

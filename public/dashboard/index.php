@@ -57,10 +57,12 @@ repsDashRenderPageHeader('Home', $subtitle);
     <button type="button" class="btn btn-outline-secondary" id="rdWizardPrev" disabled>Back</button>
     <button type="button" class="btn btn-primary" id="rdWizardNext">Next</button>
     <form method="post" action="/dashboard/onboarding.php" class="ms-auto m-0" id="rdWizardFinishForm">
+      <?php echo repsDashCsrfField(); ?>
       <input type="hidden" name="action" value="finish">
       <button type="submit" class="btn btn-success" id="rdWizardFinish" hidden>Finish tour · open Home</button>
     </form>
     <form method="post" action="/dashboard/onboarding.php" class="m-0">
+      <?php echo repsDashCsrfField(); ?>
       <input type="hidden" name="action" value="finish">
       <button type="submit" class="btn btn-link btn-sm text-muted">Skip tour</button>
     </form>
@@ -116,6 +118,7 @@ repsDashRenderPageHeader('Home', $subtitle);
     <span class="d-block d-md-inline ms-md-1">
       Prefer the tour?
       <form method="post" action="/dashboard/onboarding.php" class="d-inline">
+        <?php echo repsDashCsrfField(); ?>
         <input type="hidden" name="action" value="restart">
         <button type="submit" class="btn btn-link btn-sm p-0 align-baseline">Replay Home wizard</button>
       </form>

@@ -1,5 +1,8 @@
 db/applications.jsonl
 db/*.jsonl
+db/*.sqlite
+db/*.sqlite-*
+db/*.db
 .DS_Store
 tools/design-smoke/output/
 node_modules/

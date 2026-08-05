@@ -43,6 +43,7 @@ function repsDashRenderDevModeBar(?array $user): void
     ?>
   <div class="rd-dev-bar" role="region" aria-label="Dev Mode role picker">
     <form method="post" action="/dashboard/switch-role.php" class="rd-dev-bar__form">
+      <?php echo repsDashCsrfField(); ?>
       <input type="hidden" name="return" value="<?php echo htmlspecialchars($return); ?>">
       <span class="rd-dev-bar__label"><i class="bi bi-tools me-1"></i>Dev Mode</span>
       <label class="rd-dev-bar__select-wrap">
@@ -56,10 +57,11 @@ function repsDashRenderDevModeBar(?array $user): void
         </select>
       </label>
       <a class="rd-dev-bar__link" href="/dashboard/access.php">Views × roles</a>
-      <span class="rd-dev-bar__hint d-none d-lg-inline">Switch seat to audit scoping. Slice A only.</span>
+      <span class="rd-dev-bar__hint d-none d-lg-inline">Env-gated seat switcher (REPS_DASH_DEV_MODE=1).</span>
     </form>
     <?php if (repsDashUsesLearnerChrome((string) $user['role'])): ?>
     <form method="post" action="/dashboard/onboarding.php" class="rd-dev-bar__onboarding m-0">
+      <?php echo repsDashCsrfField(); ?>
       <input type="hidden" name="return" value="<?php echo htmlspecialchars($return); ?>">
       <?php if (repsDashIsWizardHome($user)): ?>
         <input type="hidden" name="action" value="finish">

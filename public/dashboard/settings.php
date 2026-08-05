@@ -7,9 +7,11 @@ $role = (string) $user['role'];
 $panels = repsDashSettingsPanelsForRole($role);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array('skin', $panels, true)) {
+    repsDashRequireCsrf();
     $slug = repsDashSkinNormalizeSlug((string) ($_POST['skin_slug'] ?? ''));
     if ($slug !== null) {
         $_SESSION['reps_dash_skin'] = $slug;
+        repsDashPersistUserSkin((int) $user['id'], $slug);
     }
     header('Location: /dashboard/settings.php');
     exit;
@@ -32,8 +34,9 @@ repsDashRenderPageHeader('Settings', match ($role) {
   <div class="col-lg-6">
     <div class="surface p-3">
       <h2 class="h5 mb-3">UI skin</h2>
-      <p class="text-muted small">Same four skins as Docket / Tasks / CRM. Choice stored in this demo session only.</p>
+      <p class="text-muted small">Same four skins as Docket / Tasks / CRM. Saved on your user record.</p>
       <form method="post" class="d-grid gap-2">
+        <?php echo repsDashCsrfField(); ?>
         <?php foreach (repsDashSkinAvailableSlugs() as $slug): ?>
           <label class="border rounded p-2 d-flex align-items-center gap-2">
             <input type="radio" name="skin_slug" value="<?php echo htmlspecialchars($slug); ?>" <?php echo $skin === $slug ? 'checked' : ''; ?>>
@@ -41,7 +44,7 @@ repsDashRenderPageHeader('Settings', match ($role) {
             <a class="small ms-auto" href="?preview_skin=<?php echo urlencode($slug); ?>">preview</a>
           </label>
         <?php endforeach; ?>
-        <button type="submit" class="btn btn-primary mt-2">Save skin for this session</button>
+        <button type="submit" class="btn btn-primary mt-2">Save skin</button>
       </form>
     </div>
   </div>
@@ -88,6 +91,7 @@ repsDashRenderPageHeader('Settings', match ($role) {
         New learner seats start on a short Home tour. Replay it anytime, or open Education Center for capture tips.
       </p>
       <form method="post" action="/dashboard/onboarding.php" class="d-inline">
+        <?php echo repsDashCsrfField(); ?>
         <input type="hidden" name="action" value="restart">
         <input type="hidden" name="return" value="/dashboard/">
         <button type="submit" class="btn btn-outline-primary btn-sm">Replay Home wizard</button>

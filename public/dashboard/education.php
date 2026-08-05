@@ -82,6 +82,7 @@ repsDashRenderPageHeader(
 <?php if (repsDashUsesLearnerChrome($role)): ?>
   <div class="mt-2 mb-4">
     <form method="post" action="/dashboard/onboarding.php" class="d-inline">
+      <?php echo repsDashCsrfField(); ?>
       <input type="hidden" name="action" value="restart">
       <input type="hidden" name="return" value="/dashboard/">
       <button type="submit" class="btn btn-outline-secondary btn-sm">Replay Home wizard tour</button>

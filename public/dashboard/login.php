@@ -61,7 +61,7 @@ $navLight = in_array($skin, ['hey', 'ledger'], true);
                 <strong><?php echo htmlspecialchars($acct['display_name']); ?></strong>
                 <span class="text-muted small ms-2">@<?php echo htmlspecialchars($acct['username']); ?></span>
               </span>
-              <span class="badge text-bg-secondary"><?php echo htmlspecialchars($acct['role']); ?></span>
+              <span class="badge text-bg-secondary"><?php echo htmlspecialchars(repsDashRoleLabel((string) $acct['role'])); ?></span>
             </button>
           </form>
         <?php endforeach; ?>

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/includes/bootstrap.php';
 $user = repsDashRequireLogin();
+repsDashRequireNavKey('sessions', $user);
 $sessions = repsDashSessionsForUser($user);
 
 repsDashRenderHeader('Sessions', 'sessions');

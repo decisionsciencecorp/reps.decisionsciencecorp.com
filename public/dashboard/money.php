@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/includes/bootstrap.php';
 $user = repsDashRequireLogin();
+repsDashRequireNavKey('money', $user);
 $shops = repsDashShopsForUser($user);
 $rate = 20.0; // mock $/accepted hour display
 

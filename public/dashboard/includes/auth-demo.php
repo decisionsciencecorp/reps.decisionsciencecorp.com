@@ -5,7 +5,15 @@ if (!defined('REPS_DASH_LOADED')) {
     die('Direct access not permitted');
 }
 
-/** @return list<array<string, mixed>> */
+/**
+ * Demo seats for Slice A / Dev Mode. Real auth is Slice B.
+ *
+ * Optional scoping keys:
+ * - shop_id: business_owner (one shop)
+ * - operator_id: employee / individual (self)
+ *
+ * @return list<array<string, mixed>>
+ */
 function repsDashDemoAccounts(): array
 {
     return [
@@ -16,6 +24,14 @@ function repsDashDemoAccounts(): array
             'role' => 'admin',
             'skin_slug' => null,
             'email' => 'mark@decisionsciencecorp.com',
+        ],
+        [
+            'id' => 5,
+            'username' => 'ops',
+            'display_name' => 'Ops Desk',
+            'role' => 'ops',
+            'skin_slug' => 'brutalist',
+            'email' => 'ops@decisionsciencecorp.com',
         ],
         [
             'id' => 2,
@@ -42,14 +58,67 @@ function repsDashDemoAccounts(): array
             'email' => 'chuck@example.com',
         ],
         [
-            'id' => 5,
-            'username' => 'ops',
-            'display_name' => 'Ops Desk',
-            'role' => 'ops',
+            'id' => 6,
+            'username' => 'maria',
+            'display_name' => 'Maria Lopez',
+            'role' => 'business_owner',
+            'skin_slug' => 'hey',
+            'email' => 'maria@fleetwash.example',
+            'shop_id' => 104,
+        ],
+        [
+            'id' => 7,
+            'username' => 'alex',
+            'display_name' => 'Alex Rivera',
+            'role' => 'employee',
+            'skin_slug' => null,
+            'email' => 'alex@fleetwash.example',
+            'shop_id' => 104,
+            'operator_id' => 1,
+        ],
+        [
+            'id' => 8,
+            'username' => 'pat',
+            'display_name' => 'Pat Solo',
+            'role' => 'individual',
+            'skin_slug' => null,
+            'email' => 'pat@example.com',
+            'operator_id' => 5,
+            'shop_id' => 103,
+        ],
+        [
+            'id' => 9,
+            'username' => 'agent',
+            'display_name' => 'Agent Bot',
+            'role' => 'agent',
             'skin_slug' => 'brutalist',
-            'email' => 'ops@decisionsciencecorp.com',
+            'email' => 'agent@decisionsciencecorp.com',
         ],
     ];
+}
+
+/** Human labels for role badges / picker. */
+function repsDashRoleLabel(string $role): string
+{
+    return match ($role) {
+        'admin' => 'Admin',
+        'ops' => 'Ops',
+        'sales' => 'Sales',
+        'business_owner' => 'Business owner',
+        'employee' => 'Employee',
+        'individual' => 'Individual',
+        'agent' => 'Agent',
+        default => $role,
+    };
+}
+
+/** Whether Dev Mode chrome (role picker) is shown. Slice A = always on. */
+function repsDashIsDevMode(): bool
+{
+    if (defined('REPS_DASH_DEV_MODE')) {
+        return (bool) REPS_DASH_DEV_MODE;
+    }
+    return true;
 }
 
 function repsDashFindAccount(string $username): ?array
@@ -84,6 +153,8 @@ function repsDashLoginDemo(string $username): bool
     $_SESSION['reps_dash_user'] = $user['username'];
     if (!empty($user['skin_slug'])) {
         $_SESSION['reps_dash_skin'] = $user['skin_slug'];
+    } else {
+        unset($_SESSION['reps_dash_skin']);
     }
     return true;
 }
@@ -116,4 +187,49 @@ function repsDashIsAdmin(?array $user = null): bool
 {
     $user = $user ?? repsDashCurrentUser();
     return $user && $user['role'] === 'admin';
+}
+
+/**
+ * Nav keys visible for a role (home always included by caller).
+ *
+ * @return list<string>
+ */
+function repsDashNavKeysForRole(string $role): array
+{
+    return match ($role) {
+        'admin' => ['home', 'shops', 'operators', 'sessions', 'money', 'users', 'settings'],
+        'ops', 'agent' => ['home', 'shops', 'operators', 'sessions', 'money', 'settings'],
+        'sales' => ['home', 'shops', 'operators', 'sessions', 'money', 'settings'],
+        'business_owner' => ['home', 'operators', 'sessions', 'money', 'settings'],
+        'employee', 'individual' => ['home', 'sessions', 'settings'],
+        default => ['home', 'settings'],
+    };
+}
+
+function repsDashSafeReturnPath(?string $raw): string
+{
+    if (!is_string($raw) || $raw === '') {
+        return '/dashboard/';
+    }
+    $path = parse_url($raw, PHP_URL_PATH);
+    if (!is_string($path) || !str_starts_with($path, '/dashboard')) {
+        return '/dashboard/';
+    }
+    $query = parse_url($raw, PHP_URL_QUERY);
+    return $path . (is_string($query) && $query !== '' ? '?' . $query : '');
+}
+
+/** Redirect home if this role cannot open the given nav key. */
+function repsDashRequireNavKey(string $navKey, ?array $user = null): void
+{
+    $user = $user ?? repsDashCurrentUser();
+    if (!$user) {
+        header('Location: /dashboard/login.php');
+        exit;
+    }
+    $allowed = repsDashNavKeysForRole((string) $user['role']);
+    if (!in_array($navKey, $allowed, true)) {
+        header('Location: /dashboard/');
+        exit;
+    }
 }

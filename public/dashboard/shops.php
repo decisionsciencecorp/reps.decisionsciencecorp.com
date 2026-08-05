@@ -3,15 +3,17 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/includes/bootstrap.php';
 $user = repsDashRequireLogin();
+repsDashRequireNavKey('shops', $user);
 $shops = repsDashShopsForUser($user);
 
+$subtitle = match ((string) $user['role']) {
+    'admin', 'ops', 'agent' => 'All shops in the Reps book (mock)',
+    'business_owner' => 'Your shop only (mock)',
+    default => 'Your assigned shops plus the unassigned pool (mock)',
+};
+
 repsDashRenderHeader('Shops', 'shops');
-repsDashRenderPageHeader(
-    'Shops',
-    repsDashIsAdminOrOps($user)
-        ? 'All shops in the Reps book (mock)'
-        : 'Your assigned shops plus the unassigned pool (mock)'
-);
+repsDashRenderPageHeader('Shops', $subtitle);
 ?>
 
 <div class="surface p-0">

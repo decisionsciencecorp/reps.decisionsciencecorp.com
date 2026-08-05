@@ -3,13 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/includes/bootstrap.php';
 $user = repsDashRequireLogin();
-if (!repsDashIsAdmin($user)) {
-    http_response_code(403);
-    repsDashRenderHeader('Users', 'users');
-    echo '<div class="alert alert-danger">Admin only — switch to the Mark demo seat to audit this screen.</div>';
-    repsDashRenderFooter();
-    exit;
-}
+repsDashRequireNavKey('users', $user);
 
 $accounts = repsDashDemoAccounts();
 

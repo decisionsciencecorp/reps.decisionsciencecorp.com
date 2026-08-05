@@ -139,31 +139,55 @@ function repsDashMockSessions(): array
 }
 
 /**
- * Scope shops for the current user (sales sees assigned + unassigned pool).
+ * Scope shops for the current user.
  * @return list<array<string, mixed>>
  */
 function repsDashShopsForUser(array $user): array
 {
     $shops = repsDashMockShops();
-    if (in_array($user['role'], ['admin', 'ops'], true)) {
+    $role = (string) ($user['role'] ?? '');
+
+    if (in_array($role, ['admin', 'ops', 'agent'], true)) {
         return $shops;
     }
-    if ($user['role'] === 'sales') {
+    if ($role === 'sales') {
         return array_values(array_filter(
             $shops,
             static fn(array $s): bool => ($s['assigned_sales_rep'] ?? null) === $user['username']
                 || ($s['assigned_sales_rep'] ?? null) === null
         ));
     }
+    if ($role === 'business_owner' && isset($user['shop_id'])) {
+        $sid = (int) $user['shop_id'];
+        return array_values(array_filter(
+            $shops,
+            static fn(array $s): bool => (int) $s['id'] === $sid
+        ));
+    }
+    // employee / individual: no shop directory (operator-scoped elsewhere)
     return [];
 }
 
 /** @return list<array<string, mixed>> */
 function repsDashOperatorsForUser(array $user): array
 {
+    $role = (string) ($user['role'] ?? '');
+    $ops = repsDashMockOperators();
+
+    if ($role === 'employee' || $role === 'individual') {
+        $oid = (int) ($user['operator_id'] ?? 0);
+        return array_values(array_filter(
+            $ops,
+            static fn(array $o): bool => (int) $o['id'] === $oid
+        ));
+    }
+
     $shopIds = array_column(repsDashShopsForUser($user), 'id');
+    if ($shopIds === []) {
+        return [];
+    }
     return array_values(array_filter(
-        repsDashMockOperators(),
+        $ops,
         static fn(array $o): bool => in_array($o['shop_id'], $shopIds, true)
     ));
 }
@@ -171,9 +195,24 @@ function repsDashOperatorsForUser(array $user): array
 /** @return list<array<string, mixed>> */
 function repsDashSessionsForUser(array $user): array
 {
+    $role = (string) ($user['role'] ?? '');
+    $sessions = repsDashMockSessions();
+
+    if ($role === 'employee' || $role === 'individual') {
+        $ops = repsDashOperatorsForUser($user);
+        $names = array_column($ops, 'name');
+        return array_values(array_filter(
+            $sessions,
+            static fn(array $s): bool => in_array($s['operator'], $names, true)
+        ));
+    }
+
     $shopIds = array_column(repsDashShopsForUser($user), 'id');
+    if ($shopIds === []) {
+        return [];
+    }
     return array_values(array_filter(
-        repsDashMockSessions(),
+        $sessions,
         static fn(array $s): bool => in_array($s['shop_id'], $shopIds, true)
     ));
 }

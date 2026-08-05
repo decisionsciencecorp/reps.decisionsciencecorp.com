@@ -33,6 +33,34 @@ function repsDashRenderPageHeader(string $title, string $subtitle = '', string $
     <?php
 }
 
+function repsDashRenderDevModeBar(?array $user): void
+{
+    if (!repsDashIsDevMode() || !$user) {
+        return;
+    }
+    $accounts = repsDashDemoAccounts();
+    $return = $_SERVER['REQUEST_URI'] ?? '/dashboard/';
+    ?>
+  <div class="rd-dev-bar" role="region" aria-label="Dev Mode role picker">
+    <form method="post" action="/dashboard/switch-role.php" class="rd-dev-bar__form">
+      <input type="hidden" name="return" value="<?php echo htmlspecialchars($return); ?>">
+      <span class="rd-dev-bar__label"><i class="bi bi-tools me-1"></i>Dev Mode</span>
+      <label class="rd-dev-bar__select-wrap">
+        <span class="visually-hidden">Switch demo role</span>
+        <select name="username" class="form-select form-select-sm rd-dev-bar__select" onchange="this.form.submit()" aria-label="Switch demo seat">
+          <?php foreach ($accounts as $acct): ?>
+            <option value="<?php echo htmlspecialchars($acct['username']); ?>"<?php echo $acct['username'] === $user['username'] ? ' selected' : ''; ?>>
+              <?php echo htmlspecialchars(repsDashRoleLabel((string) $acct['role']) . ' — ' . $acct['display_name'] . ' (@' . $acct['username'] . ')'); ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </label>
+      <span class="rd-dev-bar__hint d-none d-md-inline">Switch seat to audit scoping &amp; nav. Slice A only.</span>
+    </form>
+  </div>
+    <?php
+}
+
 function repsDashRenderHeader(string $title = '', string $active = 'home'): void
 {
     $user = repsDashCurrentUser();
@@ -41,17 +69,23 @@ function repsDashRenderHeader(string $title = '', string $active = 'home'): void
     $navLight = in_array($skin, ['hey', 'ledger'], true);
     $navThemeClass = $navLight ? 'navbar-light' : 'navbar-dark';
 
-    $nav = [
+    $navAll = [
         'home' => ['Home', '/dashboard/', 'bi-speedometer2'],
         'shops' => ['Shops', '/dashboard/shops.php', 'bi-shop'],
         'operators' => ['Operators', '/dashboard/operators.php', 'bi-people'],
         'sessions' => ['Sessions', '/dashboard/sessions.php', 'bi-camera-reels'],
         'money' => ['Money', '/dashboard/money.php', 'bi-cash-coin'],
+        'users' => ['Users', '/dashboard/users.php', 'bi-person-gear'],
+        'settings' => ['Settings', '/dashboard/settings.php', 'bi-gear'],
     ];
-    if ($user && repsDashIsAdmin($user)) {
-        $nav['users'] = ['Users', '/dashboard/users.php', 'bi-person-gear'];
+    $allowed = $user ? repsDashNavKeysForRole((string) $user['role']) : ['home'];
+    $nav = [];
+    foreach ($allowed as $key) {
+        if (isset($navAll[$key])) {
+            $nav[$key] = $navAll[$key];
+        }
     }
-    $nav['settings'] = ['Settings', '/dashboard/settings.php', 'bi-gear'];
+    $bodyClass = 'bg-light' . (repsDashIsDevMode() && $user ? ' rd-has-dev-bar' : '');
     ?>
 <!DOCTYPE html>
 <html lang="en" data-skin-comp="<?php echo htmlspecialchars($skin); ?>">
@@ -61,10 +95,11 @@ function repsDashRenderHeader(string $title = '', string $active = 'home'): void
   <title><?php echo $safeTitle; ?></title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-  <link href="/dashboard/assets/css/dashboard.css?v=1" rel="stylesheet">
+  <link href="/dashboard/assets/css/dashboard.css?v=2" rel="stylesheet">
   <link href="<?php echo htmlspecialchars(repsDashSkinStylesheetHref($skin)); ?>" rel="stylesheet">
 </head>
-<body class="bg-light">
+<body class="<?php echo htmlspecialchars($bodyClass); ?>">
+  <?php repsDashRenderDevModeBar(is_array($user) ? $user : null); ?>
   <nav class="navbar navbar-expand-lg <?php echo htmlspecialchars($navThemeClass); ?> admin-nav<?php echo $navLight ? '' : ' bg-dark'; ?>">
     <div class="container-fluid px-3 px-lg-4">
       <a class="navbar-brand fw-semibold d-inline-flex align-items-center gap-2" href="/dashboard/">
@@ -84,7 +119,7 @@ function repsDashRenderHeader(string $title = '', string $active = 'home'): void
           <?php endforeach; ?>
           <span class="navbar-text small px-2 text-nowrap">
             <?php echo htmlspecialchars($user['display_name']); ?>
-            <span class="badge text-bg-secondary ms-1"><?php echo htmlspecialchars($user['role']); ?></span>
+            <span class="badge text-bg-secondary ms-1"><?php echo htmlspecialchars(repsDashRoleLabel((string) $user['role'])); ?></span>
           </span>
           <a class="btn btn-outline-light" href="/dashboard/logout.php"><i class="bi bi-box-arrow-right me-1"></i>Sign out</a>
         </div>

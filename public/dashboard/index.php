@@ -75,8 +75,17 @@ repsDashRenderPageHeader(
     <div class="surface p-3">
       <h2 class="h5 mb-2">Signed in as</h2>
       <p class="mb-1"><strong><?php echo htmlspecialchars($user['display_name']); ?></strong></p>
-      <p class="mb-0 text-muted small">Role <code><?php echo htmlspecialchars($user['role']); ?></code> —
-        <?php echo repsDashIsAdminOrOps($user) ? 'sees all shops' : 'sees assigned shops + unassigned pool'; ?>.</p>
+      <p class="mb-0 text-muted small">Role <strong><?php echo htmlspecialchars(repsDashRoleLabel((string) $user['role'])); ?></strong>
+        (<code><?php echo htmlspecialchars((string) $user['role']); ?></code>) —
+        <?php
+        echo match ((string) $user['role']) {
+            'admin', 'ops', 'agent' => 'sees all shops',
+            'sales' => 'sees assigned shops + unassigned pool',
+            'business_owner' => 'sees your shop’s operators, sessions, and money',
+            'employee', 'individual' => 'sees your own sessions only',
+            default => 'limited scope',
+        };
+        ?>. Use the Dev Mode bar to switch seats.</p>
     </div>
   </div>
 </div>

@@ -66,7 +66,7 @@ function repsDashWizardStepsForRole(string $role): array
             [
                 'id' => 'money',
                 'title' => 'Money is your book view',
-                'body' => 'Earnings estimates and who’s producing at each shop live under Money — not a separate Operators desk, and not a session inbox.',
+                'body' => 'Earnings estimates for shops you own and individuals you sourced live under Money — not a separate Operators desk, and not a session inbox.',
                 'cta' => 'Open Money',
                 'href' => '/dashboard/money.php',
             ],

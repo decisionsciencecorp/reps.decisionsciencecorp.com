@@ -41,11 +41,13 @@ function accountsByUsername(): array
 
 $by = accountsByUsername();
 
-// --- Pat Solo (id 9, shop_id 0) visible to admin/ops + self ---
+// --- Pat Solo (id 9): admin/ops/self + sourcing affiliate (jim) ---
 assertTrue(repsDashCanViewOperator($by['mark'], 9), 'admin can view Pat');
 assertTrue(repsDashCanViewOperator($by['ops'], 9), 'ops can view Pat');
 assertTrue(repsDashCanViewOperator($by['pat'], 9), 'individual can view self (Pat)');
-assertTrue(!repsDashCanViewOperator($by['jim'], 9), 'sales jim cannot view Pat');
+assertTrue(repsDashCanViewOperator($by['jim'], 9), 'sales jim (sourcer) can view Pat');
+assertTrue(!repsDashCanViewOperator($by['seven'], 9), 'sales seven cannot view Pat (jim-sourced)');
+assertTrue(!repsDashCanViewOperator($by['chuck'], 9), 'sales chuck cannot view Pat');
 assertTrue(!repsDashCanViewOperator($by['maria'], 9), 'owner cannot view Pat');
 assertTrue(!repsDashCanViewOperator($by['alex'], 9), 'employee cannot view Pat');
 assertTrue(!repsDashCanViewOperator($by['agent'], 9), 'agent cannot view Pat');
@@ -54,6 +56,30 @@ $adminOps = repsDashOperatorsForUser($by['mark']);
 $adminIds = array_map(static fn($o) => (int) $o['id'], $adminOps);
 assertTrue(in_array(9, $adminIds, true), 'admin operators list includes Pat');
 assertEq(count($adminOps), count(repsDashAllOperators()), 'admin sees all operators');
+
+$jimInd = repsDashIndividualsForSalesUser($by['jim']);
+assertEq(count($jimInd), 1, 'jim has one sourced individual');
+assertEq((int) $jimInd[0]['id'], 9, 'jim sourced individual is Pat');
+
+$sevenInd = repsDashIndividualsForSalesUser($by['seven']);
+assertEq(count($sevenInd), 1, 'seven has one sourced individual (Riley invited)');
+assertEq((int) $sevenInd[0]['id'], 10, 'seven sourced individual is Riley');
+
+assertTrue(repsDashCanViewOperator($by['seven'], 10), 'seven can view Riley');
+assertTrue(!repsDashCanViewOperator($by['jim'], 10), 'jim cannot view Riley');
+assertTrue(!repsDashCanViewOperator($by['jim'], 11), 'jim cannot view unsourced solo');
+assertTrue(repsDashCanViewOperator($by['mark'], 11), 'admin can view unsourced solo');
+
+$jimOpIds = array_map(static fn($o) => (int) $o['id'], repsDashOperatorsForUser($by['jim']));
+assertTrue(in_array(9, $jimOpIds, true), 'jim operators include Pat');
+assertTrue(in_array(1, $jimOpIds, true), 'jim operators still include shop workers');
+
+$jimSessOps = array_unique(array_map(
+    static fn($s) => (int) $s['operator_id'],
+    repsDashSessionsForUser($by['jim'])
+));
+assertTrue(in_array(9, $jimSessOps, true), 'jim sessions include Pat');
+assertTrue(!in_array(11, $jimSessOps, true), 'jim sessions exclude unsourced solo');
 
 // --- Cross-shop isolation ---
 assertTrue(repsDashCanViewOperator($by['alex'], 1), 'employee can view self (Alex)');

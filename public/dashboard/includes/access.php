@@ -107,7 +107,7 @@ function repsDashScopeBlurb(string $role): string
     return match ($role) {
         'admin' => 'Full desk: all shops, hours, economics, and user provisioning.',
         'ops' => 'Same operational desk as admin, without user provisioning or platform keys.',
-        'sales' => 'Pipeline (Shops) plus Money for your book — earnings and which operators are producing. No session inbox.',
+        'sales' => 'Pipeline (Shops) plus Money for your book — shops and individuals you sourced. No session inbox.',
         'business_owner' => 'Your shop only: roster, hours, and your shop’s pay display.',
         'employee' => 'Your own sessions and hours — not the shop ledger or other workers.',
         'individual' => 'Your own capture/work only — no shop book.',
@@ -225,7 +225,7 @@ function repsDashViewsRolesMatrix(): array
             'cells' => $cells([
                 'admin' => 'DSC portfolio command',
                 'ops' => 'Hours health + reject drag',
-                'sales' => 'Affiliate book $ + producers',
+                'sales' => 'Affiliate book $ + shop & individual producers',
                 'business_owner' => 'My pay (shop keep + team)',
                 'employee' => '—',
                 'individual' => '—',

@@ -24,7 +24,7 @@ Login platform for DSC Reps ops + affiliate seats. PRD: Tasks Doc **#990**.
 |------|------|
 | `mock-data.php` | Fixtures only |
 | `repository.php` | Data access seam (Slice C swaps here) |
-| `scope.php` | Seat ACL (`*ForUser`, `CanView*`) |
+| `scope.php` | Seat ACL (`*ForUser`, `CanView*`); sales book = shops ∪ sourced individuals (`assigned_sales_rep` on solo ops) |
 | `economics.php` | Hourly rate + shop splits |
 | `rollups.php` | Worker/day stats + URL helpers |
 | `partials.php` | Shared session/operator table HTML |

@@ -149,7 +149,7 @@ function repsDashRenderMoneyAdmin(array $user, array $shops): void
 </div>
 <p class="small text-muted mt-3 mb-0">
   Drill-down: tap an operator name → worker → day → sessions.
-  Solo individuals (no shop) live under <a href="/dashboard/operators.php">Operators</a>.
+  Solo individuals appear here when <code>shop_id = 0</code>; affiliate attribution uses operator <code>assigned_sales_rep</code> (sales Money shows “Individuals you sourced”).
 </p>
     <?php
     repsDashRenderFooter();
@@ -291,10 +291,12 @@ function repsDashRenderMoneySales(array $user, array $shops): void
 {
     $rate = repsDashMoneyHourlyRate();
     $opsByShop = repsDashMoneyOpsByShopId(repsDashOperatorsForUser($user));
+    $individuals = repsDashIndividualsForSalesUser($user);
 
     $bookHours = $yourEarn = 0.0;
     $activeOps = $producingShops = 0;
     $shopBlocks = [];
+    $individualRows = [];
 
     foreach ($shops as $shop) {
         $e = repsDashMoneyShopEconomics($shop, $rate);
@@ -304,7 +306,11 @@ function repsDashRenderMoneySales(array $user, array $shops): void
         if ($e['hours'] > 0) {
             $producingShops++;
         }
-        $ops = $opsByShop[(int) $shop['id']] ?? [];
+        // Shop workers only (exclude any stray shop_id 0 bucket)
+        $ops = array_values(array_filter(
+            $opsByShop[(int) $shop['id']] ?? [],
+            static fn(array $o): bool => !repsDashIsSoloOperator($o)
+        ));
         foreach ($ops as $op) {
             if (($op['status'] ?? '') === 'active') {
                 $activeOps++;
@@ -318,11 +324,28 @@ function repsDashRenderMoneySales(array $user, array $shops): void
         ];
     }
 
+    foreach ($individuals as $op) {
+        $e = repsDashMoneyIndividualEconomics($op, $rate);
+        $bookHours += $e['hours'];
+        $yourEarn += $e['your_affiliate'];
+        if (($op['status'] ?? '') === 'active') {
+            $activeOps++;
+        }
+        $individualRows[] = [
+            'op' => $op,
+            'e' => $e,
+        ];
+    }
+    $producingIndividuals = count(array_filter(
+        $individualRows,
+        static fn(array $r): bool => $r['e']['hours'] > 0
+    ));
+
     repsDashRenderHeader('Money', 'money');
-    repsDashRenderPageHeader('Money', 'Your book — earnings and who’s producing (mock)');
+    repsDashRenderPageHeader('Money', 'Your book — shops, sourced individuals, and who’s producing (mock)');
     ?>
 <div class="alert alert-secondary border-0 mb-3">
-  <strong>Sales peer.</strong> Pipeline economics for <em>your</em> book: estimated earnings + operators per shop.
+  <strong>Sales peer.</strong> Pipeline economics for <em>your</em> book: shops you own <em>and</em> individuals you sourced.
   Not the DSC ledger. Not a session inbox. Split math is lorem until #1570.
 </div>
 
@@ -341,20 +364,68 @@ function repsDashRenderMoneySales(array $user, array $shops): void
   </div>
   <div class="col-6 col-md-3">
     <div class="surface p-3 h-100">
-      <div class="text-muted small">Shops producing</div>
-      <div class="fs-3 fw-semibold"><?php echo (int) $producingShops; ?><span class="fs-6 text-muted"> / <?php echo count($shops); ?></span></div>
+      <div class="text-muted small">Shops / individuals producing</div>
+      <div class="fs-3 fw-semibold"><?php echo (int) $producingShops; ?><span class="fs-6 text-muted"> / <?php echo count($shops); ?></span>
+        <span class="fs-6 text-muted">·</span>
+        <?php echo (int) $producingIndividuals; ?><span class="fs-6 text-muted"> / <?php echo count($individuals); ?></span>
+      </div>
     </div>
   </div>
   <div class="col-6 col-md-3">
     <div class="surface p-3 h-100">
-      <div class="text-muted small">Active operators</div>
+      <div class="text-muted small">Active producers</div>
       <div class="fs-3 fw-semibold"><?php echo (int) $activeOps; ?></div>
     </div>
   </div>
 </div>
 
+<div class="surface p-3 mb-3">
+  <h2 class="h5 mb-2">Individuals you sourced</h2>
+  <p class="small text-muted mb-3">
+    Solo capture seats (no shop). Attribution is <code>assigned_sales_rep</code> on the operator — same edge Shift/Reps will store when affiliates sign people up directly.
+  </p>
+  <?php if ($individualRows === []): ?>
+    <p class="small text-muted mb-0">None yet — when you sign up an individual, they show here (not only under a shop).</p>
+  <?php else: ?>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Individual</th>
+            <th>Status</th>
+            <th>Accepted 7d</th>
+            <th>Rejected 7d</th>
+            <th>Est. your $</th>
+            <th>Last active</th>
+          </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($individualRows as $row):
+            $op = $row['op'];
+            $e = $row['e'];
+            ?>
+          <tr>
+            <td class="fw-semibold">
+              <?php echo repsDashOperatorLinkHtml((int) $op['id'], (string) $op['name']); ?>
+              <div class="small text-muted">Individual · no shop</div>
+            </td>
+            <td><?php repsDashStatusPill((string) $op['status']); ?></td>
+            <td><?php echo htmlspecialchars((string) $op['accepted_7d']); ?></td>
+            <td><?php echo htmlspecialchars((string) $op['rejected_7d']); ?></td>
+            <td>$<?php echo number_format($e['your_affiliate'], 2); ?></td>
+            <td class="small text-muted"><?php echo htmlspecialchars((string) $op['last_session']); ?></td>
+          </tr>
+        <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+  <?php endif; ?>
+</div>
+
 <?php if ($shopBlocks === []): ?>
   <div class="surface p-3 text-muted">No shops in your book yet.</div>
+<?php else: ?>
+  <h2 class="h5 mb-3">Shops in your book</h2>
 <?php endif; ?>
 
 <?php foreach ($shopBlocks as $block):

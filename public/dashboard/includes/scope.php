@@ -10,6 +10,11 @@ if (!defined('REPS_DASH_LOADED')) {
  * Reads only through repository.php (not mock-data.php directly).
  */
 
+function repsDashIsSoloOperator(array $op): bool
+{
+    return (int) ($op['shop_id'] ?? -1) === 0;
+}
+
 /** @return list<array<string, mixed>> */
 function repsDashShopsForUser(array $user): array
 {
@@ -41,6 +46,27 @@ function repsDashShopsForUser(array $user): array
     return [];
 }
 
+/**
+ * Solo individuals sourced by this sales username (shop_id 0 + assigned_sales_rep).
+ *
+ * @return list<array<string, mixed>>
+ */
+function repsDashIndividualsForSalesUser(array $user): array
+{
+    if (($user['role'] ?? '') !== 'sales') {
+        return [];
+    }
+    $username = (string) ($user['username'] ?? '');
+    if ($username === '') {
+        return [];
+    }
+    return array_values(array_filter(
+        repsDashAllOperators(),
+        static fn(array $o): bool => repsDashIsSoloOperator($o)
+            && ($o['assigned_sales_rep'] ?? null) === $username
+    ));
+}
+
 /** @return list<array<string, mixed>> */
 function repsDashOperatorsForUser(array $user): array
 {
@@ -62,6 +88,23 @@ function repsDashOperatorsForUser(array $user): array
     // Admin/ops see every shop worker + solo individuals (shop_id 0).
     if (in_array($role, ['admin', 'ops'], true)) {
         return $ops;
+    }
+
+    if ($role === 'sales') {
+        $shopIds = array_map('intval', array_column(repsDashShopsForUser($user), 'id'));
+        $byId = [];
+        foreach ($ops as $o) {
+            $sid = (int) $o['shop_id'];
+            // Shop-book workers (not solos)
+            if ($sid > 0 && in_array($sid, $shopIds, true)) {
+                $byId[(int) $o['id']] = $o;
+            }
+        }
+        // Affiliate-sourced individuals (no shop)
+        foreach (repsDashIndividualsForSalesUser($user) as $o) {
+            $byId[(int) $o['id']] = $o;
+        }
+        return array_values($byId);
     }
 
     $shopIds = array_map('intval', array_column(repsDashShopsForUser($user), 'id'));
@@ -97,13 +140,15 @@ function repsDashSessionsForUser(array $user): array
         return $sessions;
     }
 
-    $shopIds = array_map('intval', array_column(repsDashShopsForUser($user), 'id'));
-    if ($shopIds === []) {
+    // Sales + owner: sessions for operators in scope (shops and/or sourced individuals).
+    $ops = repsDashOperatorsForUser($user);
+    $ids = array_map('intval', array_column($ops, 'id'));
+    if ($ids === []) {
         return [];
     }
     return array_values(array_filter(
         $sessions,
-        static fn(array $s): bool => in_array((int) $s['shop_id'], $shopIds, true)
+        static fn(array $s): bool => in_array((int) ($s['operator_id'] ?? 0), $ids, true)
     ));
 }
 
@@ -116,15 +161,6 @@ function repsDashCanViewOperator(array $user, int $operatorId): bool
         if ((int) $op['id'] === $operatorId) {
             return true;
         }
-    }
-    // Sales has no Operators nav but may open drill-down from Money.
-    if (($user['role'] ?? '') === 'sales') {
-        $op = repsDashFindOperator($operatorId);
-        if (!$op) {
-            return false;
-        }
-        $shopIds = array_map('intval', array_column(repsDashShopsForUser($user), 'id'));
-        return in_array((int) $op['shop_id'], $shopIds, true);
     }
     return false;
 }

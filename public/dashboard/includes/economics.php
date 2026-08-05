@@ -54,3 +54,20 @@ function repsDashMoneyOpsByShopId(array $ops): array
     }
     return $by;
 }
+
+/**
+ * Affiliate economics for a sourced individual (no shop split).
+ * Mock: affiliate display cut = 25% of gross accepted hours until #1570.
+ *
+ * @return array{hours: float, gross: float, your_affiliate: float}
+ */
+function repsDashMoneyIndividualEconomics(array $op, float $rate): array
+{
+    $hours = (float) ($op['accepted_7d'] ?? 0);
+    $gross = $hours * $rate;
+    return [
+        'hours' => $hours,
+        'gross' => $gross,
+        'your_affiliate' => round($gross * 0.25, 2),
+    ];
+}

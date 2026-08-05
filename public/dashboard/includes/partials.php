@@ -38,6 +38,18 @@ function repsDashOperatorLinksHtml(array $ops, int $limit = 3): string
     return $html;
 }
 
+function repsDashOperatorShopCell(array $op): string
+{
+    if (repsDashIsSoloOperator($op)) {
+        $rep = $op['assigned_sales_rep'] ?? null;
+        $src = is_string($rep) && $rep !== ''
+            ? 'sourced by <code>' . htmlspecialchars($rep) . '</code>'
+            : 'no affiliate source';
+        return 'Individual · ' . $src;
+    }
+    return htmlspecialchars((string) $op['shop']);
+}
+
 /**
  * Hours-feed / day session table.
  *
@@ -188,7 +200,7 @@ function repsDashRenderOperatorRoster(array $operators): void
       <thead>
         <tr>
           <th>Name</th>
-          <th>Shop</th>
+          <th>Shop / source</th>
           <th>Status</th>
           <th>Accepted</th>
           <th>Accept rate</th>
@@ -207,7 +219,7 @@ function repsDashRenderOperatorRoster(array $operators): void
             <?php echo repsDashOperatorLinkHtml((int) $op['id'], (string) $op['name'], 'fw-semibold text-decoration-none'); ?>
             <div class="small text-muted"><?php echo htmlspecialchars((string) $op['phone']); ?></div>
           </td>
-          <td><?php echo htmlspecialchars((string) $op['shop']); ?></td>
+          <td class="small"><?php echo repsDashOperatorShopCell($op); ?></td>
           <td>
             <?php repsDashStatusPill((string) $op['status']); ?>
             <?php if (!empty($op['matched'])): ?>

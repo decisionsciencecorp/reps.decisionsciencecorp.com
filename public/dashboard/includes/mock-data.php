@@ -155,7 +155,11 @@ function repsDashShopsForUser(array $user): array
     $shops = repsDashMockShops();
     $role = (string) ($user['role'] ?? '');
 
-    if (in_array($role, ['admin', 'ops', 'agent'], true)) {
+    // Agent is an API principal — no human shop directory.
+    if ($role === 'agent') {
+        return [];
+    }
+    if (in_array($role, ['admin', 'ops'], true)) {
         return $shops;
     }
     if ($role === 'sales') {
@@ -182,6 +186,10 @@ function repsDashOperatorsForUser(array $user): array
     $role = (string) ($user['role'] ?? '');
     $ops = repsDashMockOperators();
 
+    if ($role === 'agent') {
+        return [];
+    }
+
     if ($role === 'employee' || $role === 'individual') {
         $oid = (int) ($user['operator_id'] ?? 0);
         return array_values(array_filter(
@@ -190,13 +198,18 @@ function repsDashOperatorsForUser(array $user): array
         ));
     }
 
-    $shopIds = array_column(repsDashShopsForUser($user), 'id');
+    // Admin/ops see every shop worker + solo individuals (shop_id 0).
+    if (in_array($role, ['admin', 'ops'], true)) {
+        return $ops;
+    }
+
+    $shopIds = array_map('intval', array_column(repsDashShopsForUser($user), 'id'));
     if ($shopIds === []) {
         return [];
     }
     return array_values(array_filter(
         $ops,
-        static fn(array $o): bool => in_array($o['shop_id'], $shopIds, true)
+        static fn(array $o): bool => in_array((int) $o['shop_id'], $shopIds, true)
     ));
 }
 
@@ -206,26 +219,30 @@ function repsDashSessionsForUser(array $user): array
     $role = (string) ($user['role'] ?? '');
     $sessions = repsDashMockSessions();
 
-    if ($role === 'employee' || $role === 'individual') {
-        $ops = repsDashOperatorsForUser($user);
-        $names = array_column($ops, 'name');
-        return array_values(array_filter(
-            $sessions,
-            static fn(array $s): bool => in_array($s['operator'], $names, true)
-        ));
-    }
-
     if ($role === 'agent') {
         return [];
     }
 
-    $shopIds = array_column(repsDashShopsForUser($user), 'id');
+    if ($role === 'employee' || $role === 'individual') {
+        $ops = repsDashOperatorsForUser($user);
+        $ids = array_map('intval', array_column($ops, 'id'));
+        return array_values(array_filter(
+            $sessions,
+            static fn(array $s): bool => in_array((int) ($s['operator_id'] ?? 0), $ids, true)
+        ));
+    }
+
+    if (in_array($role, ['admin', 'ops'], true)) {
+        return $sessions;
+    }
+
+    $shopIds = array_map('intval', array_column(repsDashShopsForUser($user), 'id'));
     if ($shopIds === []) {
         return [];
     }
     return array_values(array_filter(
         $sessions,
-        static fn(array $s): bool => in_array((int) $s['shop_id'], array_map('intval', $shopIds), true)
+        static fn(array $s): bool => in_array((int) $s['shop_id'], $shopIds, true)
     ));
 }
 
@@ -241,6 +258,9 @@ function repsDashFindOperator(int $id): ?array
 
 function repsDashCanViewOperator(array $user, int $operatorId): bool
 {
+    if (($user['role'] ?? '') === 'agent') {
+        return false;
+    }
     foreach (repsDashOperatorsForUser($user) as $op) {
         if ((int) $op['id'] === $operatorId) {
             return true;

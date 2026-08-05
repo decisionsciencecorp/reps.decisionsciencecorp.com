@@ -4,6 +4,13 @@ declare(strict_types=1);
 require_once __DIR__ . '/includes/bootstrap.php';
 $user = repsDashRequireLogin();
 $id = (int) ($_GET['id'] ?? 0);
+$role = (string) $user['role'];
+
+if ($role === 'agent') {
+    header('Location: /dashboard/');
+    exit;
+}
+
 $op = $id > 0 ? repsDashFindOperator($id) : null;
 
 if ($op === null || !repsDashCanViewOperator($user, $id)) {
@@ -17,7 +24,6 @@ if ($op === null || !repsDashCanViewOperator($user, $id)) {
 
 $stats = repsDashOperatorDetailStats($id);
 $rate = 20.0;
-$role = (string) $user['role'];
 $backHref = match ($role) {
     'business_owner' => '/dashboard/operators.php',
     'sales' => '/dashboard/money.php',

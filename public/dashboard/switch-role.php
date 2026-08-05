@@ -35,6 +35,8 @@ $pathMap = [
     '/dashboard/operators.php' => 'operators',
     '/dashboard/sessions.php' => 'sessions',
     '/dashboard/money.php' => 'money',
+    '/dashboard/education.php' => 'education',
+    '/dashboard/education-article.php' => 'education',
     '/dashboard/users.php' => 'users',
     '/dashboard/settings.php' => 'settings',
     '/dashboard/access.php' => 'access',
@@ -42,13 +44,22 @@ $pathMap = [
     '/dashboard/day.php' => 'day',
 ];
 $key = $pathMap[$path] ?? null;
-if (in_array($key, ['access', 'operator', 'day'], true)) {
-    // drill-downs / matrix — re-check after switch; bounce home if out of scope
-    if ($key === 'operator') {
+if (in_array($key, ['access', 'operator', 'day', 'education'], true)) {
+    // drill-downs / matrix / education — re-check after switch; bounce home if out of scope
+    if ($key === 'education' && !in_array('education', $navKeys, true)) {
+        $return = '/dashboard/';
+    }
+    if ($key === 'operator' || $key === 'day') {
         $oid = 0;
-        if (isset($_POST['return'])) {
-            parse_str((string) parse_url($return, PHP_URL_QUERY), $q);
+        parse_str((string) (parse_url($return, PHP_URL_QUERY) ?? ''), $q);
+        if ($key === 'operator') {
             $oid = (int) ($q['id'] ?? 0);
+        } else {
+            $oid = (int) ($q['operator_id'] ?? 0);
+            // Sales/agent may not keep a book-wide day URL after switch.
+            if ($oid <= 0 && $user && in_array((string) $user['role'], ['sales', 'agent'], true)) {
+                $return = '/dashboard/';
+            }
         }
         if ($oid > 0 && $user && !repsDashCanViewOperator($user, $oid)) {
             $return = '/dashboard/';

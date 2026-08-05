@@ -30,6 +30,17 @@ if ($operatorId > 0) {
     $backLabel = 'Back to worker';
     $active = 'operators';
 } else {
+    $role = (string) $user['role'];
+    // Sales has no session inbox — day views must be worker-scoped from Money.
+    // Agent has no human desk day lists.
+    if (in_array($role, ['sales', 'agent'], true)) {
+        http_response_code(403);
+        repsDashRenderHeader('Day', 'home');
+        echo '<div class="alert alert-danger">Open a worker from Money (or Team) to view a day — no book-wide day inbox for this seat.</div>';
+        echo '<a class="btn btn-outline-primary btn-sm" href="/dashboard/">Back home</a>';
+        repsDashRenderFooter();
+        exit;
+    }
     // Shop/book day — sessions in user scope for that date
     $sessions = array_values(array_filter(
         repsDashSessionsForUser($user),

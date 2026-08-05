@@ -159,13 +159,30 @@ function repsDashRenderMoneyAdmin(array $user, array $shops): void
       <?php foreach ($rows as $r):
           $s = $r['shop'];
           $e = $r['e'];
+          $shopOps = $opsBy[(int) $s['id']] ?? [];
           ?>
         <tr>
           <td class="fw-semibold"><?php echo htmlspecialchars($s['name']); ?></td>
           <td><?php repsDashStatusPill($s['status']); ?></td>
           <td class="small"><code><?php echo htmlspecialchars((string) ($s['assigned_sales_rep'] ?? '—')); ?></code></td>
           <td class="small text-muted"><?php echo $e['internal'] ? 'internal' : 'affiliate split'; ?></td>
-          <td><?php echo (int) $r['ops']; ?></td>
+          <td class="small">
+            <?php if ($shopOps === []): ?>
+              <?php echo (int) $r['ops']; ?>
+            <?php else: ?>
+              <?php
+              $links = [];
+              foreach (array_slice($shopOps, 0, 3) as $op) {
+                  $links[] = '<a href="' . htmlspecialchars(repsDashOperatorHref((int) $op['id'])) . '">'
+                      . htmlspecialchars((string) $op['name']) . '</a>';
+              }
+              echo implode(', ', $links);
+              if (count($shopOps) > 3) {
+                  echo ' <span class="text-muted">+' . (count($shopOps) - 3) . '</span>';
+              }
+              ?>
+            <?php endif; ?>
+          </td>
           <td><?php echo htmlspecialchars((string) $e['hours']); ?></td>
           <td>$<?php echo number_format($e['gross'], 2); ?></td>
           <td>$<?php echo number_format($e['dsc_pay'], 2); ?></td>
@@ -176,6 +193,10 @@ function repsDashRenderMoneyAdmin(array $user, array $shops): void
     </table>
   </div>
 </div>
+<p class="small text-muted mt-3 mb-0">
+  Drill-down: tap an operator name → worker → day → sessions.
+  Solo individuals (no shop) live under <a href="/dashboard/operators.php">Operators</a>.
+</p>
     <?php
     repsDashRenderFooter();
 }
@@ -266,7 +287,20 @@ function repsDashRenderMoneyOps(array $user, array $shops): void
             <td><?php echo htmlspecialchars((string) $r['e']['hours']); ?></td>
             <td><?php echo htmlspecialchars((string) round((float) $s['reject_rate'] * 100)); ?>%</td>
             <td>$<?php echo number_format($r['drag'], 2); ?></td>
-            <td class="small text-muted"><?php echo htmlspecialchars($why); ?></td>
+            <td class="small text-muted">
+              <?php echo htmlspecialchars($why); ?>
+              <?php if (($r['ops'] ?? []) !== []): ?>
+                ·
+                <?php
+                $opLinks = [];
+                foreach (array_slice($r['ops'], 0, 2) as $op) {
+                    $opLinks[] = '<a href="' . htmlspecialchars(repsDashOperatorHref((int) $op['id'])) . '">'
+                        . htmlspecialchars((string) $op['name']) . '</a>';
+                }
+                echo implode(', ', $opLinks);
+                ?>
+              <?php endif; ?>
+            </td>
           </tr>
         <?php endforeach; ?>
         </tbody>
@@ -289,7 +323,24 @@ function repsDashRenderMoneyOps(array $user, array $shops): void
           <td><?php echo htmlspecialchars($s['name']); ?></td>
           <td><?php echo htmlspecialchars((string) $r['e']['hours']); ?></td>
           <td><?php echo htmlspecialchars((string) round((float) $s['reject_rate'] * 100)); ?>%</td>
-          <td><?php echo (int) $activeOps; ?></td>
+          <td>
+            <?php
+            $activeList = array_values(array_filter($r['ops'], static fn($o) => ($o['status'] ?? '') === 'active'));
+            if ($activeList === []) {
+                echo '0';
+            } else {
+                $bits = [];
+                foreach (array_slice($activeList, 0, 2) as $op) {
+                    $bits[] = '<a href="' . htmlspecialchars(repsDashOperatorHref((int) $op['id'])) . '">'
+                        . htmlspecialchars((string) $op['name']) . '</a>';
+                }
+                echo implode(', ', $bits);
+                if (count($activeList) > 2) {
+                    echo ' <span class="text-muted">+' . (count($activeList) - 2) . '</span>';
+                }
+            }
+            ?>
+          </td>
         </tr>
       <?php endforeach; ?>
       <?php if ($healthy === []): ?>

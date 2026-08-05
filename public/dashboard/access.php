@@ -75,10 +75,15 @@ repsDashRenderPageHeader(
     Admin = DSC portfolio · Ops = hours/reject drag · Sales = book earnings + producers ·
     Owner = “My pay” (shop keep + who produced). Sales has no Operators nav — producers live in Money.
   </p>
-  <p class="mb-0 small text-muted">
+  <p class="mb-2 small text-muted">
     <strong>Drill-down (Shift-shaped):</strong>
     Money / Team names → Worker detail → By day → Day sessions.
     Live Shift walk 2026-08-05: Overview → Team → <code>/dashboard/worker/{userId}</code> → day → session rows (hours-feed).
+  </p>
+  <p class="mb-0 small text-muted">
+    <strong>Learner chrome:</strong>
+    Sales, business owner, employee, and individual get a first-run Home wizard plus an Education Center tab.
+    Admin and ops (and agent) do not — they land on the normal desk.
   </p>
 </div>
 

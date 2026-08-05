@@ -58,6 +58,18 @@ function repsDashRenderDevModeBar(?array $user): void
       <a class="rd-dev-bar__link" href="/dashboard/access.php">Views × roles</a>
       <span class="rd-dev-bar__hint d-none d-lg-inline">Switch seat to audit scoping. Slice A only.</span>
     </form>
+    <?php if (repsDashUsesLearnerChrome((string) $user['role'])): ?>
+    <form method="post" action="/dashboard/onboarding.php" class="rd-dev-bar__onboarding m-0">
+      <input type="hidden" name="return" value="<?php echo htmlspecialchars($return); ?>">
+      <?php if (repsDashIsWizardHome($user)): ?>
+        <input type="hidden" name="action" value="finish">
+        <button type="submit" class="rd-dev-bar__link border-0 bg-transparent p-0">Exit wizard → normal Home</button>
+      <?php else: ?>
+        <input type="hidden" name="action" value="restart">
+        <button type="submit" class="rd-dev-bar__link border-0 bg-transparent p-0">Restart Home wizard</button>
+      <?php endif; ?>
+    </form>
+    <?php endif; ?>
   </div>
     <?php
 }
@@ -85,6 +97,7 @@ function repsDashRenderHeader(string $title = '', string $active = 'home'): void
         'operators' => [$opsLabel, '/dashboard/operators.php', 'bi-people'],
         'sessions' => [$sessionsLabel, '/dashboard/sessions.php', 'bi-camera-reels'],
         'money' => [$moneyLabel, '/dashboard/money.php', 'bi-cash-coin'],
+        'education' => ['Education', '/dashboard/education.php', 'bi-mortarboard'],
         'users' => ['Users', '/dashboard/users.php', 'bi-person-gear'],
         'settings' => ['Settings', '/dashboard/settings.php', 'bi-gear'],
     ];
@@ -105,7 +118,7 @@ function repsDashRenderHeader(string $title = '', string $active = 'home'): void
   <title><?php echo $safeTitle; ?></title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-  <link href="/dashboard/assets/css/dashboard.css?v=3" rel="stylesheet">
+  <link href="/dashboard/assets/css/dashboard.css?v=5" rel="stylesheet">
   <link href="<?php echo htmlspecialchars(repsDashSkinStylesheetHref($skin)); ?>" rel="stylesheet">
 </head>
 <body class="<?php echo htmlspecialchars($bodyClass); ?>">

@@ -8,6 +8,8 @@ $pulse = repsDashPulseForUser($user);
 $shops = repsDashShopsForUser($user);
 $sessions = repsDashSessionsForUser($user);
 $blocks = repsDashHomeBlocksForRole($role);
+$wizard = repsDashIsWizardHome($user);
+$steps = $wizard ? repsDashWizardStepsForRole($role) : [];
 
 $subtitle = match ($role) {
     'employee', 'individual' => 'Your personal pulse · mock data',
@@ -17,15 +19,107 @@ $subtitle = match ($role) {
         . (repsDashCanSeePartnerCode($user) ? ' · Partner ' . $pulse['partner_code'] : ''),
 };
 
+if ($wizard) {
+    $subtitle = 'First-run tour for your seat · finish anytime to open normal Home';
+}
+
 repsDashRenderHeader('Home', 'home');
 repsDashRenderPageHeader('Home', $subtitle);
 ?>
+
+<?php if ($wizard): ?>
+<div class="rd-wizard" id="rdWizard" data-step-count="<?php echo count($steps); ?>">
+  <div class="alert alert-primary border-0 mb-3">
+    <strong>Wizard mode.</strong>
+    New learner seats (sales, owner, employee, individual) start here.
+    Admin and ops skip straight to the normal desk.
+  </div>
+
+  <div class="rd-wizard__progress mb-3" role="progressbar" aria-valuemin="1" aria-valuemax="<?php echo count($steps); ?>" aria-valuenow="1">
+    <div class="rd-wizard__progress-bar" id="rdWizardBar" style="width: <?php echo count($steps) > 0 ? round(100 / count($steps)) : 100; ?>%;"></div>
+  </div>
+  <p class="small text-muted mb-3" id="rdWizardMeta">Step 1 of <?php echo count($steps); ?></p>
+
+  <?php foreach ($steps as $i => $step): ?>
+    <div class="rd-wizard__step surface p-4<?php echo $i === 0 ? '' : ' d-none'; ?>" data-step="<?php echo (int) $i; ?>"<?php echo $i === 0 ? '' : ' hidden'; ?>>
+      <div class="text-muted small mb-1">Step <?php echo $i + 1; ?></div>
+      <h2 class="h4 mb-3"><?php echo htmlspecialchars($step['title']); ?></h2>
+      <p class="mb-3"><?php echo htmlspecialchars($step['body']); ?></p>
+      <?php if (!empty($step['href']) && !empty($step['cta'])): ?>
+        <a class="btn btn-outline-primary btn-sm mb-3" href="<?php echo htmlspecialchars($step['href']); ?>">
+          <?php echo htmlspecialchars($step['cta']); ?>
+        </a>
+      <?php endif; ?>
+    </div>
+  <?php endforeach; ?>
+
+  <div class="d-flex flex-wrap gap-2 align-items-center mt-3">
+    <button type="button" class="btn btn-outline-secondary" id="rdWizardPrev" disabled>Back</button>
+    <button type="button" class="btn btn-primary" id="rdWizardNext">Next</button>
+    <form method="post" action="/dashboard/onboarding.php" class="ms-auto m-0" id="rdWizardFinishForm">
+      <input type="hidden" name="action" value="finish">
+      <button type="submit" class="btn btn-success" id="rdWizardFinish" hidden>Finish tour · open Home</button>
+    </form>
+    <form method="post" action="/dashboard/onboarding.php" class="m-0">
+      <input type="hidden" name="action" value="finish">
+      <button type="submit" class="btn btn-link btn-sm text-muted">Skip tour</button>
+    </form>
+  </div>
+</div>
+<script>
+(function () {
+  var root = document.getElementById('rdWizard');
+  if (!root) return;
+  var steps = root.querySelectorAll('.rd-wizard__step');
+  var bar = document.getElementById('rdWizardBar');
+  var meta = document.getElementById('rdWizardMeta');
+  var prev = document.getElementById('rdWizardPrev');
+  var next = document.getElementById('rdWizardNext');
+  var finish = document.getElementById('rdWizardFinish');
+  var i = 0;
+  function show(n) {
+    i = Math.max(0, Math.min(n, steps.length - 1));
+    steps.forEach(function (el, idx) {
+      var on = idx === i;
+      el.classList.toggle('d-none', !on);
+      if (on) el.removeAttribute('hidden');
+      else el.setAttribute('hidden', '');
+    });
+    var pct = ((i + 1) / steps.length) * 100;
+    if (bar) bar.style.width = pct + '%';
+    if (meta) meta.textContent = 'Step ' + (i + 1) + ' of ' + steps.length;
+    var progress = root.querySelector('.rd-wizard__progress');
+    if (progress) progress.setAttribute('aria-valuenow', String(i + 1));
+    if (prev) prev.disabled = i === 0;
+    var last = i === steps.length - 1;
+    if (next) next.classList.toggle('d-none', last);
+    if (finish) {
+      if (last) finish.removeAttribute('hidden');
+      else finish.setAttribute('hidden', '');
+    }
+  }
+  if (prev) prev.addEventListener('click', function () { show(i - 1); });
+  if (next) next.addEventListener('click', function () { show(i + 1); });
+  show(0);
+})();
+</script>
+
+<?php else: ?>
 
 <div class="alert alert-warning border-0 mb-3">
   <strong>Slice A — mock data.</strong> Numbers are fake for layout and scoping audit.
   Real Shift polling is Slice C (PRD Doc #990).
   <?php if (repsDashCanSeePartnerCode($user)): ?>
     Last sync shown: <?php echo htmlspecialchars($pulse['last_sync']); ?>.
+  <?php endif; ?>
+  <?php if (repsDashUsesLearnerChrome($role)): ?>
+    <span class="d-block d-md-inline ms-md-1">
+      Prefer the tour?
+      <form method="post" action="/dashboard/onboarding.php" class="d-inline">
+        <input type="hidden" name="action" value="restart">
+        <button type="submit" class="btn btn-link btn-sm p-0 align-baseline">Replay Home wizard</button>
+      </form>
+    </span>
   <?php endif; ?>
 </div>
 
@@ -177,5 +271,7 @@ repsDashRenderPageHeader('Home', $subtitle);
     <?php endif; ?>
   </div>
 </div>
+
+<?php endif; ?>
 
 <?php repsDashRenderFooter(); ?>

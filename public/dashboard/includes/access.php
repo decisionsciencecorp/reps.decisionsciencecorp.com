@@ -30,10 +30,10 @@ function repsDashNavKeysForRole(string $role): array
         'ops' => ['home', 'shops', 'operators', 'sessions', 'money', 'settings'],
         // Sales = pipeline (Shops) + Money. Operators appear inside Money, not a roster desk.
         // No session drill-down / vids.
-        'sales' => ['home', 'shops', 'money', 'settings'],
+        'sales' => ['home', 'shops', 'money', 'education', 'settings'],
         // Owner: "Shops" = their shop card (not a pipeline book).
-        'business_owner' => ['home', 'shops', 'operators', 'sessions', 'money', 'settings'],
-        'employee', 'individual' => ['home', 'sessions', 'settings'],
+        'business_owner' => ['home', 'shops', 'operators', 'sessions', 'money', 'education', 'settings'],
+        'employee', 'individual' => ['home', 'sessions', 'education', 'settings'],
         // Agent is an API principal — not a human ops desk.
         'agent' => ['home', 'settings'],
         default => ['home', 'settings'],
@@ -137,15 +137,29 @@ function repsDashViewsRolesMatrix(): array
         [
             'view' => 'home',
             'label' => 'Home',
-            'purpose' => 'Landing pulse for this seat',
+            'purpose' => 'Landing pulse (learners: wizard first, then normal)',
             'cells' => $cells([
-                'admin' => 'All-shop pulse + leads',
-                'ops' => 'All-shop pulse + leads',
-                'sales' => 'Book pulse + leads',
-                'business_owner' => 'My shop pulse + team',
-                'employee' => 'My hours only',
-                'individual' => 'My hours only',
+                'admin' => 'Normal desk (no wizard)',
+                'ops' => 'Normal desk (no wizard)',
+                'sales' => 'Wizard → book pulse + leads',
+                'business_owner' => 'Wizard → shop pulse + team',
+                'employee' => 'Wizard → my hours',
+                'individual' => 'Wizard → my hours',
                 'agent' => 'API stub only',
+            ]),
+        ],
+        [
+            'view' => 'education',
+            'label' => 'Education Center',
+            'purpose' => 'How-tos / capture tips (learner seats)',
+            'cells' => $cells([
+                'admin' => '—',
+                'ops' => '—',
+                'sales' => 'Yes',
+                'business_owner' => 'Yes',
+                'employee' => 'Yes',
+                'individual' => 'Yes',
+                'agent' => '—',
             ]),
         ],
         [

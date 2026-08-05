@@ -155,12 +155,28 @@ function repsDashLoginDemo(string $username): bool
     } else {
         unset($_SESSION['reps_dash_skin']);
     }
+    // Learner seats: wizard until finished (per demo username). Admin/ops/agent skip.
+    if (function_exists('repsDashUsesLearnerChrome') && repsDashUsesLearnerChrome((string) $user['role'])) {
+        $obUser = (string) ($_SESSION['reps_dash_onboarding_user'] ?? '');
+        if ($obUser !== $user['username'] || !isset($_SESSION['reps_dash_onboarding'])) {
+            $_SESSION['reps_dash_onboarding'] = 'wizard';
+            $_SESSION['reps_dash_onboarding_user'] = $user['username'];
+        }
+    } else {
+        $_SESSION['reps_dash_onboarding'] = 'done';
+        $_SESSION['reps_dash_onboarding_user'] = $user['username'];
+    }
     return true;
 }
 
 function repsDashLogout(): void
 {
-    unset($_SESSION['reps_dash_user'], $_SESSION['reps_dash_skin']);
+    unset(
+        $_SESSION['reps_dash_user'],
+        $_SESSION['reps_dash_skin'],
+        $_SESSION['reps_dash_onboarding'],
+        $_SESSION['reps_dash_onboarding_user']
+    );
 }
 
 function repsDashRequireLogin(): array

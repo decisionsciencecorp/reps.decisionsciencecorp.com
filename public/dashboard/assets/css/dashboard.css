@@ -455,6 +455,10 @@ table.table td.col-status {
     position: sticky;
     top: 0;
     z-index: 1080;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
     background: #1a1d23;
     color: #f0f2f5;
     border-bottom: 2px solid #f59e0b;
@@ -465,9 +469,19 @@ table.table td.col-status {
     flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem 0.75rem;
+    flex: 1 1 auto;
     max-width: min(1400px, 100%);
     margin: 0 auto;
     padding: 0.45rem 1rem;
+}
+.rd-dev-bar__onboarding {
+    padding: 0 1rem 0.45rem;
+}
+@media (min-width: 992px) {
+    .rd-dev-bar__onboarding {
+        padding: 0.45rem 1rem 0.45rem 0;
+        margin-right: 0.5rem;
+    }
 }
 .rd-dev-bar__label {
     font-size: 0.72rem;
@@ -523,5 +537,25 @@ table.table td.col-status {
 }
 .rd-access-matrix .rd-cell-none {
     color: var(--dk-text-muted);
+}
+
+/* Home wizard (learner seats) */
+.rd-wizard {
+    max-width: 42rem;
+}
+.rd-wizard__progress {
+    height: 0.4rem;
+    background: var(--dk-border, #dee2e6);
+    border-radius: 999px;
+    overflow: hidden;
+}
+.rd-wizard__progress-bar {
+    height: 100%;
+    background: var(--bs-primary, #0d6efd);
+    border-radius: 999px;
+    transition: width 0.2s ease;
+}
+.rd-wizard__step h2 {
+    letter-spacing: -0.01em;
 }
 

@@ -80,6 +80,21 @@ repsDashRenderPageHeader('Settings', match ($role) {
       </p>
     </div>
     <?php endif; ?>
+
+    <?php if (repsDashUsesLearnerChrome($role)): ?>
+    <div class="surface p-3 mt-3">
+      <h2 class="h5 mb-2">Home wizard</h2>
+      <p class="small text-muted mb-3">
+        New learner seats start on a short Home tour. Replay it anytime, or open Education Center for capture tips.
+      </p>
+      <form method="post" action="/dashboard/onboarding.php" class="d-inline">
+        <input type="hidden" name="action" value="restart">
+        <input type="hidden" name="return" value="/dashboard/">
+        <button type="submit" class="btn btn-outline-primary btn-sm">Replay Home wizard</button>
+      </form>
+      <a class="btn btn-outline-secondary btn-sm ms-1" href="/dashboard/education.php">Education Center</a>
+    </div>
+    <?php endif; ?>
   </div>
 </div>
 

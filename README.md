@@ -18,6 +18,25 @@ Login platform for DSC Reps ops + affiliate seats. PRD: Tasks Doc **#990**.
 - Slice A (now): visual shell + skins + mock data — no real Shift poll yet.
 - Later: auth, schema, Shift sync, JSON API, SDK, SMCP.
 
+### Code layout (`public/dashboard/includes/`)
+
+| File | Role |
+|------|------|
+| `mock-data.php` | Fixtures only |
+| `repository.php` | Data access seam (Slice C swaps here) |
+| `scope.php` | Seat ACL (`*ForUser`, `CanView*`) |
+| `economics.php` | Hourly rate + shop splits |
+| `rollups.php` | Worker/day stats + URL helpers |
+| `partials.php` | Shared session/operator table HTML |
+| `access.php` | Nav / home / Money mode contract |
+| `money-views.php` | Money peer HTML only |
+
+Scope regression (CLI):
+
+```bash
+php tools/scope-matrix-smoke.php
+```
+
 Local: open `http://127.0.0.1:8787/dashboard/login.php` after the preview server below.
 
 ## Local preview

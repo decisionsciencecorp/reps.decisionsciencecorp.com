@@ -30,10 +30,7 @@ if ($operatorId > 0) {
     $backLabel = 'Back to worker';
     $active = 'operators';
 } else {
-    $role = (string) $user['role'];
-    // Sales has no session inbox — day views must be worker-scoped from Money.
-    // Agent has no human desk day lists.
-    if (in_array($role, ['sales', 'agent'], true)) {
+    if (!repsDashCanOpenBookWideDay($user)) {
         http_response_code(403);
         repsDashRenderHeader('Day', 'home');
         echo '<div class="alert alert-danger">Open a worker from Money (or Team) to view a day — no book-wide day inbox for this seat.</div>';
@@ -41,7 +38,6 @@ if ($operatorId > 0) {
         repsDashRenderFooter();
         exit;
     }
-    // Shop/book day — sessions in user scope for that date
     $sessions = array_values(array_filter(
         repsDashSessionsForUser($user),
         static fn(array $s): bool => (($s['day'] ?? '') === $date)
@@ -53,7 +49,7 @@ if ($operatorId > 0) {
     $op = null;
 }
 
-$rate = 20.0;
+$rate = repsDashMoneyHourlyRate();
 $accepted = 0.0;
 $recorded = 0.0;
 $rejectedH = 0.0;
@@ -107,45 +103,13 @@ repsDashRenderPageHeader($title, 'A single day’s activity (mock · Shift day d
 
 <div class="surface p-0">
   <div class="p-3 border-bottom"><h2 class="h5 mb-0">Sessions</h2></div>
-  <div class="table-responsive">
-    <table class="table table-sm align-middle mb-0">
-      <thead>
-        <tr>
-          <th>When</th>
-          <?php if ($operatorId <= 0): ?><th>Operator</th><?php endif; ?>
-          <th>Duration</th>
-          <th>Accepted</th>
-          <th>Status</th>
-          <th>Reason</th>
-        </tr>
-      </thead>
-      <tbody>
-      <?php if ($sessions === []): ?>
-        <tr><td colspan="6" class="text-muted p-3">No sessions this day in mock scope.</td></tr>
-      <?php endif; ?>
-      <?php foreach ($sessions as $s): ?>
-        <tr>
-          <td class="small"><?php echo htmlspecialchars(substr((string) $s['completed_at'], 11)); ?></td>
-          <?php if ($operatorId <= 0): ?>
-            <td>
-              <?php if (!empty($s['operator_id'])): ?>
-                <a href="<?php echo htmlspecialchars(repsDashOperatorHref((int) $s['operator_id'])); ?>">
-                  <?php echo htmlspecialchars($s['operator']); ?>
-                </a>
-              <?php else: ?>
-                <?php echo htmlspecialchars($s['operator']); ?>
-              <?php endif; ?>
-            </td>
-          <?php endif; ?>
-          <td><?php echo htmlspecialchars((string) $s['duration_hours']); ?> h</td>
-          <td><?php echo htmlspecialchars((string) $s['accepted_hours']); ?> h</td>
-          <td><?php repsDashStatusPill($s['status']); ?></td>
-          <td class="small text-muted"><?php echo htmlspecialchars($s['rejection_reason'] !== '' ? $s['rejection_reason'] : '—'); ?></td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
-  </div>
+  <?php
+  repsDashRenderSessionTable($sessions, [
+      'variant' => 'day',
+      'show_operator' => $operatorId <= 0,
+      'empty' => 'No sessions this day in mock scope.',
+  ]);
+  ?>
 </div>
 
 <?php repsDashRenderFooter(); ?>

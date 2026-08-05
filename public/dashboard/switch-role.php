@@ -37,6 +37,7 @@ $pathMap = [
     '/dashboard/money.php' => 'money',
     '/dashboard/education.php' => 'education',
     '/dashboard/education-article.php' => 'education',
+    '/dashboard/onboarding.php' => 'home',
     '/dashboard/users.php' => 'users',
     '/dashboard/settings.php' => 'settings',
     '/dashboard/access.php' => 'access',
@@ -54,10 +55,12 @@ if (in_array($key, ['access', 'operator', 'day', 'education'], true)) {
         parse_str((string) (parse_url($return, PHP_URL_QUERY) ?? ''), $q);
         if ($key === 'operator') {
             $oid = (int) ($q['id'] ?? 0);
+            if ($user && !repsDashCanOpenOperatorDesk($user)) {
+                $return = '/dashboard/';
+            }
         } else {
             $oid = (int) ($q['operator_id'] ?? 0);
-            // Sales/agent may not keep a book-wide day URL after switch.
-            if ($oid <= 0 && $user && in_array((string) $user['role'], ['sales', 'agent'], true)) {
+            if ($oid <= 0 && $user && !repsDashCanOpenBookWideDay($user)) {
                 $return = '/dashboard/';
             }
         }

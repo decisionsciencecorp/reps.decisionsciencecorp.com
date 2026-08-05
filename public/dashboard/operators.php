@@ -17,47 +17,7 @@ repsDashRenderPageHeader(
 ?>
 
 <div class="surface p-0">
-  <div class="table-responsive">
-    <table class="table align-middle mb-0">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Shop</th>
-          <th>Status</th>
-          <th>Accepted</th>
-          <th>Accept rate</th>
-          <th>Last session</th>
-        </tr>
-      </thead>
-      <tbody>
-      <?php if ($operators === []): ?>
-        <tr><td colspan="6" class="text-muted p-3">No operators in scope.</td></tr>
-      <?php endif; ?>
-      <?php foreach ($operators as $op):
-          $st = repsDashOperatorDetailStats((int) $op['id']);
-          ?>
-        <tr>
-          <td>
-            <a class="fw-semibold text-decoration-none" href="<?php echo htmlspecialchars(repsDashOperatorHref((int) $op['id'])); ?>">
-              <?php echo htmlspecialchars($op['name']); ?>
-            </a>
-            <div class="small text-muted"><?php echo htmlspecialchars($op['phone']); ?></div>
-          </td>
-          <td><?php echo htmlspecialchars($op['shop']); ?></td>
-          <td>
-            <?php repsDashStatusPill($op['status']); ?>
-            <?php if (!empty($op['matched'])): ?>
-              <span class="badge text-bg-light border ms-1">Matched</span>
-            <?php endif; ?>
-          </td>
-          <td><?php echo htmlspecialchars((string) $st['accepted_hours']); ?> h</td>
-          <td><?php echo $st['acceptance_rate'] === null ? '—' : ((int) $st['acceptance_rate'] . '%'); ?></td>
-          <td class="small"><?php echo htmlspecialchars($op['last_session']); ?></td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
-  </div>
+  <?php repsDashRenderOperatorRoster($operators); ?>
 </div>
 
 <?php repsDashRenderFooter(); ?>

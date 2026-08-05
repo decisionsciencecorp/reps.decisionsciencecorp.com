@@ -214,27 +214,13 @@ repsDashRenderPageHeader('Home', $subtitle);
   <div class="col-lg-7">
     <div class="surface p-3">
       <h2 class="h5 mb-3">Your recent sessions</h2>
-      <div class="table-responsive">
-        <table class="table table-sm align-middle mb-0">
-          <thead><tr><th>When</th><th>Status</th><th>Accepted</th><th>Reason</th></tr></thead>
-          <tbody>
-          <?php
-          $recent = array_slice($sessions, 0, 8);
-          if ($recent === []):
-          ?>
-            <tr><td colspan="4" class="text-muted">No sessions yet (mock).</td></tr>
-          <?php endif; ?>
-          <?php foreach ($recent as $s): ?>
-            <tr>
-              <td class="small"><?php echo htmlspecialchars($s['completed_at']); ?></td>
-              <td><?php repsDashStatusPill($s['status']); ?></td>
-              <td><?php echo htmlspecialchars((string) $s['accepted_hours']); ?></td>
-              <td class="small text-muted"><?php echo htmlspecialchars($s['rejection_reason'] !== '' ? $s['rejection_reason'] : '—'); ?></td>
-            </tr>
-          <?php endforeach; ?>
-          </tbody>
-        </table>
-      </div>
+      <?php
+      repsDashRenderSessionTable($sessions, [
+          'variant' => 'recent',
+          'limit' => 8,
+          'empty' => 'No sessions yet (mock).',
+      ]);
+      ?>
       <a class="btn btn-sm btn-outline-primary mt-3" href="/dashboard/sessions.php">All my sessions</a>
     </div>
   </div>

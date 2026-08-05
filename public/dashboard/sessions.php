@@ -44,59 +44,15 @@ repsDashRenderPageHeader($selfOnly ? 'My sessions' : 'Sessions / hours', $subtit
 <?php endif; ?>
 
 <div class="surface p-0">
-  <div class="table-responsive">
-    <table class="table table-sm align-middle mb-0">
-      <thead>
-        <tr>
-          <th>Session</th>
-          <?php if ($showOperator): ?><th>Operator</th><?php endif; ?>
-          <?php if ($showShop): ?><th>Shop</th><?php endif; ?>
-          <th>Status</th>
-          <th>Duration</th>
-          <th>Accepted</th>
-          <th>Reason</th>
-          <th>Completed</th>
-        </tr>
-      </thead>
-      <tbody>
-      <?php if ($sessions === []): ?>
-        <tr><td colspan="8" class="text-muted p-3">No sessions in scope for this seat.</td></tr>
-      <?php endif; ?>
-      <?php foreach ($sessions as $s): ?>
-        <tr>
-          <td class="small font-monospace"><?php echo htmlspecialchars($s['session_id']); ?></td>
-          <?php if ($showOperator): ?>
-            <td>
-              <?php if (!empty($s['operator_id'])): ?>
-                <a href="<?php echo htmlspecialchars(repsDashOperatorHref((int) $s['operator_id'])); ?>">
-                  <?php echo htmlspecialchars($s['operator']); ?>
-                </a>
-              <?php else: ?>
-                <?php echo htmlspecialchars($s['operator']); ?>
-              <?php endif; ?>
-            </td>
-          <?php endif; ?>
-          <?php if ($showShop): ?>
-            <td><?php echo htmlspecialchars($role === 'individual' ? '—' : $s['shop']); ?></td>
-          <?php endif; ?>
-          <td><?php repsDashStatusPill($s['status']); ?></td>
-          <td><?php echo htmlspecialchars((string) $s['duration_hours']); ?></td>
-          <td><?php echo htmlspecialchars((string) $s['accepted_hours']); ?></td>
-          <td class="small text-muted"><?php echo htmlspecialchars($s['rejection_reason'] !== '' ? $s['rejection_reason'] : '—'); ?></td>
-          <td class="small">
-            <?php if (!empty($s['day'])): ?>
-              <a href="<?php echo htmlspecialchars(repsDashDayHref((string) $s['day'], !empty($s['operator_id']) ? (int) $s['operator_id'] : null)); ?>">
-                <?php echo htmlspecialchars($s['completed_at']); ?>
-              </a>
-            <?php else: ?>
-              <?php echo htmlspecialchars($s['completed_at']); ?>
-            <?php endif; ?>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
-  </div>
+  <?php
+  repsDashRenderSessionTable($sessions, [
+      'variant' => 'inbox',
+      'show_operator' => $showOperator,
+      'show_shop' => $showShop,
+      'shop_dash' => $role === 'individual',
+      'empty' => 'No sessions in scope for this seat.',
+  ]);
+  ?>
 </div>
 
 <?php repsDashRenderFooter(); ?>

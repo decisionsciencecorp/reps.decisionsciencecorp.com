@@ -5,45 +5,9 @@ if (!defined('REPS_DASH_LOADED')) {
     die('Direct access not permitted');
 }
 
-/** Mock $/accepted hour — replace when Slice C + #1570 lock real rates. */
-function repsDashMoneyHourlyRate(): float
-{
-    return 20.0;
-}
-
 /**
- * @param list<array<string, mixed>> $shops
- * @return array{hours: float, gross: float, shop_pay: float, dsc_pay: float, partner_lane: float, your_affiliate: float}
+ * Money page HTML peers only — rates/economics live in economics.php.
  */
-function repsDashMoneyShopEconomics(array $shop, float $rate): array
-{
-    $hours = (float) $shop['accepted_hours_7d'];
-    $gross = $hours * $rate;
-    $shopShare = (float) $shop['agreed_shop_split'];
-    $shopPay = $gross * $shopShare;
-    $dscPay = $gross - $shopPay;
-    // Mock: affiliate display cut = half of non-shop lane when split > 0
-    $yourAffiliate = $shopShare <= 0.001 ? 0.0 : $dscPay * 0.5;
-    return [
-        'hours' => $hours,
-        'gross' => $gross,
-        'shop_pay' => $shopPay,
-        'dsc_pay' => $dscPay,
-        'partner_lane' => $dscPay,
-        'your_affiliate' => $yourAffiliate,
-        'internal' => $shopShare <= 0.001,
-    ];
-}
-
-/** @param list<array<string, mixed>> $ops */
-function repsDashMoneyOpsByShopId(array $ops): array
-{
-    $by = [];
-    foreach ($ops as $op) {
-        $by[(int) $op['shop_id']][] = $op;
-    }
-    return $by;
-}
 
 function repsDashRenderMoneyAdmin(array $user, array $shops): void
 {
@@ -167,21 +131,11 @@ function repsDashRenderMoneyAdmin(array $user, array $shops): void
           <td class="small"><code><?php echo htmlspecialchars((string) ($s['assigned_sales_rep'] ?? '—')); ?></code></td>
           <td class="small text-muted"><?php echo $e['internal'] ? 'internal' : 'affiliate split'; ?></td>
           <td class="small">
-            <?php if ($shopOps === []): ?>
-              <?php echo (int) $r['ops']; ?>
-            <?php else: ?>
-              <?php
-              $links = [];
-              foreach (array_slice($shopOps, 0, 3) as $op) {
-                  $links[] = '<a href="' . htmlspecialchars(repsDashOperatorHref((int) $op['id'])) . '">'
-                      . htmlspecialchars((string) $op['name']) . '</a>';
-              }
-              echo implode(', ', $links);
-              if (count($shopOps) > 3) {
-                  echo ' <span class="text-muted">+' . (count($shopOps) - 3) . '</span>';
-              }
-              ?>
-            <?php endif; ?>
+            <?php
+            echo $shopOps === []
+                ? (string) (int) $r['ops']
+                : repsDashOperatorLinksHtml($shopOps, 3);
+            ?>
           </td>
           <td><?php echo htmlspecialchars((string) $e['hours']); ?></td>
           <td>$<?php echo number_format($e['gross'], 2); ?></td>
@@ -290,15 +244,7 @@ function repsDashRenderMoneyOps(array $user, array $shops): void
             <td class="small text-muted">
               <?php echo htmlspecialchars($why); ?>
               <?php if (($r['ops'] ?? []) !== []): ?>
-                ·
-                <?php
-                $opLinks = [];
-                foreach (array_slice($r['ops'], 0, 2) as $op) {
-                    $opLinks[] = '<a href="' . htmlspecialchars(repsDashOperatorHref((int) $op['id'])) . '">'
-                        . htmlspecialchars((string) $op['name']) . '</a>';
-                }
-                echo implode(', ', $opLinks);
-                ?>
+                · <?php echo repsDashOperatorLinksHtml($r['ops'], 2); ?>
               <?php endif; ?>
             </td>
           </tr>
@@ -325,19 +271,7 @@ function repsDashRenderMoneyOps(array $user, array $shops): void
           <td>
             <?php
             $activeList = array_values(array_filter($r['ops'], static fn($o) => ($o['status'] ?? '') === 'active'));
-            if ($activeList === []) {
-                echo '0';
-            } else {
-                $bits = [];
-                foreach (array_slice($activeList, 0, 2) as $op) {
-                    $bits[] = '<a href="' . htmlspecialchars(repsDashOperatorHref((int) $op['id'])) . '">'
-                        . htmlspecialchars((string) $op['name']) . '</a>';
-                }
-                echo implode(', ', $bits);
-                if (count($activeList) > 2) {
-                    echo ' <span class="text-muted">+' . (count($activeList) - 2) . '</span>';
-                }
-            }
+            echo repsDashOperatorLinksHtml($activeList, 2);
             ?>
           </td>
         </tr>
@@ -454,9 +388,7 @@ function repsDashRenderMoneySales(array $user, array $shops): void
           <?php foreach ($block['ops'] as $op): ?>
             <tr>
               <td class="fw-semibold">
-                <a href="<?php echo htmlspecialchars(repsDashOperatorHref((int) $op['id'])); ?>">
-                  <?php echo htmlspecialchars($op['name']); ?>
-                </a>
+                <?php echo repsDashOperatorLinkHtml((int) $op['id'], (string) $op['name']); ?>
               </td>
               <td><?php repsDashStatusPill($op['status']); ?></td>
               <td><?php echo htmlspecialchars((string) $op['accepted_7d']); ?></td>
@@ -564,9 +496,7 @@ function repsDashRenderMoneyOwner(array $user, array $shops): void
                 ?>
               <tr>
                 <td class="fw-semibold">
-                  <a href="<?php echo htmlspecialchars(repsDashOperatorHref((int) $op['id'])); ?>">
-                    <?php echo htmlspecialchars($op['name']); ?>
-                  </a>
+                  <?php echo repsDashOperatorLinkHtml((int) $op['id'], (string) $op['name']); ?>
                 </td>
                 <td><?php repsDashStatusPill($op['status']); ?></td>
                 <td><?php echo htmlspecialchars((string) $op['accepted_7d']); ?></td>
@@ -576,9 +506,7 @@ function repsDashRenderMoneyOwner(array $user, array $shops): void
             <?php foreach ($invited as $op): ?>
               <tr class="text-muted">
                 <td>
-                  <a href="<?php echo htmlspecialchars(repsDashOperatorHref((int) $op['id'])); ?>">
-                    <?php echo htmlspecialchars($op['name']); ?>
-                  </a>
+                  <?php echo repsDashOperatorLinkHtml((int) $op['id'], (string) $op['name']); ?>
                 </td>
                 <td><?php repsDashStatusPill($op['status']); ?></td>
                 <td>—</td>

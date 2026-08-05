@@ -71,8 +71,9 @@ repsDashRenderPageHeader(
     (or a future DSC app) exposes them over API — no video player in Reps until then.
   </p>
   <p class="mb-0 small text-muted">
-    <strong>Sales:</strong> Home + Shops (pipeline) + Money. Operator visibility is <em>inside Money</em>
-    (who’s producing at each shop in the book) — not a separate Operators desk, and not Sessions.
+    <strong>Money is four peers, not one table:</strong>
+    Admin = DSC portfolio · Ops = hours/reject drag · Sales = book earnings + producers ·
+    Owner = “My pay” (shop keep + who produced). Sales has no Operators nav — producers live in Money.
   </p>
 </div>
 

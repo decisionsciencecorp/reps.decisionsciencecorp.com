@@ -74,12 +74,17 @@ function repsDashRenderHeader(string $title = '', string $active = 'home'): void
     $shopsLabel = $role === 'business_owner' ? 'My shop' : 'Shops';
     $opsLabel = $role === 'business_owner' ? 'Team' : 'Operators';
     $sessionsLabel = in_array($role, ['employee', 'individual'], true) ? 'My sessions' : 'Sessions';
+    $moneyLabel = match ($role) {
+        'business_owner' => 'My pay',
+        'sales' => 'Money',
+        default => 'Money',
+    };
     $navAll = [
         'home' => ['Home', '/dashboard/', 'bi-speedometer2'],
         'shops' => [$shopsLabel, '/dashboard/shops.php', 'bi-shop'],
         'operators' => [$opsLabel, '/dashboard/operators.php', 'bi-people'],
         'sessions' => [$sessionsLabel, '/dashboard/sessions.php', 'bi-camera-reels'],
-        'money' => ['Money', '/dashboard/money.php', 'bi-cash-coin'],
+        'money' => [$moneyLabel, '/dashboard/money.php', 'bi-cash-coin'],
         'users' => ['Users', '/dashboard/users.php', 'bi-person-gear'],
         'settings' => ['Settings', '/dashboard/settings.php', 'bi-gear'],
     ];

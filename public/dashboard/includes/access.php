@@ -74,13 +74,21 @@ function repsDashSettingsPanelsForRole(string $role): array
     };
 }
 
-/** Money page: which economic columns a role may see. */
+/**
+ * Money page peer mode — each role gets a distinct redesign (not one table).
+ *
+ * - dsc_command: admin portfolio ledger
+ * - ops_pulse: production / reject-drag monitoring
+ * - affiliate_book: sales earnings + producers
+ * - owner_payout: single-shop keep + team contribution
+ */
 function repsDashMoneyModeForRole(string $role): string
 {
     return match ($role) {
-        'admin', 'ops' => 'dsc_full',       // gross + DSC share + shop share + lane
-        'sales' => 'affiliate_book',        // book hours/gross/shop pay — no DSC take column
-        'business_owner' => 'owner_shop',   // own shop hours/gross/your pay — no DSC take
+        'admin' => 'dsc_command',
+        'ops' => 'ops_pulse',
+        'sales' => 'affiliate_book',
+        'business_owner' => 'owner_payout',
         default => 'none',
     };
 }
@@ -201,10 +209,10 @@ function repsDashViewsRolesMatrix(): array
             'label' => 'Money',
             'purpose' => 'Economics (+ sales: who produces in the book)',
             'cells' => $cells([
-                'admin' => 'Full (DSC + shop)',
-                'ops' => 'Full (DSC + shop)',
-                'sales' => 'Affiliate book $ + operators/shop',
-                'business_owner' => 'Own shop pay',
+                'admin' => 'DSC portfolio command',
+                'ops' => 'Hours health + reject drag',
+                'sales' => 'Affiliate book $ + producers',
+                'business_owner' => 'My pay (shop keep + team)',
                 'employee' => '—',
                 'individual' => '—',
                 'agent' => '—',

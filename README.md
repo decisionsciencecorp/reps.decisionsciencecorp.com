@@ -25,8 +25,8 @@ Login platform for DSC Reps ops + affiliate seats. PRD: Tasks Doc **#990**.
 |------|--------|
 | DB | `db/dashboard.sqlite` (sibling of `public/` / multihost `html/`) |
 | Override | `REPS_DASH_DB_PATH` |
-| Dev Mode | off unless `REPS_DASH_DEV_MODE=1` |
-| Seed password | `reps-demo` (all demo seats; change via Users) |
+| Dev Mode | **on by default** (demo); set `REPS_DASH_DEV_MODE=0` to lock down |
+| Seed password | `reps-demo` (listed on login while Dev Mode is on) |
 | Login | username + password at `/dashboard/login.php` |
 
 ### Code layout (`public/dashboard/includes/`)

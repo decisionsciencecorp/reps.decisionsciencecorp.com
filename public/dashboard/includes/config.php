@@ -42,11 +42,11 @@ if (!defined('REPS_DASH_PASSWORD_MIN')) {
 }
 
 /**
- * Dev Mode (role switcher / seat picker). Off unless explicitly enabled.
- * Set REPS_DASH_DEV_MODE=1 in the process env, or define before bootstrap.
+ * Dev Mode (role switcher / seat picker / demo creds on login).
+ * Default ON while the product is still in demo; set REPS_DASH_DEV_MODE=0 to lock down.
  */
 if (!defined('REPS_DASH_DEV_MODE')) {
-    $dev = repsDashEnvOrDefault('REPS_DASH_DEV_MODE', '0');
+    $dev = repsDashEnvOrDefault('REPS_DASH_DEV_MODE', '1');
     define('REPS_DASH_DEV_MODE', filter_var((string) $dev, FILTER_VALIDATE_BOOLEAN));
 }
 

@@ -181,9 +181,9 @@ function repsDashViewsRolesMatrix(): array
             'label' => 'Leads CRM',
             'purpose' => 'Join funnel queue + activity desk',
             'cells' => $cells([
-                'admin' => 'All queues + affiliate',
-                'ops' => 'All queues + affiliate',
-                'sales' => 'My queue + feed',
+                'admin' => 'All queues + affiliate + path filters',
+                'ops' => 'All queues + affiliate + path filters',
+                'sales' => 'My operator/shop queue only',
                 'business_owner' => '—',
                 'employee' => '—',
                 'individual' => '—',

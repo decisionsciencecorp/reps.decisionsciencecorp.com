@@ -12,29 +12,36 @@ if (!repsDashCanManageApplyLeads($user)) {
 
 repsDashMarkLeadsSeen($user);
 
+$role = (string) $user['role'];
+$isAdminOps = in_array($role, ['admin', 'ops'], true);
+
 $statusFilter = trim((string) ($_GET['status'] ?? ''));
 if ($statusFilter !== '' && !in_array($statusFilter, ['open', 'claimed', 'closed'], true)) {
     $statusFilter = '';
 }
-$kindFilter = trim((string) ($_GET['kind'] ?? ''));
-if ($kindFilter !== '' && !in_array($kindFilter, ['operator', 'shop', 'affiliate'], true)) {
-    $kindFilter = '';
+
+// Signup path type (form path) — admin/ops only.
+$pathFilter = '';
+if ($isAdminOps) {
+    $pathFilter = trim((string) ($_GET['path'] ?? ''));
+    if ($pathFilter !== '' && !in_array($pathFilter, ['on_job', 'at_home', 'company', 'affiliate'], true)) {
+        $pathFilter = '';
+    }
 }
 
-$role = (string) $user['role'];
 $myDefault = $role === 'sales';
 $scope = trim((string) ($_GET['scope'] ?? ($myDefault ? 'mine' : 'all')));
 if (!in_array($scope, ['mine', 'all'], true)) {
     $scope = $myDefault ? 'mine' : 'all';
 }
-// Sales always mine unless somehow admin; admin/ops can choose.
-$myQueueOnly = ($role === 'sales') || ($scope === 'mine' && in_array($role, ['admin', 'ops'], true));
+$myQueueOnly = ($role === 'sales') || ($scope === 'mine' && $isAdminOps);
 
 $leads = repsDashListApplyLeadsForUser(
     $user,
     $statusFilter !== '' ? $statusFilter : null,
-    $kindFilter !== '' ? $kindFilter : null,
-    $myQueueOnly
+    null,
+    $myQueueOnly,
+    $pathFilter !== '' ? $pathFilter : null
 );
 $openCount = repsDashCountOpenApplyLeads();
 
@@ -56,8 +63,21 @@ $sourceLabels = [
     'none' => 'Unassigned',
 ];
 
+$qsBase = static function (array $overrides = []) use ($scope, $statusFilter, $pathFilter, $isAdminOps): string {
+    $q = ['scope' => $overrides['scope'] ?? $scope];
+    $st = array_key_exists('status', $overrides) ? $overrides['status'] : $statusFilter;
+    $pt = array_key_exists('path', $overrides) ? $overrides['path'] : $pathFilter;
+    if ($st !== null && $st !== '') {
+        $q['status'] = $st;
+    }
+    if ($isAdminOps && $pt !== null && $pt !== '') {
+        $q['path'] = $pt;
+    }
+    return '?' . http_build_query($q);
+};
+
 $subtitle = $myQueueOnly
-    ? 'My queue · join funnel CRM'
+    ? 'My queue · operator & shop leads'
     : 'All queues · ' . $openCount . ' open/claimed';
 
 repsDashRenderHeader('Leads', 'leads');
@@ -65,25 +85,26 @@ repsDashRenderPageHeader('Leads CRM', $subtitle);
 ?>
 
 <p class="mb-3 small d-flex flex-wrap gap-2 align-items-center">
-  <?php if (in_array($role, ['admin', 'ops'], true)): ?>
+  <?php if ($isAdminOps): ?>
     Scope:
-    <a href="?scope=mine<?= $statusFilter !== '' ? '&status=' . urlencode($statusFilter) : '' ?><?= $kindFilter !== '' ? '&kind=' . urlencode($kindFilter) : '' ?>"
-       class="<?= $scope === 'mine' ? 'fw-semibold' : '' ?>">Mine</a> ·
-    <a href="?scope=all<?= $statusFilter !== '' ? '&status=' . urlencode($statusFilter) : '' ?><?= $kindFilter !== '' ? '&kind=' . urlencode($kindFilter) : '' ?>"
-       class="<?= $scope === 'all' ? 'fw-semibold' : '' ?>">All</a>
+    <a href="<?= htmlspecialchars($qsBase(['scope' => 'mine'])) ?>" class="<?= $scope === 'mine' ? 'fw-semibold' : '' ?>">Mine</a> ·
+    <a href="<?= htmlspecialchars($qsBase(['scope' => 'all'])) ?>" class="<?= $scope === 'all' ? 'fw-semibold' : '' ?>">All</a>
     <span class="text-muted">|</span>
   <?php endif; ?>
   Status:
-  <a href="?scope=<?= urlencode($scope) ?><?= $kindFilter !== '' ? '&kind=' . urlencode($kindFilter) : '' ?>" class="<?= $statusFilter === '' ? 'fw-semibold' : '' ?>">All</a> ·
-  <a href="?scope=<?= urlencode($scope) ?>&status=open<?= $kindFilter !== '' ? '&kind=' . urlencode($kindFilter) : '' ?>" class="<?= $statusFilter === 'open' ? 'fw-semibold' : '' ?>">Open</a> ·
-  <a href="?scope=<?= urlencode($scope) ?>&status=claimed<?= $kindFilter !== '' ? '&kind=' . urlencode($kindFilter) : '' ?>" class="<?= $statusFilter === 'claimed' ? 'fw-semibold' : '' ?>">Claimed</a> ·
-  <a href="?scope=<?= urlencode($scope) ?>&status=closed<?= $kindFilter !== '' ? '&kind=' . urlencode($kindFilter) : '' ?>" class="<?= $statusFilter === 'closed' ? 'fw-semibold' : '' ?>">Closed</a>
-  <span class="text-muted">|</span>
-  Kind:
-  <a href="?scope=<?= urlencode($scope) ?><?= $statusFilter !== '' ? '&status=' . urlencode($statusFilter) : '' ?>" class="<?= $kindFilter === '' ? 'fw-semibold' : '' ?>">All</a> ·
-  <a href="?scope=<?= urlencode($scope) ?>&kind=operator<?= $statusFilter !== '' ? '&status=' . urlencode($statusFilter) : '' ?>" class="<?= $kindFilter === 'operator' ? 'fw-semibold' : '' ?>">Operator</a> ·
-  <a href="?scope=<?= urlencode($scope) ?>&kind=shop<?= $statusFilter !== '' ? '&status=' . urlencode($statusFilter) : '' ?>" class="<?= $kindFilter === 'shop' ? 'fw-semibold' : '' ?>">Shop</a> ·
-  <a href="?scope=<?= urlencode($scope) ?>&kind=affiliate<?= $statusFilter !== '' ? '&status=' . urlencode($statusFilter) : '' ?>" class="<?= $kindFilter === 'affiliate' ? 'fw-semibold' : '' ?>">Affiliate</a>
+  <a href="<?= htmlspecialchars($qsBase(['status' => ''])) ?>" class="<?= $statusFilter === '' ? 'fw-semibold' : '' ?>">All</a> ·
+  <a href="<?= htmlspecialchars($qsBase(['status' => 'open'])) ?>" class="<?= $statusFilter === 'open' ? 'fw-semibold' : '' ?>">Open</a> ·
+  <a href="<?= htmlspecialchars($qsBase(['status' => 'claimed'])) ?>" class="<?= $statusFilter === 'claimed' ? 'fw-semibold' : '' ?>">Claimed</a> ·
+  <a href="<?= htmlspecialchars($qsBase(['status' => 'closed'])) ?>" class="<?= $statusFilter === 'closed' ? 'fw-semibold' : '' ?>">Closed</a>
+  <?php if ($isAdminOps): ?>
+    <span class="text-muted">|</span>
+    Signup path:
+    <a href="<?= htmlspecialchars($qsBase(['path' => ''])) ?>" class="<?= $pathFilter === '' ? 'fw-semibold' : '' ?>">All</a> ·
+    <a href="<?= htmlspecialchars($qsBase(['path' => 'on_job'])) ?>" class="<?= $pathFilter === 'on_job' ? 'fw-semibold' : '' ?>">On the job</a> ·
+    <a href="<?= htmlspecialchars($qsBase(['path' => 'at_home'])) ?>" class="<?= $pathFilter === 'at_home' ? 'fw-semibold' : '' ?>">At home</a> ·
+    <a href="<?= htmlspecialchars($qsBase(['path' => 'company'])) ?>" class="<?= $pathFilter === 'company' ? 'fw-semibold' : '' ?>">Company / team</a> ·
+    <a href="<?= htmlspecialchars($qsBase(['path' => 'affiliate'])) ?>" class="<?= $pathFilter === 'affiliate' ? 'fw-semibold' : '' ?>">Affiliate</a>
+  <?php endif; ?>
 </p>
 
 <div class="surface p-0">
@@ -93,7 +114,7 @@ repsDashRenderPageHeader('Leads CRM', $subtitle);
         <tr>
           <th>Name</th>
           <th>Kind</th>
-          <th>Path</th>
+          <th>Signup path</th>
           <th>Contact</th>
           <th>Status</th>
           <th>Source</th>

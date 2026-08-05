@@ -22,18 +22,19 @@ if ($lead === null) {
     exit;
 }
 
-// Sales may only open their assigned leads (admin/ops see all).
+// Sales may only open assigned operator/shop leads. Affiliate leads = admin/ops only.
 $role = (string) $user['role'];
-if ($role === 'sales') {
-    $assignee = (string) ($lead['assigned_sales_rep'] ?? '');
-    if ($assignee !== '' && $assignee !== (string) $user['username']) {
-        http_response_code(403);
-        repsDashRenderHeader('Lead', 'leads');
+if (!repsDashCanViewLead($user, $lead)) {
+    http_response_code(403);
+    repsDashRenderHeader('Lead', 'leads');
+    if (($lead['join_kind'] ?? '') === 'affiliate') {
+        echo '<div class="alert alert-warning">Affiliate partner leads are visible to admin and ops only.</div>';
+    } else {
         echo '<div class="alert alert-warning">This lead is in another rep’s queue.</div>';
-        echo '<a class="btn btn-outline-primary" href="/dashboard/leads.php">Back to my queue</a>';
-        repsDashRenderFooter();
-        exit;
     }
+    echo '<a class="btn btn-outline-primary" href="/dashboard/leads.php">Back to leads</a>';
+    repsDashRenderFooter();
+    exit;
 }
 
 $flash = '';

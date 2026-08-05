@@ -213,6 +213,57 @@ final class LeadsCrmTest extends TestCase
         $this->assertFalse($missing['ok']);
     }
 
+    public function testSalesCannotSeeAffiliateLeads(): void
+    {
+        $r = repsDashCreateApplyLead([
+            'name' => 'Hidden Aff',
+            'phone' => '2145550002',
+            'email' => 'hiddenaff@example.com',
+            'join_kind' => 'affiliate',
+            'path' => 'affiliate',
+            'expectations_ack' => 1,
+        ]);
+        $this->assertTrue($r['ok']);
+        $jim = repsDashFindUserByUsername('jim');
+        $mark = repsDashFindUserByUsername('mark');
+        $this->assertFalse(repsDashCanViewAffiliateLeads($jim));
+        $this->assertTrue(repsDashCanViewAffiliateLeads($mark));
+        $this->assertFalse(repsDashCanViewLead($jim, $r['lead']));
+        $this->assertTrue(repsDashCanViewLead($mark, $r['lead']));
+
+        $jimList = repsDashListApplyLeadsForUser($jim, null, null, true);
+        foreach ($jimList as $l) {
+            $this->assertNotSame('affiliate', $l['join_kind']);
+        }
+        $this->assertSame([], repsDashListApplyLeadsForUser($jim, null, 'affiliate', true));
+        $this->assertSame([], repsDashListApplyLeadsForUser($jim, null, null, true, 'affiliate'));
+
+        $adminAff = repsDashListApplyLeadsForUser($mark, null, null, false, 'affiliate');
+        $this->assertNotEmpty($adminAff);
+        foreach ($adminAff as $l) {
+            $this->assertSame('affiliate', $l['path']);
+        }
+    }
+
+    public function testAdminPathFilterOnJob(): void
+    {
+        repsDashCreateApplyLead([
+            'name' => 'Path On Job',
+            'phone' => '2145550003',
+            'email' => 'pathonjob@example.com',
+            'path' => 'on_job',
+            'expectations_ack' => 1,
+            'affiliate_code' => 'jim',
+        ]);
+        $mark = repsDashFindUserByUsername('mark');
+        $rows = repsDashListApplyLeadsForUser($mark, null, null, false, 'on_job');
+        $this->assertNotEmpty($rows);
+        foreach ($rows as $l) {
+            $this->assertSame('on_job', $l['path']);
+            $this->assertNotSame('affiliate', $l['join_kind']);
+        }
+    }
+
     public function testSalesQueueScopingAndFeedBadge(): void
     {
         repsDashCreateApplyLead([

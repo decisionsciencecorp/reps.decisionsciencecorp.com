@@ -228,6 +228,34 @@ function repsDashListLeadEvents(int $leadId, int $limit = 100): array
 }
 
 /**
+ * Affiliate partner leads are admin/ops only — never sales.
+ */
+function repsDashCanViewAffiliateLeads(array $user): bool
+{
+    return in_array((string) ($user['role'] ?? ''), ['admin', 'ops'], true);
+}
+
+/**
+ * Whether this user may open a given lead row.
+ */
+function repsDashCanViewLead(array $user, array $lead): bool
+{
+    $role = (string) ($user['role'] ?? '');
+    $kind = (string) ($lead['join_kind'] ?? 'operator');
+    if ($kind === 'affiliate') {
+        return repsDashCanViewAffiliateLeads($user);
+    }
+    if (in_array($role, ['admin', 'ops'], true)) {
+        return true;
+    }
+    if ($role === 'sales') {
+        $assignee = (string) ($lead['assigned_sales_rep'] ?? '');
+        return $assignee === '' || $assignee === (string) ($user['username'] ?? '');
+    }
+    return false;
+}
+
+/**
  * @return list<array<string, mixed>>
  */
 function repsDashListLeadFeedForUser(array $user, int $limit = 20): array
@@ -247,12 +275,13 @@ function repsDashListLeadFeedForUser(array $user, int $limit = 20): array
 
     if ($role === 'sales') {
         $stmt = repsDashDb()->prepare(
-            'SELECT e.*, l.name AS lead_name, l.join_kind, l.assigned_sales_rep
+            "SELECT e.*, l.name AS lead_name, l.join_kind, l.assigned_sales_rep
              FROM lead_events e
              INNER JOIN apply_leads l ON l.id = e.lead_id
              WHERE l.assigned_sales_rep = ?
+               AND l.join_kind != 'affiliate'
              ORDER BY datetime(e.created_at) DESC, e.id DESC
-             LIMIT ?'
+             LIMIT ?"
         );
         $stmt->bindValue(1, $username);
         $stmt->bindValue(2, $limit, PDO::PARAM_INT);
@@ -287,6 +316,7 @@ function repsDashLeadsBadgeCount(array $user): int
         $stmt = repsDashDb()->prepare(
             "SELECT COUNT(*) FROM apply_leads
              WHERE assigned_sales_rep = ?
+               AND join_kind != 'affiliate'
                AND status IN ('open','claimed')
                AND datetime(COALESCE(last_event_at, created_at)) > datetime(?)"
         );
@@ -305,24 +335,49 @@ function repsDashLeadsBadgeCount(array $user): int
 /**
  * @return list<array<string, mixed>>
  */
-function repsDashListApplyLeadsForUser(array $user, ?string $status = null, ?string $joinKind = null, bool $myQueueOnly = false): array
-{
+function repsDashListApplyLeadsForUser(
+    array $user,
+    ?string $status = null,
+    ?string $joinKind = null,
+    bool $myQueueOnly = false,
+    ?string $path = null
+): array {
     $role = (string) ($user['role'] ?? '');
     $sql = 'SELECT * FROM apply_leads WHERE 1=1';
     $params = [];
-    if ($role === 'sales' || $myQueueOnly) {
+
+    if ($role === 'sales') {
+        // Sales: own operator/shop queue only — never affiliate partner leads.
+        $sql .= " AND assigned_sales_rep = ? AND join_kind != 'affiliate'";
+        $params[] = (string) $user['username'];
+        // Ignore affiliate kind/path filters from the query string.
+        if ($joinKind === 'affiliate' || $path === 'affiliate') {
+            return [];
+        }
+    } elseif ($myQueueOnly && in_array($role, ['admin', 'ops'], true)) {
         $sql .= ' AND assigned_sales_rep = ?';
         $params[] = (string) $user['username'];
     } elseif (!in_array($role, ['admin', 'ops'], true)) {
         return [];
     }
+
     if ($status !== null && $status !== '') {
         $sql .= ' AND status = ?';
         $params[] = $status;
     }
     if ($joinKind !== null && $joinKind !== '') {
+        if ($joinKind === 'affiliate' && !repsDashCanViewAffiliateLeads($user)) {
+            return [];
+        }
         $sql .= ' AND join_kind = ?';
         $params[] = $joinKind;
+    }
+    if ($path !== null && $path !== '') {
+        if ($path === 'affiliate' && !repsDashCanViewAffiliateLeads($user)) {
+            return [];
+        }
+        $sql .= ' AND path = ?';
+        $params[] = $path;
     }
     $sql .= ' ORDER BY datetime(COALESCE(last_event_at, created_at)) DESC, id DESC';
     $stmt = repsDashDb()->prepare($sql);

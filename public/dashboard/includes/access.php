@@ -28,8 +28,9 @@ function repsDashNavKeysForRole(string $role): array
     return match ($role) {
         'admin' => ['home', 'shops', 'operators', 'sessions', 'money', 'users', 'settings'],
         'ops' => ['home', 'shops', 'operators', 'sessions', 'money', 'settings'],
-        // Sales = pipeline + money. No session drill-down (individual captures / vids).
-        'sales' => ['home', 'shops', 'operators', 'money', 'settings'],
+        // Sales = pipeline (Shops) + Money. Operators appear inside Money, not a roster desk.
+        // No session drill-down / vids.
+        'sales' => ['home', 'shops', 'money', 'settings'],
         // Owner: "Shops" = their shop card (not a pipeline book).
         'business_owner' => ['home', 'shops', 'operators', 'sessions', 'money', 'settings'],
         'employee', 'individual' => ['home', 'sessions', 'settings'],
@@ -98,7 +99,7 @@ function repsDashScopeBlurb(string $role): string
     return match ($role) {
         'admin' => 'Full desk: all shops, hours, economics, and user provisioning.',
         'ops' => 'Same operational desk as admin, without user provisioning or platform keys.',
-        'sales' => 'Pipeline and money for your book (assigned + unassigned pool). Shop-level rollups only — no individual session list.',
+        'sales' => 'Pipeline (Shops) plus Money for your book — earnings and which operators are producing. No session inbox.',
         'business_owner' => 'Your shop only: roster, hours, and your shop’s pay display.',
         'employee' => 'Your own sessions and hours — not the shop ledger or other workers.',
         'individual' => 'Your own capture/work only — no shop book.',
@@ -155,12 +156,12 @@ function repsDashViewsRolesMatrix(): array
         ],
         [
             'view' => 'operators',
-            'label' => 'Operators',
-            'purpose' => 'Workers on shops you can see',
+            'label' => 'Operators (nav)',
+            'purpose' => 'Standalone roster desk',
             'cells' => $cells([
                 'admin' => 'All',
                 'ops' => 'All',
-                'sales' => 'Book shops',
+                'sales' => '— (see Money)',
                 'business_owner' => 'Own shop roster',
                 'employee' => '—',
                 'individual' => '—',
@@ -198,11 +199,11 @@ function repsDashViewsRolesMatrix(): array
         [
             'view' => 'money',
             'label' => 'Money',
-            'purpose' => 'Period economics display (not payroll)',
+            'purpose' => 'Economics (+ sales: who produces in the book)',
             'cells' => $cells([
                 'admin' => 'Full (DSC + shop)',
                 'ops' => 'Full (DSC + shop)',
-                'sales' => 'Book · no DSC take',
+                'sales' => 'Affiliate book $ + operators/shop',
                 'business_owner' => 'Own shop pay',
                 'employee' => '—',
                 'individual' => '—',

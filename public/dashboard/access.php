@@ -65,11 +65,14 @@ repsDashRenderPageHeader(
 
 <div class="surface p-3 mb-4">
   <h2 class="h5 mb-2">Session video / media</h2>
-  <p class="mb-0 small text-muted">
+  <p class="mb-2 small text-muted">
     <strong>*</strong> We are not running our own capture app on this surface yet.
     Individual session rows (and any clip playback) only exist if <strong>Shift for Business</strong>
-    (or a future DSC app) exposes them over API. Until then, sales stays on <strong>shops + money</strong>
-    with shop-level rollups — no session drill-down and no video player in Reps.
+    (or a future DSC app) exposes them over API — no video player in Reps until then.
+  </p>
+  <p class="mb-0 small text-muted">
+    <strong>Sales:</strong> Home + Shops (pipeline) + Money. Operator visibility is <em>inside Money</em>
+    (who’s producing at each shop in the book) — not a separate Operators desk, and not Sessions.
   </p>
 </div>
 

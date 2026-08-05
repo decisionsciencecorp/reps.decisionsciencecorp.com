@@ -37,9 +37,12 @@ $pathMap = [
     '/dashboard/money.php' => 'money',
     '/dashboard/users.php' => 'users',
     '/dashboard/settings.php' => 'settings',
+    '/dashboard/access.php' => 'access', // Dev Mode matrix — always allowed when Dev Mode on
 ];
 $key = $pathMap[$path] ?? null;
-if ($key !== null && !in_array($key, $navKeys, true)) {
+if ($key === 'access') {
+    // stay on access matrix after role switch
+} elseif ($key !== null && !in_array($key, $navKeys, true)) {
     $return = '/dashboard/';
 }
 

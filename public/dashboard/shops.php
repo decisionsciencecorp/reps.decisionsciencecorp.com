@@ -7,13 +7,14 @@ repsDashRequireNavKey('shops', $user);
 $shops = repsDashShopsForUser($user);
 
 $subtitle = match ((string) $user['role']) {
-    'admin', 'ops', 'agent' => 'All shops in the Reps book (mock)',
-    'business_owner' => 'Your shop only (mock)',
+    'admin', 'ops' => 'All shops in the Reps book (mock)',
+    'business_owner' => 'Your shop only — status and notes (mock)',
     default => 'Your assigned shops plus the unassigned pool (mock)',
 };
+$title = (string) $user['role'] === 'business_owner' ? 'My shop' : 'Shops';
 
-repsDashRenderHeader('Shops', 'shops');
-repsDashRenderPageHeader('Shops', $subtitle);
+repsDashRenderHeader($title, 'shops');
+repsDashRenderPageHeader($title, $subtitle);
 ?>
 
 <div class="surface p-0">

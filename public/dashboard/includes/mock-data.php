@@ -102,6 +102,8 @@ function repsDashMockOperators(): array
         ['id' => 6, 'name' => 'Kit Empanada A', 'shop_id' => 101, 'shop' => 'Empanada Empire — Richardson', 'phone' => '(214) 555-2001', 'status' => 'active', 'accepted_7d' => 20.0, 'rejected_7d' => 1.0, 'last_session' => '2026-08-04 15:22'],
         ['id' => 7, 'name' => 'Kit Empanada B', 'shop_id' => 101, 'shop' => 'Empanada Empire — Richardson', 'phone' => '(214) 555-2002', 'status' => 'active', 'accepted_7d' => 12.5, 'rejected_7d' => 2.0, 'last_session' => '2026-08-04 09:18'],
         ['id' => 8, 'name' => 'Kit Empanada C', 'shop_id' => 101, 'shop' => 'Empanada Empire — Richardson', 'phone' => '(214) 555-2003', 'status' => 'active', 'accepted_7d' => 10.0, 'rejected_7d' => 0.5, 'last_session' => '2026-08-03 21:44'],
+        // Individual seat — no shop book (shop_id 0 = personal lane)
+        ['id' => 9, 'name' => 'Pat Solo', 'shop_id' => 0, 'shop' => '— (individual)', 'phone' => '(469) 555-0188', 'status' => 'active', 'accepted_7d' => 9.5, 'rejected_7d' => 1.0, 'last_session' => '2026-08-04 13:55'],
     ];
 }
 
@@ -207,13 +209,17 @@ function repsDashSessionsForUser(array $user): array
         ));
     }
 
+    if ($role === 'agent') {
+        return [];
+    }
+
     $shopIds = array_column(repsDashShopsForUser($user), 'id');
     if ($shopIds === []) {
         return [];
     }
     return array_values(array_filter(
         $sessions,
-        static fn(array $s): bool => in_array($s['shop_id'], $shopIds, true)
+        static fn(array $s): bool => in_array((int) $s['shop_id'], array_map('intval', $shopIds), true)
     ));
 }
 
@@ -234,12 +240,17 @@ function repsDashPulseForUser(array $user): array
         }
     }
     $shops = repsDashShopsForUser($user);
+    $ops = repsDashOperatorsForUser($user);
     $dead = 0;
     foreach ($shops as $shop) {
         if (in_array($shop['status'], ['active', 'signed'], true) && (float) $shop['accepted_hours_7d'] <= 0) {
             $dead++;
         }
     }
+    $activeOps = count(array_filter(
+        $ops,
+        static fn(array $o): bool => ($o['status'] ?? '') === 'active'
+    ));
     return [
         'last_sync' => '2026-08-04 18:45 CDT (mock)',
         'partner_code' => 'C6N9T7',
@@ -248,7 +259,8 @@ function repsDashPulseForUser(array $user): array
         'pending_sessions' => $pending,
         'shops_visible' => count($shops),
         'shops_zero_upload' => $dead,
-        'apply_leads_open' => 3,
+        'operators_active' => $activeOps,
+        'apply_leads_open' => in_array($user['role'], ['admin', 'ops', 'sales'], true) ? 3 : 0,
         'demo_banner' => true,
     ];
 }

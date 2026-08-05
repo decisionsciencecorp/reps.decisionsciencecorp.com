@@ -6,8 +6,14 @@ $user = repsDashRequireLogin();
 repsDashRequireNavKey('operators', $user);
 $operators = repsDashOperatorsForUser($user);
 
-repsDashRenderHeader('Operators', 'operators');
-repsDashRenderPageHeader('Operators', 'Workers linked to shops you can see (mock Shift roster)');
+$isOwner = (string) $user['role'] === 'business_owner';
+repsDashRenderHeader($isOwner ? 'Team' : 'Operators', 'operators');
+repsDashRenderPageHeader(
+    $isOwner ? 'Team' : 'Operators',
+    $isOwner
+        ? 'Workers on your shop (mock roster)'
+        : 'Workers linked to shops you can see (mock Shift roster)'
+);
 ?>
 
 <div class="surface p-0">

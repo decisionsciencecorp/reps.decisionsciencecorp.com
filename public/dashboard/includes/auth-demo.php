@@ -83,8 +83,7 @@ function repsDashDemoAccounts(): array
             'role' => 'individual',
             'skin_slug' => null,
             'email' => 'pat@example.com',
-            'operator_id' => 5,
-            'shop_id' => 103,
+            'operator_id' => 9,
         ],
         [
             'id' => 9,
@@ -187,23 +186,6 @@ function repsDashIsAdmin(?array $user = null): bool
 {
     $user = $user ?? repsDashCurrentUser();
     return $user && $user['role'] === 'admin';
-}
-
-/**
- * Nav keys visible for a role (home always included by caller).
- *
- * @return list<string>
- */
-function repsDashNavKeysForRole(string $role): array
-{
-    return match ($role) {
-        'admin' => ['home', 'shops', 'operators', 'sessions', 'money', 'users', 'settings'],
-        'ops', 'agent' => ['home', 'shops', 'operators', 'sessions', 'money', 'settings'],
-        'sales' => ['home', 'shops', 'operators', 'sessions', 'money', 'settings'],
-        'business_owner' => ['home', 'operators', 'sessions', 'money', 'settings'],
-        'employee', 'individual' => ['home', 'sessions', 'settings'],
-        default => ['home', 'settings'],
-    };
 }
 
 function repsDashSafeReturnPath(?string $raw): string

@@ -3,8 +3,10 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/includes/bootstrap.php';
 $user = repsDashRequireLogin();
+$role = (string) $user['role'];
+$panels = repsDashSettingsPanelsForRole($role);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array('skin', $panels, true)) {
     $slug = repsDashSkinNormalizeSlug((string) ($_POST['skin_slug'] ?? ''));
     if ($slug !== null) {
         $_SESSION['reps_dash_skin'] = $slug;
@@ -17,10 +19,16 @@ $skin = repsDashSkinEffectiveSlug($user);
 $pulse = repsDashPulseForUser($user);
 
 repsDashRenderHeader('Settings', 'settings');
-repsDashRenderPageHeader('Settings', 'Skin lab + sync placeholders');
+repsDashRenderPageHeader('Settings', match ($role) {
+    'admin' => 'Skin lab + sync + platform stubs',
+    'ops' => 'Skin + Shift sync status',
+    'agent' => 'Platform / API stubs for the service principal',
+    default => 'Your display preferences',
+});
 ?>
 
 <div class="row g-3">
+  <?php if (in_array('skin', $panels, true)): ?>
   <div class="col-lg-6">
     <div class="surface p-3">
       <h2 class="h5 mb-3">UI skin</h2>
@@ -37,7 +45,10 @@ repsDashRenderPageHeader('Settings', 'Skin lab + sync placeholders');
       </form>
     </div>
   </div>
+  <?php endif; ?>
+
   <div class="col-lg-6">
+    <?php if (in_array('sync', $panels, true)): ?>
     <div class="surface p-3 mb-3">
       <h2 class="h5 mb-2">Shift sync</h2>
       <dl class="row mb-0 small">
@@ -47,6 +58,9 @@ repsDashRenderPageHeader('Settings', 'Skin lab + sync placeholders');
         <dt class="col-5">Re-auth</dt><dd class="col-7 text-muted">OTP runbook placeholder</dd>
       </dl>
     </div>
+    <?php endif; ?>
+
+    <?php if (in_array('platform', $panels, true)): ?>
     <div class="surface p-3">
       <h2 class="h5 mb-2">Platform stubs</h2>
       <ul class="small mb-0">
@@ -55,6 +69,17 @@ repsDashRenderPageHeader('Settings', 'Skin lab + sync placeholders');
         <li><code>smcp_plugin/</code> — Slice E</li>
       </ul>
     </div>
+    <?php endif; ?>
+
+    <?php if ($panels === ['skin']): ?>
+    <div class="surface p-3 mt-0">
+      <h2 class="h5 mb-2">Account</h2>
+      <p class="small text-muted mb-0">
+        <?php echo htmlspecialchars(repsDashScopeBlurb($role)); ?>
+        Shop roster invites and password reset land in Slice B.
+      </p>
+    </div>
+    <?php endif; ?>
   </div>
 </div>
 

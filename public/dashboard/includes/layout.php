@@ -55,7 +55,8 @@ function repsDashRenderDevModeBar(?array $user): void
           <?php endforeach; ?>
         </select>
       </label>
-      <span class="rd-dev-bar__hint d-none d-md-inline">Switch seat to audit scoping &amp; nav. Slice A only.</span>
+      <a class="rd-dev-bar__link" href="/dashboard/access.php">Views × roles</a>
+      <span class="rd-dev-bar__hint d-none d-lg-inline">Switch seat to audit scoping. Slice A only.</span>
     </form>
   </div>
     <?php
@@ -69,16 +70,20 @@ function repsDashRenderHeader(string $title = '', string $active = 'home'): void
     $navLight = in_array($skin, ['hey', 'ledger'], true);
     $navThemeClass = $navLight ? 'navbar-light' : 'navbar-dark';
 
+    $role = $user ? (string) $user['role'] : '';
+    $shopsLabel = $role === 'business_owner' ? 'My shop' : 'Shops';
+    $opsLabel = $role === 'business_owner' ? 'Team' : 'Operators';
+    $sessionsLabel = in_array($role, ['employee', 'individual'], true) ? 'My sessions' : 'Sessions';
     $navAll = [
         'home' => ['Home', '/dashboard/', 'bi-speedometer2'],
-        'shops' => ['Shops', '/dashboard/shops.php', 'bi-shop'],
-        'operators' => ['Operators', '/dashboard/operators.php', 'bi-people'],
-        'sessions' => ['Sessions', '/dashboard/sessions.php', 'bi-camera-reels'],
+        'shops' => [$shopsLabel, '/dashboard/shops.php', 'bi-shop'],
+        'operators' => [$opsLabel, '/dashboard/operators.php', 'bi-people'],
+        'sessions' => [$sessionsLabel, '/dashboard/sessions.php', 'bi-camera-reels'],
         'money' => ['Money', '/dashboard/money.php', 'bi-cash-coin'],
         'users' => ['Users', '/dashboard/users.php', 'bi-person-gear'],
         'settings' => ['Settings', '/dashboard/settings.php', 'bi-gear'],
     ];
-    $allowed = $user ? repsDashNavKeysForRole((string) $user['role']) : ['home'];
+    $allowed = $user ? repsDashNavKeysForRole($role) : ['home'];
     $nav = [];
     foreach ($allowed as $key) {
         if (isset($navAll[$key])) {
@@ -95,7 +100,7 @@ function repsDashRenderHeader(string $title = '', string $active = 'home'): void
   <title><?php echo $safeTitle; ?></title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-  <link href="/dashboard/assets/css/dashboard.css?v=2" rel="stylesheet">
+  <link href="/dashboard/assets/css/dashboard.css?v=3" rel="stylesheet">
   <link href="<?php echo htmlspecialchars(repsDashSkinStylesheetHref($skin)); ?>" rel="stylesheet">
 </head>
 <body class="<?php echo htmlspecialchars($bodyClass); ?>">
@@ -133,10 +138,13 @@ function repsDashRenderHeader(string $title = '', string $active = 'home'): void
 
 function repsDashRenderFooter(): void
 {
+    $partner = repsDashCanSeePartnerCode()
+        ? ' · Partner code C6N9T7'
+        : '';
     ?>
   </main>
   <footer class="container-fluid px-3 px-lg-4 pb-4">
-    <p class="text-muted small mb-0">Reps Dashboard · Slice A mock data · Partner code display C6N9T7 · <a href="/">Marketing site</a></p>
+    <p class="text-muted small mb-0">Reps Dashboard · Slice A mock data<?php echo htmlspecialchars($partner); ?> · <a href="/">Marketing site</a></p>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

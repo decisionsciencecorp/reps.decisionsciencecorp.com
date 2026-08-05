@@ -13,6 +13,7 @@ define('REPS_DASH_NAME', 'Reps Dashboard');
 require_once __DIR__ . '/skin.php';
 require_once __DIR__ . '/mock-data.php';
 require_once __DIR__ . '/auth-demo.php';
+require_once __DIR__ . '/access.php';
 require_once __DIR__ . '/layout.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {

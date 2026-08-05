@@ -503,4 +503,25 @@ table.table td.col-status {
     font-size: 0.75rem;
     color: #9aa3b2;
 }
+.rd-dev-bar__link {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #fbbf24;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    white-space: nowrap;
+}
+.rd-dev-bar__link:hover {
+    color: #fde68a;
+}
+.rd-access-matrix {
+    font-size: 0.8rem;
+}
+.rd-access-matrix th,
+.rd-access-matrix td {
+    vertical-align: middle;
+}
+.rd-access-matrix .rd-cell-none {
+    color: var(--dk-text-muted);
+}
 

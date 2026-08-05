@@ -25,9 +25,24 @@ for (const vp of viewports) {
   await page.screenshot({ path: path.join(outDir, `${vp.name}-login.png`), fullPage: true });
   await page.click('button:has-text("Mark Hopkins")');
   await page.waitForURL('**/dashboard/**');
-  await page.screenshot({ path: path.join(outDir, `${vp.name}-home.png`), fullPage: true });
+  await page.waitForSelector('.rd-dev-bar');
+  await page.screenshot({ path: path.join(outDir, `${vp.name}-home-admin.png`), fullPage: true });
   await page.goto(`${base}/dashboard/shops.php`, { waitUntil: 'networkidle' });
   await page.screenshot({ path: path.join(outDir, `${vp.name}-shops.png`), fullPage: true });
+  // Dev Mode → business owner
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: 'networkidle' }),
+    page.selectOption('.rd-dev-bar__select', 'maria'),
+  ]);
+  await page.waitForFunction(() => document.body.innerText.includes('Maria Lopez'));
+  await page.screenshot({ path: path.join(outDir, `${vp.name}-home-owner.png`), fullPage: true });
+  // Dev Mode → employee (narrow nav)
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: 'networkidle' }),
+    page.selectOption('.rd-dev-bar__select', 'alex'),
+  ]);
+  await page.waitForFunction(() => document.body.innerText.includes('Alex Rivera'));
+  await page.screenshot({ path: path.join(outDir, `${vp.name}-home-employee.png`), fullPage: true });
   await context.close();
 }
 await browser.close();

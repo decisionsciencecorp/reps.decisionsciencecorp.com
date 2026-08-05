@@ -55,6 +55,13 @@ if (!defined('REPS_DASH_SEED_PASSWORD')) {
     define('REPS_DASH_SEED_PASSWORD', (string) (repsDashEnvOrDefault('REPS_DASH_SEED_PASSWORD', 'reps-demo') ?? 'reps-demo'));
 }
 
+if (!defined('REPS_LEADS_WEBHOOK_URL')) {
+    define('REPS_LEADS_WEBHOOK_URL', (string) (repsDashEnvOrDefault('REPS_LEADS_WEBHOOK_URL', '') ?? ''));
+}
+if (!defined('REPS_LEADS_WEBHOOK_SECRET')) {
+    define('REPS_LEADS_WEBHOOK_SECRET', (string) (repsDashEnvOrDefault('REPS_LEADS_WEBHOOK_SECRET', '') ?? ''));
+}
+
 /** @return list<string> */
 function repsDashValidRoles(): array
 {

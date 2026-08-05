@@ -2,13 +2,20 @@
 
 Marketing site for **Reps**, Decision Science Corp’s branded capture network (Athena-named). Apes the Shift consumer pitch under DSC brand.
 
-## Apply form
+## Apply / join funnel
 
-Posts to DSC central contact intake:
+Operator and shop applications go to **`/join.php`** (optional `?rep=jim`). Affiliate / sales seat applications go to **`/join/partner.php`** (soft footer link only). Both write to dashboard SQLite **`apply_leads`** (not the DSC Messages inbox). Legacy **`/apply.php`** redirects to `/join.php`.
 
-`POST https://decisionsciencecorp.com/api/inbound-contact.php` with `channel=reps`
+Sales CRM desk: `/dashboard/leads.php` + lead detail with activity timeline, graduate-to-Users, outbound webhooks (`REPS_LEADS_WEBHOOK_URL` + `REPS_LEADS_WEBHOOK_SECRET`). Phase PRD: Tasks Doc **#997**.
 
-Land in **Admin → Messages → Reps** tab on decisionsciencecorp.com (same inbox as General contact, separate channel).
+### Tests (≥90% on join CRM slice)
+
+```bash
+composer install
+./vendor/bin/phpunit --coverage-clover coverage/clover.xml
+php tools/coverage-gate.php --min=90
+bash tools/e2e-join-crm.sh
+```
 
 
 ## Dashboard (`/dashboard`)
@@ -16,7 +23,8 @@ Land in **Admin → Messages → Reps** tab on decisionsciencecorp.com (same inb
 Login platform for DSC Reps ops + affiliate seats. PRD: Tasks Doc **#990**.
 
 - Slice A: visual shell + skins + mock data.
-- Slice B (now): real session auth, SQLite users, admin provisioning, CSRF, Dev Mode env-gated.
+- Slice B: real session auth, SQLite users, admin provisioning, CSRF, Dev Mode env-gated.
+- Join funnel + sales Leads CRM: migration `004_join_funnel`, public `/join*`, partial CRM.
 - Later: Shift sync (C), JSON API (D), SDK/SMCP (E).
 
 ### Auth (Slice B)
@@ -41,6 +49,7 @@ Login platform for DSC Reps ops + affiliate seats. PRD: Tasks Doc **#990**.
 | `rollups.php` | Worker/day stats + URL helpers |
 | `partials.php` | Shared session/operator table HTML |
 | `access.php` | Nav / home / Money mode contract |
+| `leads-crm.php` | Join funnel assignment, events, graduate, webhooks |
 | `money-views.php` | Money peer HTML only |
 
 Scope regression (CLI):

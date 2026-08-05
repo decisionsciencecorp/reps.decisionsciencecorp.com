@@ -28,6 +28,7 @@ require_once __DIR__ . '/repository.php';
 require_once __DIR__ . '/scope.php';
 require_once __DIR__ . '/economics.php';
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/leads-crm.php';
 require_once __DIR__ . '/access.php';
 require_once __DIR__ . '/onboarding.php';
 require_once __DIR__ . '/education-content.php';

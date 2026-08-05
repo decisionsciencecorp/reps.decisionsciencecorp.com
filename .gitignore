@@ -6,3 +6,7 @@ db/*.db
 .DS_Store
 tools/design-smoke/output/
 node_modules/
+/vendor/
+.phpunit.cache/
+coverage/
+

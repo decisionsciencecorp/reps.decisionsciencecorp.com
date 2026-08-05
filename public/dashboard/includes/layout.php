@@ -111,6 +111,10 @@ function repsDashRenderHeader(string $title = '', string $active = 'home'): void
             $nav[$key] = $navAll[$key];
         }
     }
+    $leadsBadge = 0;
+    if ($user && isset($nav['leads'])) {
+        $leadsBadge = repsDashLeadsBadgeCount($user);
+    }
     $bodyClass = 'bg-light' . (repsDashIsDevMode() && $user ? ' rd-has-dev-bar' : '');
     ?>
 <!DOCTYPE html>
@@ -141,6 +145,9 @@ function repsDashRenderHeader(string $title = '', string $active = 'home'): void
           <?php foreach ($nav as $key => [$label, $href, $icon]): ?>
             <a class="btn btn-outline-light text-center text-lg-start <?php echo $active === $key ? 'active' : ''; ?>" href="<?php echo htmlspecialchars($href); ?>">
               <i class="bi <?php echo htmlspecialchars($icon); ?> me-1"></i><?php echo htmlspecialchars($label); ?>
+              <?php if ($key === 'leads' && $leadsBadge > 0): ?>
+                <span class="badge text-bg-danger ms-1"><?php echo $leadsBadge > 99 ? '99+' : (int) $leadsBadge; ?></span>
+              <?php endif; ?>
             </a>
           <?php endforeach; ?>
           <span class="navbar-text small px-2 text-nowrap">

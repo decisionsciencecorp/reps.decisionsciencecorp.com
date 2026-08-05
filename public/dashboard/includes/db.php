@@ -98,6 +98,45 @@ function repsDashDbMigrate(PDO $pdo): void
         $pdo->prepare('INSERT INTO schema_migrations (version) VALUES (?)')->execute(['003_apply_leads']);
     }
 
+    if (!in_array('004_join_funnel', $applied, true)) {
+        $cols = $pdo->query('PRAGMA table_info(apply_leads)')->fetchAll(PDO::FETCH_ASSOC);
+        $names = array_map(static fn($c) => (string) $c['name'], $cols ?: []);
+        $add = static function (PDO $pdo, array $names, string $col, string $ddl) {
+            if (!in_array($col, $names, true)) {
+                $pdo->exec('ALTER TABLE apply_leads ADD COLUMN ' . $ddl);
+            }
+        };
+        $add($pdo, $names, 'join_kind', "join_kind TEXT NOT NULL DEFAULT 'operator'");
+        $add($pdo, $names, 'assign_source', "assign_source TEXT NOT NULL DEFAULT 'none'");
+        $add($pdo, $names, 'metro', "metro TEXT NOT NULL DEFAULT ''");
+        $add($pdo, $names, 'expectations_ack', 'expectations_ack INTEGER NOT NULL DEFAULT 0');
+        $add($pdo, $names, 'graduated_user_id', 'graduated_user_id INTEGER');
+        $add($pdo, $names, 'last_event_at', "last_event_at TEXT");
+
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS lead_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                lead_id INTEGER NOT NULL,
+                actor_user_id INTEGER,
+                event_type TEXT NOT NULL,
+                body TEXT NOT NULL DEFAULT \'\',
+                created_at TEXT NOT NULL DEFAULT (datetime(\'now\'))
+            )'
+        );
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_lead_events_lead ON lead_events(lead_id)');
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_lead_events_created ON lead_events(created_at)');
+
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS app_meta (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL DEFAULT \'\',
+                updated_at TEXT NOT NULL DEFAULT (datetime(\'now\'))
+            )'
+        );
+
+        $pdo->prepare('INSERT INTO schema_migrations (version) VALUES (?)')->execute(['004_join_funnel']);
+    }
+
     repsDashDbSeedUsers($pdo);
     repsDashDbSeedApplyLeads($pdo);
 }
@@ -549,6 +588,13 @@ function repsDashApplyLeadRowShape(array $row): array
         'status' => (string) $row['status'],
         'assigned_sales_rep' => $row['assigned_sales_rep'] !== null && $row['assigned_sales_rep'] !== ''
             ? (string) $row['assigned_sales_rep'] : null,
+        'join_kind' => (string) ($row['join_kind'] ?? 'operator'),
+        'assign_source' => (string) ($row['assign_source'] ?? 'none'),
+        'metro' => (string) ($row['metro'] ?? ''),
+        'expectations_ack' => (int) ($row['expectations_ack'] ?? 0) === 1,
+        'graduated_user_id' => isset($row['graduated_user_id']) && $row['graduated_user_id'] !== null && $row['graduated_user_id'] !== ''
+            ? (int) $row['graduated_user_id'] : null,
+        'last_event_at' => (string) ($row['last_event_at'] ?? $row['created_at'] ?? ''),
         'created_at' => (string) $row['created_at'],
         'updated_at' => (string) $row['updated_at'],
     ];
@@ -589,9 +635,11 @@ function repsDashUpdateApplyLead(int $id, array $data): array
         $rep = null;
     }
     $stmt = repsDashDb()->prepare(
-        'UPDATE apply_leads SET status = ?, assigned_sales_rep = ?, notes = ?, updated_at = datetime(\'now\')
+        'UPDATE apply_leads SET status = ?, assigned_sales_rep = ?, notes = ?, updated_at = datetime(\'now\'),
+         last_event_at = datetime(\'now\'), assign_source = CASE WHEN ? != \'\' THEN ? ELSE assign_source END
          WHERE id = ?'
     );
-    $stmt->execute([$status, $rep, $notes, $id]);
+    $manualSource = array_key_exists('assigned_sales_rep', $data) ? 'manual' : '';
+    $stmt->execute([$status, $rep, $notes, $manualSource, $manualSource !== '' ? 'manual' : '', $id]);
     return ['ok' => true];
 }

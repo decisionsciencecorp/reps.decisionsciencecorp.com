@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.5/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         cacheDirectory=".phpunit.cache">
+  <testsuites>
+    <testsuite name="reps">
+      <directory>tests</directory>
+    </testsuite>
+  </testsuites>
+  <source>
+    <include>
+      <file>public/dashboard/includes/leads-crm.php</file>
+      <file>public/join-handler.php</file>
+    </include>
+  </source>
+  <coverage>
+    <report>
+      <clover outputFile="coverage/clover.xml"/>
+      <html outputDirectory="coverage/html"/>
+      <text outputFile="coverage/coverage.txt" showOnlySummary="true"/>
+    </report>
+  </coverage>
+</phpunit>

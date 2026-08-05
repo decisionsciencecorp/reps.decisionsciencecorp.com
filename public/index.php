@@ -35,7 +35,7 @@ $canonical = 'https://reps.decisionsciencecorp.com/';
         <a href="#companies">For companies</a>
         <a href="#faq">FAQ</a>
       </nav>
-      <a class="btn btn-solid top-cta" href="#apply">Apply now</a>
+      <a class="btn btn-solid top-cta" href="/join.php">Apply now</a>
     </div>
   </header>
 
@@ -64,7 +64,7 @@ $canonical = 'https://reps.decisionsciencecorp.com/';
         <h1 class="hero-line">Record what you do.<br>Earn while you work.</h1>
         <p class="hero-sub">Capture everyday tasks with a headset. You get paid for every <em>accepted</em> upload after quality review — through Decision Science Corp.</p>
         <div class="hero-actions">
-          <a class="btn btn-solid" href="#apply" data-track="hero_cta">Apply in 1 minute</a>
+          <a class="btn btn-solid" href="/join.php" data-track="hero_cta">Apply in 1 minute</a>
           <a class="btn btn-ghost" href="#quality">See real capture</a>
         </div>
         <div class="rec-frame">
@@ -138,7 +138,7 @@ $canonical = 'https://reps.decisionsciencecorp.com/';
         </div>
       </div>
       <div class="section-cta">
-        <a class="btn btn-solid" href="#apply">Apply now</a>
+        <a class="btn btn-solid" href="/join.php">Apply now</a>
       </div>
     </section>
 
@@ -187,12 +187,12 @@ $canonical = 'https://reps.decisionsciencecorp.com/';
         <article class="way">
           <h3>1. Record on the job</h3>
           <p>Work in a trade, kitchen, warehouse, or shop? Your daily professional tasks are exactly what capture buyers want. Earn supplemental income on top of what you already do.</p>
-          <a class="text-link" href="#apply">Apply now</a>
+          <a class="text-link" href="/join.php">Apply now</a>
         </article>
         <article class="way">
           <h3>2. Record at home</h3>
           <p>Cooking, cleaning, laundry, repairs — home tasks are just as valuable. No special experience. If it’s part of your routine, it can qualify.</p>
-          <a class="text-link" href="#apply">Apply now</a>
+          <a class="text-link" href="/join.php">Apply now</a>
         </article>
       </div>
     </section>
@@ -240,7 +240,7 @@ $canonical = 'https://reps.decisionsciencecorp.com/';
         </li>
       </ol>
       <div class="section-cta">
-        <a class="btn btn-solid" href="#apply">Apply now — takes 1 minute</a>
+        <a class="btn btn-solid" href="/join.php">Apply now — takes 1 minute</a>
       </div>
     </section>
 
@@ -301,43 +301,15 @@ $canonical = 'https://reps.decisionsciencecorp.com/';
     <section class="apply" id="apply" aria-labelledby="apply-title">
       <div class="apply-panel">
         <h2 id="apply-title">Apply to Reps</h2>
-        <p>Takes about a minute. We’ll follow up with eligibility, then headset next steps.</p>
+        <p>Takes about a minute. A human from the team will call or text to set expectations before any headset or login.</p>
         <ul class="apply-proof" aria-label="What happens after you apply">
-          <li>We review eligibility and reply</li>
-          <li>Approved operators get headset + app setup</li>
-          <li>Accepted uploads pay on a regular cycle</li>
+          <li>You apply with real contact info</li>
+          <li>We follow up to set expectations</li>
+          <li>If it’s a fit, we provision your seat and gear path</li>
         </ul>
-        <form class="apply-form" method="post" action="https://decisionsciencecorp.com/api/inbound-contact.php" novalidate>
-          <input type="hidden" name="channel" value="reps">
-          <input type="hidden" name="return_url" value="https://reps.decisionsciencecorp.com/#apply">
-          <label>
-            <span>Full name</span>
-            <input type="text" name="name" required autocomplete="name" maxlength="120">
-          </label>
-          <label>
-            <span>Phone</span>
-            <input type="tel" name="phone" required autocomplete="tel" maxlength="40">
-          </label>
-          <label>
-            <span>Email</span>
-            <input type="email" name="email" required autocomplete="email" maxlength="160">
-          </label>
-          <label>
-            <span>How will you capture?</span>
-            <select name="path" required>
-              <option value="">Select…</option>
-              <option value="on_job">On the job</option>
-              <option value="at_home">At home</option>
-              <option value="company">I’m enrolling a company / team</option>
-            </select>
-          </label>
-          <label class="full">
-            <span>Anything we should know? (optional)</span>
-            <textarea name="notes" rows="3" maxlength="2000"></textarea>
-          </label>
-          <input type="text" name="company_website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <button class="btn btn-solid" type="submit">Submit application</button>
-        </form>
+        <p style="margin-top:1.25rem">
+          <a class="btn btn-solid" href="/join.php" data-track="apply_panel_cta">Continue to application</a>
+        </p>
         <p class="apply-alt">Or email <a href="mailto:hello@decisionsciencecorp.com?subject=Reps%20application">hello@decisionsciencecorp.com</a></p>
       </div>
     </section>
@@ -353,11 +325,12 @@ $canonical = 'https://reps.decisionsciencecorp.com/';
         </a>
       </div>
       <p class="foot-copy">© <?= date('Y') ?> Decision Science Corp. Reps is a DSC capture program.</p>
+      <p class="foot-copy" style="opacity:0.7;font-size:0.85em"><a href="/join/partner.php">Interested in an affiliate / sales seat?</a></p>
     </div>
   </footer>
 
   <div class="sticky-apply" data-sticky-apply hidden>
-    <a class="btn btn-solid sticky-apply-btn" href="#apply" data-track="sticky_apply">Apply now</a>
+    <a class="btn btn-solid sticky-apply-btn" href="/join.php" data-track="sticky_apply">Apply now</a>
   </div>
 
   <script src="/assets/js/reps.js" defer></script>

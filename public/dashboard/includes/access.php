@@ -178,12 +178,12 @@ function repsDashViewsRolesMatrix(): array
         ],
         [
             'view' => 'leads',
-            'label' => 'Apply leads',
-            'purpose' => 'Inbound reps apply form desk',
+            'label' => 'Leads CRM',
+            'purpose' => 'Join funnel queue + activity desk',
             'cells' => $cells([
-                'admin' => 'All leads',
-                'ops' => 'All leads',
-                'sales' => 'Claim / work book',
+                'admin' => 'All queues + affiliate',
+                'ops' => 'All queues + affiliate',
+                'sales' => 'My queue + feed',
                 'business_owner' => '—',
                 'employee' => '—',
                 'individual' => '—',

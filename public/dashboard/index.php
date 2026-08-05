@@ -237,26 +237,43 @@ repsDashRenderPageHeader('Home', $subtitle);
     <?php if (in_array('apply_leads', $blocks, true)): ?>
     <div class="surface p-3 mb-3">
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <h2 class="h5 mb-0">Apply leads</h2>
-        <a class="small" href="/dashboard/leads.php">Open desk</a>
+        <h2 class="h5 mb-0">My lead feed</h2>
+        <a class="small" href="/dashboard/leads.php">Open CRM</a>
       </div>
-      <p class="mb-2"><?php echo (int) $pulse['apply_leads_open']; ?> open/claimed inbound applications.</p>
+      <p class="mb-2 small text-muted"><?php echo (int) $pulse['apply_leads_open']; ?> open/claimed in system · latest activity on your leads</p>
       <?php
-      $homeLeads = array_slice(
-          array_values(array_filter(
-              repsDashListApplyLeads(null),
-              static fn(array $l): bool => in_array($l['status'], ['open', 'claimed'], true)
-          )),
-          0,
-          4
+      $feed = repsDashListLeadFeedForUser($user, 8);
+      $homeLeads = repsDashListApplyLeadsForUser(
+          $user,
+          null,
+          null,
+          ($role === 'sales')
       );
+      $homeLeads = array_values(array_filter(
+          $homeLeads,
+          static fn(array $l): bool => in_array($l['status'], ['open', 'claimed'], true)
+      ));
+      $homeLeads = array_slice($homeLeads, 0, 4);
       ?>
+      <?php if ($feed !== []): ?>
+        <ul class="list-unstyled small mb-3">
+          <?php foreach ($feed as $ev): ?>
+            <li class="border-bottom py-1">
+              <a href="<?php echo htmlspecialchars(repsDashLeadHref((int) $ev['lead_id'])); ?>">
+                <?php echo htmlspecialchars((string) ($ev['lead_name'] ?? 'Lead')); ?>
+              </a>
+              · <span class="badge text-bg-light border"><?php echo htmlspecialchars((string) $ev['event_type']); ?></span>
+              <?php echo htmlspecialchars((string) $ev['body']); ?>
+            </li>
+          <?php endforeach; ?>
+        </ul>
+      <?php endif; ?>
       <?php if ($homeLeads === []): ?>
-        <p class="small text-muted mb-0">No open leads right now.</p>
+        <p class="small text-muted mb-0">No open leads in your queue right now.</p>
       <?php else: ?>
         <div class="table-responsive">
           <table class="table table-sm align-middle mb-0">
-            <thead><tr><th>Name</th><th>Path</th><th>Status</th></tr></thead>
+            <thead><tr><th>Name</th><th>Kind</th><th>Status</th></tr></thead>
             <tbody>
             <?php foreach ($homeLeads as $lead): ?>
               <tr>
@@ -265,7 +282,7 @@ repsDashRenderPageHeader('Home', $subtitle);
                     <?php echo htmlspecialchars($lead['name']); ?>
                   </a>
                 </td>
-                <td class="small"><?php echo htmlspecialchars($lead['path']); ?></td>
+                <td class="small"><?php echo htmlspecialchars($lead['join_kind']); ?></td>
                 <td><?php repsDashStatusPill($lead['status']); ?></td>
               </tr>
             <?php endforeach; ?>

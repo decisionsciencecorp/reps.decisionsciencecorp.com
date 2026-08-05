@@ -151,7 +151,7 @@ function repsDashViewsRolesMatrix(): array
         [
             'view' => 'education',
             'label' => 'Education Center',
-            'purpose' => 'How-tos / capture tips (learner seats)',
+            'purpose' => 'Shift FAQ + reject catalog + field coaching (learner seats)',
             'cells' => $cells([
                 'admin' => '—',
                 'ops' => '—',

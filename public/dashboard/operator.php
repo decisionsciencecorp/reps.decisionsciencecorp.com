@@ -98,7 +98,19 @@ repsDashRenderPageHeader(
     <?php foreach ($stats['reasons'] as $r): ?>
       <div class="col-md-4">
         <div class="border rounded p-2 h-100">
-          <div class="fw-semibold small"><?php echo htmlspecialchars(str_replace('_', ' ', $r['reason'])); ?></div>
+          <div class="fw-semibold small">
+            <?php
+            $eduId = repsDashEducationIdForRejectReason((string) $r['reason']);
+            $label = str_replace('_', ' ', (string) $r['reason']);
+            if ($eduId !== null && repsDashUsesLearnerChrome($role)):
+            ?>
+              <a href="/dashboard/education.php?topic=<?php echo urlencode($eduId); ?>#<?php echo urlencode($eduId); ?>">
+                <?php echo htmlspecialchars($label); ?>
+              </a>
+            <?php else: ?>
+              <?php echo htmlspecialchars($label); ?>
+            <?php endif; ?>
+          </div>
           <div class="small text-muted"><?php echo (int) $r['sessions']; ?> sessions · <?php echo htmlspecialchars((string) round($r['hours'], 1)); ?> h · −$<?php echo number_format($r['lost'], 0); ?></div>
         </div>
       </div>

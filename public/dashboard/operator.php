@@ -104,7 +104,7 @@ repsDashRenderPageHeader(
             $label = str_replace('_', ' ', (string) $r['reason']);
             if ($eduId !== null && repsDashUsesLearnerChrome($role)):
             ?>
-              <a href="/dashboard/education.php?topic=<?php echo urlencode($eduId); ?>#<?php echo urlencode($eduId); ?>">
+              <a href="<?php echo htmlspecialchars(repsDashEducationArticleHref($eduId)); ?>">
                 <?php echo htmlspecialchars($label); ?>
               </a>
             <?php else: ?>

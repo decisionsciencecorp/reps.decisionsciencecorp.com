@@ -39,7 +39,7 @@ repsDashRenderPageHeader('Home', $subtitle);
   </div>
   <div class="col-6 col-md-3">
     <div class="surface p-3 h-100">
-      <div class="text-muted small">Rejected sessions</div>
+      <div class="text-muted small"><?php echo $role === 'sales' ? 'Reject signals (book)' : 'Rejected sessions'; ?></div>
       <div class="fs-3 fw-semibold"><?php echo (int) $pulse['rejected_sessions']; ?></div>
     </div>
   </div>

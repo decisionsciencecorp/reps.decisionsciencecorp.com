@@ -185,6 +185,22 @@ function repsDashCanEditShopNotes(array $user, int $shopId): bool
     return repsDashCanViewShop($user, $shopId);
 }
 
+function repsDashCanViewSession(array $user, string $sessionId): bool
+{
+    $session = repsDashFindSession($sessionId);
+    if ($session === null) {
+        return false;
+    }
+    $oid = (int) ($session['operator_id'] ?? 0);
+    return $oid > 0 && repsDashCanViewOperator($user, $oid);
+}
+
+/** Apply leads desk — admin / ops / sales. */
+function repsDashCanManageApplyLeads(array $user): bool
+{
+    return in_array((string) ($user['role'] ?? ''), ['admin', 'ops', 'sales'], true);
+}
+
 /** Book-wide /day.php?date=… (no operator_id) — not for sales or agent. */
 function repsDashCanOpenBookWideDay(array $user): bool
 {

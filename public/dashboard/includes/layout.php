@@ -96,6 +96,7 @@ function repsDashRenderHeader(string $title = '', string $active = 'home'): void
     $navAll = [
         'home' => ['Home', '/dashboard/', 'bi-speedometer2'],
         'shops' => [$shopsLabel, '/dashboard/shops.php', 'bi-shop'],
+        'leads' => ['Leads', '/dashboard/leads.php', 'bi-inbox'],
         'operators' => [$opsLabel, '/dashboard/operators.php', 'bi-people'],
         'sessions' => [$sessionsLabel, '/dashboard/sessions.php', 'bi-camera-reels'],
         'money' => [$moneyLabel, '/dashboard/money.php', 'bi-cash-coin'],

@@ -8,10 +8,14 @@ $user = repsDashRequireLogin();
 repsDashRequireNavKey('money', $user);
 $mode = repsDashMoneyModeForRole((string) $user['role']);
 $shops = repsDashShopsForUser($user);
+$repFilter = trim((string) ($_GET['rep'] ?? ''));
+if ($repFilter === '') {
+    $repFilter = null;
+}
 
 switch ($mode) {
     case 'dsc_command':
-        repsDashRenderMoneyAdmin($user, $shops);
+        repsDashRenderMoneyAdmin($user, $shops, $repFilter);
         break;
     case 'ops_pulse':
         repsDashRenderMoneyOps($user, $shops);

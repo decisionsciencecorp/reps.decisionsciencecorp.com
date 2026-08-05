@@ -35,8 +35,11 @@ $pathMap = [
     '/dashboard/index.php' => 'home',
     '/dashboard/shops.php' => 'shops',
     '/dashboard/shop.php' => 'shop',
+    '/dashboard/leads.php' => 'leads',
+    '/dashboard/lead.php' => 'lead',
     '/dashboard/operators.php' => 'operators',
     '/dashboard/sessions.php' => 'sessions',
+    '/dashboard/session.php' => 'session',
     '/dashboard/money.php' => 'money',
     '/dashboard/education.php' => 'education',
     '/dashboard/education-article.php' => 'education',
@@ -48,7 +51,7 @@ $pathMap = [
     '/dashboard/day.php' => 'day',
 ];
 $key = $pathMap[$path] ?? null;
-if (in_array($key, ['access', 'operator', 'day', 'education', 'shop'], true)) {
+if (in_array($key, ['access', 'operator', 'day', 'education', 'shop', 'session', 'lead'], true)) {
     // drill-downs / matrix / education — re-check after switch; bounce home if out of scope
     if ($key === 'education' && !in_array('education', $navKeys, true)) {
         $return = '/dashboard/';
@@ -58,6 +61,18 @@ if (in_array($key, ['access', 'operator', 'day', 'education', 'shop'], true)) {
         $sid = (int) ($q['id'] ?? 0);
         if ($sid <= 0 || !$user || !repsDashCanViewShop($user, $sid)) {
             $return = in_array('shops', $navKeys, true) ? '/dashboard/shops.php' : '/dashboard/';
+        }
+    }
+    if ($key === 'session') {
+        parse_str((string) (parse_url($return, PHP_URL_QUERY) ?? ''), $q);
+        $sid = (string) ($q['id'] ?? '');
+        if ($sid === '' || !$user || !repsDashCanViewSession($user, $sid)) {
+            $return = in_array('sessions', $navKeys, true) ? '/dashboard/sessions.php' : '/dashboard/';
+        }
+    }
+    if ($key === 'lead') {
+        if (!$user || !repsDashCanManageApplyLeads($user)) {
+            $return = '/dashboard/';
         }
     }
     if ($key === 'operator' || $key === 'day') {

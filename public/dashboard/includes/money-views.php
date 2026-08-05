@@ -9,18 +9,30 @@ if (!defined('REPS_DASH_LOADED')) {
  * Money page HTML peers only — rates/economics live in economics.php.
  */
 
-function repsDashRenderMoneyAdmin(array $user, array $shops): void
+function repsDashRenderMoneyAdmin(array $user, array $shops, ?string $repFilter = null): void
 {
     $rate = repsDashMoneyHourlyRate();
     $opsBy = repsDashMoneyOpsByShopId(repsDashOperatorsForUser($user));
+    $repFilter = $repFilter !== null && $repFilter !== '' ? $repFilter : null;
 
     $totGross = $totDsc = $totShop = $totHours = 0.0;
     $internalGross = $affiliateGross = 0.0;
-    $byRep = [];
     $rows = [];
+    $byRepAll = [];
 
     foreach ($shops as $shop) {
         $e = repsDashMoneyShopEconomics($shop, $rate);
+        $rep = (string) ($shop['assigned_sales_rep'] ?? 'unassigned');
+        if (!isset($byRepAll[$rep])) {
+            $byRepAll[$rep] = ['hours' => 0.0, 'dsc' => 0.0, 'shops' => 0];
+        }
+        $byRepAll[$rep]['hours'] += $e['hours'];
+        $byRepAll[$rep]['dsc'] += $e['dsc_pay'];
+        $byRepAll[$rep]['shops']++;
+
+        if ($repFilter !== null && $rep !== $repFilter) {
+            continue;
+        }
         $totGross += $e['gross'];
         $totDsc += $e['dsc_pay'];
         $totShop += $e['shop_pay'];
@@ -30,24 +42,29 @@ function repsDashRenderMoneyAdmin(array $user, array $shops): void
         } else {
             $affiliateGross += $e['gross'];
         }
-        $rep = (string) ($shop['assigned_sales_rep'] ?? 'unassigned');
-        if (!isset($byRep[$rep])) {
-            $byRep[$rep] = ['hours' => 0.0, 'dsc' => 0.0, 'shops' => 0];
-        }
-        $byRep[$rep]['hours'] += $e['hours'];
-        $byRep[$rep]['dsc'] += $e['dsc_pay'];
-        $byRep[$rep]['shops']++;
         $rows[] = ['shop' => $shop, 'e' => $e, 'ops' => count($opsBy[(int) $shop['id']] ?? [])];
     }
+    ksort($byRepAll);
     usort($rows, static fn($a, $b) => $b['e']['gross'] <=> $a['e']['gross']);
 
+    $subtitle = 'DSC portfolio — every shop, every dollar lane (mock)';
+    if ($repFilter !== null) {
+        $subtitle .= ' · filtered to @' . $repFilter;
+    }
+
     repsDashRenderHeader('Money', 'money');
-    repsDashRenderPageHeader('Money', 'DSC portfolio — every shop, every dollar lane (mock)');
+    repsDashRenderPageHeader('Money', $subtitle);
     ?>
 <div class="alert alert-dark border-0 mb-3">
   <strong>Admin peer.</strong> Full economics: DSC take, shop outflows, internal vs affiliate lanes, sales-rep attribution.
   Mock $<?php echo number_format($rate, 0); ?>/hr · not payroll · rules TBD #1570.
+  Tap a rep to filter the shop ledger.
 </div>
+<?php if ($repFilter !== null): ?>
+  <p class="mb-3">
+    <a class="btn btn-sm btn-outline-secondary" href="/dashboard/money.php">Clear rep filter (@<?php echo htmlspecialchars($repFilter); ?>)</a>
+  </p>
+<?php endif; ?>
 
 <div class="row g-3 mb-4">
   <div class="col-6 col-lg-3">
@@ -79,7 +96,7 @@ function repsDashRenderMoneyAdmin(array $user, array $shops): void
 <div class="row g-3 mb-4">
   <div class="col-md-6">
     <div class="surface p-3 h-100">
-      <h2 class="h6 mb-3">Lane mix</h2>
+      <h2 class="h6 mb-3">Lane mix<?php echo $repFilter !== null ? ' (filtered)' : ''; ?></h2>
       <div class="d-flex justify-content-between small mb-2"><span>Internal (100% DSC)</span><strong>$<?php echo number_format($internalGross, 2); ?></strong></div>
       <div class="d-flex justify-content-between small mb-0"><span>Affiliate shops (split)</span><strong>$<?php echo number_format($affiliateGross, 2); ?></strong></div>
     </div>
@@ -87,16 +104,20 @@ function repsDashRenderMoneyAdmin(array $user, array $shops): void
   <div class="col-md-6">
     <div class="surface p-3 h-100">
       <h2 class="h6 mb-3">By sales seat</h2>
-      <?php if ($byRep === []): ?>
+      <?php if ($byRepAll === []): ?>
         <p class="small text-muted mb-0">No shops.</p>
       <?php else: ?>
         <div class="table-responsive">
           <table class="table table-sm mb-0">
             <thead><tr><th>Rep</th><th>Shops</th><th>Hours</th><th>DSC $</th></tr></thead>
             <tbody>
-            <?php foreach ($byRep as $rep => $agg): ?>
-              <tr>
-                <td><code><?php echo htmlspecialchars($rep); ?></code></td>
+            <?php foreach ($byRepAll as $rep => $agg): ?>
+              <tr<?php echo $repFilter === $rep ? ' class="table-active"' : ''; ?>>
+                <td>
+                  <a href="<?php echo htmlspecialchars(repsDashMoneyRepHref((string) $rep)); ?>">
+                    <code><?php echo htmlspecialchars((string) $rep); ?></code>
+                  </a>
+                </td>
                 <td><?php echo (int) $agg['shops']; ?></td>
                 <td><?php echo htmlspecialchars((string) round($agg['hours'], 1)); ?></td>
                 <td>$<?php echo number_format($agg['dsc'], 2); ?></td>
@@ -120,15 +141,21 @@ function repsDashRenderMoneyAdmin(array $user, array $shops): void
         </tr>
       </thead>
       <tbody>
+      <?php if ($rows === []): ?>
+        <tr><td colspan="9" class="text-muted p-3">No shops for this filter.</td></tr>
+      <?php endif; ?>
       <?php foreach ($rows as $r):
           $s = $r['shop'];
           $e = $r['e'];
           $shopOps = $opsBy[(int) $s['id']] ?? [];
+          $rep = (string) ($s['assigned_sales_rep'] ?? 'unassigned');
           ?>
         <tr>
           <td class="fw-semibold"><a class="text-decoration-none" href="<?php echo htmlspecialchars(repsDashShopHref((int) $s['id'])); ?>"><?php echo htmlspecialchars($s['name']); ?></a></td>
           <td><?php repsDashStatusPill($s['status']); ?></td>
-          <td class="small"><code><?php echo htmlspecialchars((string) ($s['assigned_sales_rep'] ?? '—')); ?></code></td>
+          <td class="small">
+            <a href="<?php echo htmlspecialchars(repsDashMoneyRepHref($rep)); ?>"><code><?php echo htmlspecialchars($rep === 'unassigned' ? '—' : $rep); ?></code></a>
+          </td>
           <td class="small text-muted"><?php echo $e['internal'] ? 'internal' : 'affiliate split'; ?></td>
           <td class="small">
             <?php

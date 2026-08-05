@@ -236,9 +236,43 @@ repsDashRenderPageHeader('Home', $subtitle);
   <div class="col-lg-5">
     <?php if (in_array('apply_leads', $blocks, true)): ?>
     <div class="surface p-3 mb-3">
-      <h2 class="h5 mb-2">Apply leads</h2>
-      <p class="mb-2"><?php echo (int) $pulse['apply_leads_open']; ?> open inbound applications (lorem).</p>
-      <a class="btn btn-sm btn-outline-primary" href="https://decisionsciencecorp.com/" target="_blank" rel="noopener">DSC Messages · Reps channel</a>
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h5 mb-0">Apply leads</h2>
+        <a class="small" href="/dashboard/leads.php">Open desk</a>
+      </div>
+      <p class="mb-2"><?php echo (int) $pulse['apply_leads_open']; ?> open/claimed inbound applications.</p>
+      <?php
+      $homeLeads = array_slice(
+          array_values(array_filter(
+              repsDashListApplyLeads(null),
+              static fn(array $l): bool => in_array($l['status'], ['open', 'claimed'], true)
+          )),
+          0,
+          4
+      );
+      ?>
+      <?php if ($homeLeads === []): ?>
+        <p class="small text-muted mb-0">No open leads right now.</p>
+      <?php else: ?>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th>Name</th><th>Path</th><th>Status</th></tr></thead>
+            <tbody>
+            <?php foreach ($homeLeads as $lead): ?>
+              <tr>
+                <td>
+                  <a href="<?php echo htmlspecialchars(repsDashLeadHref((int) $lead['id'])); ?>">
+                    <?php echo htmlspecialchars($lead['name']); ?>
+                  </a>
+                </td>
+                <td class="small"><?php echo htmlspecialchars($lead['path']); ?></td>
+                <td><?php repsDashStatusPill($lead['status']); ?></td>
+              </tr>
+            <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+      <?php endif; ?>
     </div>
     <?php endif; ?>
 

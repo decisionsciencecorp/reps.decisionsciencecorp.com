@@ -79,7 +79,27 @@ function repsDashDbMigrate(PDO $pdo): void
         $pdo->prepare('INSERT INTO schema_migrations (version) VALUES (?)')->execute(['002_shop_notes']);
     }
 
+    if (!in_array('003_apply_leads', $applied, true)) {
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS apply_leads (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                phone TEXT NOT NULL DEFAULT \'\',
+                email TEXT NOT NULL DEFAULT \'\',
+                path TEXT NOT NULL DEFAULT \'\',
+                notes TEXT NOT NULL DEFAULT \'\',
+                status TEXT NOT NULL DEFAULT \'open\',
+                assigned_sales_rep TEXT,
+                created_at TEXT NOT NULL DEFAULT (datetime(\'now\')),
+                updated_at TEXT NOT NULL DEFAULT (datetime(\'now\'))
+            )'
+        );
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_apply_leads_status ON apply_leads(status)');
+        $pdo->prepare('INSERT INTO schema_migrations (version) VALUES (?)')->execute(['003_apply_leads']);
+    }
+
     repsDashDbSeedUsers($pdo);
+    repsDashDbSeedApplyLeads($pdo);
 }
 
 /**
@@ -405,4 +425,173 @@ function repsDashSaveShopNotes(int $shopId, string $notes, ?int $updatedByUserId
            updated_at = datetime(\'now\')'
     );
     $stmt->execute([$shopId, $notes, $updatedByUserId]);
+}
+
+/** @return list<array<string, mixed>> */
+function repsDashSeedApplyLeadDefs(): array
+{
+    return [
+        [
+            'name' => 'Dee Patel',
+            'phone' => '(214) 555-0120',
+            'email' => 'dee@lakespa.example',
+            'path' => 'company',
+            'notes' => 'Warm intro from Jim — Lake Highlands Auto Spa. Wants Friday pitch.',
+            'status' => 'open',
+            'assigned_sales_rep' => null,
+            'created_at' => '2026-08-03 09:14:00',
+        ],
+        [
+            'name' => 'Chris Nguyen',
+            'phone' => '(469) 555-0331',
+            'email' => 'chris.n@example.com',
+            'path' => 'on_job',
+            'notes' => 'Detail tech — evenings after shop closes.',
+            'status' => 'open',
+            'assigned_sales_rep' => null,
+            'created_at' => '2026-08-04 11:02:00',
+        ],
+        [
+            'name' => 'Ava Morales',
+            'phone' => '(817) 555-0442',
+            'email' => 'ava.m@example.com',
+            'path' => 'at_home',
+            'notes' => 'Has spare Android. Asked about headset shipping.',
+            'status' => 'claimed',
+            'assigned_sales_rep' => 'jim',
+            'created_at' => '2026-08-02 16:40:00',
+        ],
+        [
+            'name' => 'Fleet Wash HQ inbound',
+            'phone' => '(817) 555-0177',
+            'email' => 'ops@fleetwash.example',
+            'path' => 'company',
+            'notes' => 'Second location interest — already have North Texas Fleet Wash live.',
+            'status' => 'open',
+            'assigned_sales_rep' => null,
+            'created_at' => '2026-08-05 08:20:00',
+        ],
+        [
+            'name' => 'Sam Ortiz',
+            'phone' => '(972) 555-0555',
+            'email' => 'sam.ortiz@example.com',
+            'path' => 'on_job',
+            'notes' => 'Closed — duplicate of existing operator lead.',
+            'status' => 'closed',
+            'assigned_sales_rep' => 'seven',
+            'created_at' => '2026-07-28 13:05:00',
+        ],
+    ];
+}
+
+function repsDashDbSeedApplyLeads(PDO $pdo): void
+{
+    $count = (int) $pdo->query('SELECT COUNT(*) FROM apply_leads')->fetchColumn();
+    if ($count > 0) {
+        return;
+    }
+    $stmt = $pdo->prepare(
+        'INSERT INTO apply_leads (name, phone, email, path, notes, status, assigned_sales_rep, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    );
+    foreach (repsDashSeedApplyLeadDefs() as $row) {
+        $created = (string) $row['created_at'];
+        $stmt->execute([
+            $row['name'],
+            $row['phone'],
+            $row['email'],
+            $row['path'],
+            $row['notes'],
+            $row['status'],
+            $row['assigned_sales_rep'],
+            $created,
+            $created,
+        ]);
+    }
+}
+
+/** @return list<array<string, mixed>> */
+function repsDashListApplyLeads(?string $status = null): array
+{
+    if ($status !== null && $status !== '') {
+        $stmt = repsDashDb()->prepare(
+            'SELECT * FROM apply_leads WHERE status = ? ORDER BY datetime(created_at) DESC, id DESC'
+        );
+        $stmt->execute([$status]);
+        $rows = $stmt->fetchAll();
+    } else {
+        $rows = repsDashDb()->query(
+            'SELECT * FROM apply_leads ORDER BY datetime(created_at) DESC, id DESC'
+        )->fetchAll();
+    }
+    return array_map('repsDashApplyLeadRowShape', $rows ?: []);
+}
+
+/** @return array<string, mixed>|null */
+function repsDashFindApplyLead(int $id): ?array
+{
+    $stmt = repsDashDb()->prepare('SELECT * FROM apply_leads WHERE id = ? LIMIT 1');
+    $stmt->execute([$id]);
+    $row = $stmt->fetch();
+    return $row ? repsDashApplyLeadRowShape($row) : null;
+}
+
+/** @param array<string, mixed> $row */
+function repsDashApplyLeadRowShape(array $row): array
+{
+    return [
+        'id' => (int) $row['id'],
+        'name' => (string) $row['name'],
+        'phone' => (string) $row['phone'],
+        'email' => (string) $row['email'],
+        'path' => (string) $row['path'],
+        'notes' => (string) $row['notes'],
+        'status' => (string) $row['status'],
+        'assigned_sales_rep' => $row['assigned_sales_rep'] !== null && $row['assigned_sales_rep'] !== ''
+            ? (string) $row['assigned_sales_rep'] : null,
+        'created_at' => (string) $row['created_at'],
+        'updated_at' => (string) $row['updated_at'],
+    ];
+}
+
+function repsDashCountOpenApplyLeads(): int
+{
+    return (int) repsDashDb()->query(
+        "SELECT COUNT(*) FROM apply_leads WHERE status IN ('open', 'claimed')"
+    )->fetchColumn();
+}
+
+/**
+ * @param array<string, mixed> $data
+ * @return array{ok:bool,error?:string}
+ */
+function repsDashUpdateApplyLead(int $id, array $data): array
+{
+    $existing = repsDashFindApplyLead($id);
+    if ($existing === null) {
+        return ['ok' => false, 'error' => 'Lead not found.'];
+    }
+    $status = (string) ($data['status'] ?? $existing['status']);
+    if (!in_array($status, ['open', 'claimed', 'closed'], true)) {
+        return ['ok' => false, 'error' => 'Invalid status.'];
+    }
+    $rep = array_key_exists('assigned_sales_rep', $data)
+        ? ($data['assigned_sales_rep'] !== null && $data['assigned_sales_rep'] !== ''
+            ? (string) $data['assigned_sales_rep'] : null)
+        : $existing['assigned_sales_rep'];
+    $notes = array_key_exists('notes', $data)
+        ? (string) $data['notes']
+        : $existing['notes'];
+    if ($status === 'claimed' && ($rep === null || $rep === '')) {
+        return ['ok' => false, 'error' => 'Claimed leads need an assigned sales rep.'];
+    }
+    if ($status === 'open') {
+        $rep = null;
+    }
+    $stmt = repsDashDb()->prepare(
+        'UPDATE apply_leads SET status = ?, assigned_sales_rep = ?, notes = ?, updated_at = datetime(\'now\')
+         WHERE id = ?'
+    );
+    $stmt->execute([$status, $rep, $notes, $id]);
+    return ['ok' => true];
 }

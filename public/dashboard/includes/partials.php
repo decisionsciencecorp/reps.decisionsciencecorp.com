@@ -136,7 +136,11 @@ function repsDashRenderSessionTable(array $sessions, array $opts = []): void
       <?php foreach ($sessions as $s): ?>
         <tr>
           <?php if ($variant === 'inbox'): ?>
-            <td class="small font-monospace"><?php echo htmlspecialchars((string) $s['session_id']); ?></td>
+            <td class="small font-monospace">
+              <a href="<?php echo htmlspecialchars(repsDashSessionHref((string) $s['session_id'])); ?>">
+                <?php echo htmlspecialchars((string) $s['session_id']); ?>
+              </a>
+            </td>
             <?php if ($showOperator): ?>
               <td>
                 <?php
@@ -149,7 +153,16 @@ function repsDashRenderSessionTable(array $sessions, array $opts = []): void
               </td>
             <?php endif; ?>
             <?php if ($showShop): ?>
-              <td><?php echo htmlspecialchars($shopDash ? '—' : (string) $s['shop']); ?></td>
+              <td>
+                <?php
+                if ($shopDash || (int) ($s['shop_id'] ?? 0) <= 0) {
+                    echo htmlspecialchars($shopDash ? '—' : (string) $s['shop']);
+                } else {
+                    echo '<a class="text-decoration-none" href="' . htmlspecialchars(repsDashShopHref((int) $s['shop_id'])) . '">'
+                        . htmlspecialchars((string) $s['shop']) . '</a>';
+                }
+                ?>
+              </td>
             <?php endif; ?>
             <td><?php repsDashStatusPill((string) $s['status']); ?></td>
             <td><?php echo htmlspecialchars((string) $s['duration_hours']); ?></td>
@@ -165,7 +178,11 @@ function repsDashRenderSessionTable(array $sessions, array $opts = []): void
               <?php endif; ?>
             </td>
           <?php elseif ($variant === 'day'): ?>
-            <td class="small"><?php echo htmlspecialchars(substr((string) $s['completed_at'], 11)); ?></td>
+            <td class="small">
+              <a href="<?php echo htmlspecialchars(repsDashSessionHref((string) $s['session_id'])); ?>">
+                <?php echo htmlspecialchars(substr((string) $s['completed_at'], 11)); ?>
+              </a>
+            </td>
             <?php if ($showOperator): ?>
               <td>
                 <?php
@@ -182,7 +199,11 @@ function repsDashRenderSessionTable(array $sessions, array $opts = []): void
             <td><?php repsDashStatusPill((string) $s['status']); ?></td>
             <td class="small text-muted"><?php echo htmlspecialchars($s['rejection_reason'] !== '' ? (string) $s['rejection_reason'] : '—'); ?></td>
           <?php else: ?>
-            <td class="small"><?php echo htmlspecialchars((string) $s['completed_at']); ?></td>
+            <td class="small">
+              <a href="<?php echo htmlspecialchars(repsDashSessionHref((string) $s['session_id'])); ?>">
+                <?php echo htmlspecialchars((string) $s['completed_at']); ?>
+              </a>
+            </td>
             <td><?php repsDashStatusPill((string) $s['status']); ?></td>
             <td><?php echo htmlspecialchars((string) $s['accepted_hours']); ?></td>
             <td class="small text-muted"><?php echo htmlspecialchars($s['rejection_reason'] !== '' ? (string) $s['rejection_reason'] : '—'); ?></td>

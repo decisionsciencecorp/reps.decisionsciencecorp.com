@@ -64,6 +64,16 @@ function repsDashFindShop(int $id): ?array
     return null;
 }
 
+function repsDashFindSession(string $sessionId): ?array
+{
+    foreach (repsDashAllSessions() as $session) {
+        if ((string) ($session['session_id'] ?? '') === $sessionId) {
+            return $session;
+        }
+    }
+    return null;
+}
+
 /** @return list<array<string, mixed>> */
 function repsDashSessionsForOperator(int $operatorId): array
 {

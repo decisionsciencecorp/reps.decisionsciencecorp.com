@@ -123,7 +123,10 @@ assertTrue(in_array('education', repsDashNavKeysForRole('business_owner'), true)
 assertTrue(!in_array('education', repsDashNavKeysForRole('admin'), true), 'admin no education');
 assertTrue(!in_array('education', repsDashNavKeysForRole('ops'), true), 'ops no education');
 assertTrue(!in_array('education', repsDashNavKeysForRole('agent'), true), 'agent no education');
+assertTrue(in_array('leads', repsDashNavKeysForRole('sales'), true), 'sales has leads nav');
 assertTrue(!in_array('sessions', repsDashNavKeysForRole('sales'), true), 'sales no sessions nav');
+assertTrue(in_array('leads', repsDashNavKeysForRole('admin'), true), 'admin has leads nav');
+assertTrue(!in_array('leads', repsDashNavKeysForRole('employee'), true), 'employee no leads');
 
 // --- Economics single source ---
 assertEq(repsDashMoneyHourlyRate(), 20.0, 'hourly rate constant');

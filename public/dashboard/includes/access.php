@@ -26,11 +26,11 @@ function repsDashAllRoles(): array
 function repsDashNavKeysForRole(string $role): array
 {
     return match ($role) {
-        'admin' => ['home', 'shops', 'operators', 'sessions', 'money', 'users', 'settings'],
-        'ops' => ['home', 'shops', 'operators', 'sessions', 'money', 'settings'],
+        'admin' => ['home', 'shops', 'leads', 'operators', 'sessions', 'money', 'users', 'settings'],
+        'ops' => ['home', 'shops', 'leads', 'operators', 'sessions', 'money', 'settings'],
         // Sales = pipeline (Shops) + Money. Operators appear inside Money, not a roster desk.
         // No session drill-down / vids.
-        'sales' => ['home', 'shops', 'money', 'education', 'settings'],
+        'sales' => ['home', 'shops', 'leads', 'money', 'education', 'settings'],
         // Owner: "Shops" = their shop card (not a pipeline book).
         'business_owner' => ['home', 'shops', 'operators', 'sessions', 'money', 'education', 'settings'],
         'employee', 'individual' => ['home', 'sessions', 'education', 'settings'],
@@ -177,6 +177,20 @@ function repsDashViewsRolesMatrix(): array
             ]),
         ],
         [
+            'view' => 'leads',
+            'label' => 'Apply leads',
+            'purpose' => 'Inbound reps apply form desk',
+            'cells' => $cells([
+                'admin' => 'All leads',
+                'ops' => 'All leads',
+                'sales' => 'Claim / work book',
+                'business_owner' => '—',
+                'employee' => '—',
+                'individual' => '—',
+                'agent' => '—',
+            ]),
+        ],
+        [
             'view' => 'operators',
             'label' => 'Operators (nav)',
             'purpose' => 'Standalone roster desk',
@@ -276,12 +290,12 @@ function repsDashViewsRolesMatrix(): array
         ],
         [
             'view' => 'apply_leads',
-            'label' => 'Apply leads (home card)',
-            'purpose' => 'Inbound join applications',
+            'label' => 'Apply leads (home + Leads nav)',
+            'purpose' => 'Inbound join applications desk',
             'cells' => $cells([
-                'admin' => 'Yes',
-                'ops' => 'Yes',
-                'sales' => 'Yes',
+                'admin' => 'Full desk',
+                'ops' => 'Full desk',
+                'sales' => 'Claim / work',
                 'business_owner' => '—',
                 'employee' => '—',
                 'individual' => '—',

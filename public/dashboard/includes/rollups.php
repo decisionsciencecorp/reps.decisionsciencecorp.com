@@ -19,6 +19,34 @@ function repsDashShopHref(int $id): string
     return '/dashboard/shop.php?id=' . $id;
 }
 
+function repsDashSessionHref(string $sessionId): string
+{
+    return '/dashboard/session.php?id=' . rawurlencode($sessionId);
+}
+
+function repsDashLeadHref(int $id): string
+{
+    return '/dashboard/lead.php?id=' . $id;
+}
+
+function repsDashMoneyRepHref(string $rep): string
+{
+    return '/dashboard/money.php?rep=' . rawurlencode($rep);
+}
+
+/** Humanize Shift rejection_reason (Doc #818 client catalog style). */
+function repsDashRejectionReasonLabel(string $reason): string
+{
+    $r = trim($reason);
+    if ($r === '') {
+        return '—';
+    }
+    $lower = strtolower($r);
+    $lower = preg_replace('/^rejected[_\s]+/', '', $lower) ?? $lower;
+    $lower = str_replace('_', ' ', $lower);
+    return ucwords($lower);
+}
+
 function repsDashDayHref(string $day, ?int $operatorId = null): string
 {
     $q = 'date=' . rawurlencode($day);
@@ -148,7 +176,9 @@ function repsDashPulseForUser(array $user): array
         'shops_visible' => count($shops),
         'shops_zero_upload' => $dead,
         'operators_active' => $activeOps,
-        'apply_leads_open' => in_array($user['role'], ['admin', 'ops', 'sales'], true) ? 3 : 0,
+        'apply_leads_open' => in_array($user['role'], ['admin', 'ops', 'sales'], true)
+            ? repsDashCountOpenApplyLeads()
+            : 0,
         'demo_banner' => true,
     ];
 }

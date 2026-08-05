@@ -317,7 +317,6 @@ function repsDashRenderMoneyOps(array $user, array $shops): void
       <tbody>
       <?php foreach ($healthy as $r):
           $s = $r['shop'];
-          $activeOps = count(array_filter($r['ops'], static fn($o) => ($o['status'] ?? '') === 'active'));
           ?>
         <tr>
           <td><?php echo htmlspecialchars($s['name']); ?></td>

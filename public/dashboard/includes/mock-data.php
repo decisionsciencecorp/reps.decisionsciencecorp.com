@@ -94,16 +94,16 @@ function repsDashMockShops(): array
 function repsDashMockOperators(): array
 {
     return [
-        ['id' => 1, 'name' => 'Alex Rivera', 'shop_id' => 104, 'shop' => 'North Texas Fleet Wash', 'phone' => '(817) 555-1001', 'status' => 'active', 'accepted_7d' => 18.5, 'rejected_7d' => 2.0, 'last_session' => '2026-08-04 14:12'],
-        ['id' => 2, 'name' => 'Jordan Lee', 'shop_id' => 104, 'shop' => 'North Texas Fleet Wash', 'phone' => '(817) 555-1002', 'status' => 'active', 'accepted_7d' => 14.0, 'rejected_7d' => 1.5, 'last_session' => '2026-08-04 11:40'],
-        ['id' => 3, 'name' => 'Sam Okonkwo', 'shop_id' => 104, 'shop' => 'North Texas Fleet Wash', 'phone' => '(817) 555-1003', 'status' => 'active', 'accepted_7d' => 16.0, 'rejected_7d' => 3.0, 'last_session' => '2026-08-03 19:05'],
-        ['id' => 4, 'name' => 'Casey Nguyen', 'shop_id' => 104, 'shop' => 'North Texas Fleet Wash', 'phone' => '(817) 555-1004', 'status' => 'invited', 'accepted_7d' => 0.0, 'rejected_7d' => 0.0, 'last_session' => '—'],
-        ['id' => 5, 'name' => 'Seven Stone', 'shop_id' => 103, 'shop' => 'Seven Mobile Detail', 'phone' => '(972) 555-0199', 'status' => 'active', 'accepted_7d' => 6.2, 'rejected_7d' => 1.8, 'last_session' => '2026-08-04 16:01'],
-        ['id' => 6, 'name' => 'Kit Empanada A', 'shop_id' => 101, 'shop' => 'Empanada Empire — Richardson', 'phone' => '(214) 555-2001', 'status' => 'active', 'accepted_7d' => 20.0, 'rejected_7d' => 1.0, 'last_session' => '2026-08-04 15:22'],
-        ['id' => 7, 'name' => 'Kit Empanada B', 'shop_id' => 101, 'shop' => 'Empanada Empire — Richardson', 'phone' => '(214) 555-2002', 'status' => 'active', 'accepted_7d' => 12.5, 'rejected_7d' => 2.0, 'last_session' => '2026-08-04 09:18'],
-        ['id' => 8, 'name' => 'Kit Empanada C', 'shop_id' => 101, 'shop' => 'Empanada Empire — Richardson', 'phone' => '(214) 555-2003', 'status' => 'active', 'accepted_7d' => 10.0, 'rejected_7d' => 0.5, 'last_session' => '2026-08-03 21:44'],
-        // Individual seat — no shop book (shop_id 0 = personal lane)
-        ['id' => 9, 'name' => 'Pat Solo', 'shop_id' => 0, 'shop' => '— (individual)', 'phone' => '(469) 555-0188', 'status' => 'active', 'accepted_7d' => 9.5, 'rejected_7d' => 1.0, 'last_session' => '2026-08-04 13:55'],
+        // Fields mirror Shift Team + Worker surfaces (Doc #818 + live walk 2026-08-05).
+        ['id' => 1, 'name' => 'Alex Rivera', 'shop_id' => 104, 'shop' => 'North Texas Fleet Wash', 'phone' => '(817) 555-1001', 'status' => 'active', 'matched' => true, 'accepted_7d' => 18.5, 'rejected_7d' => 2.0, 'last_session' => '2026-08-04 14:12'],
+        ['id' => 2, 'name' => 'Jordan Lee', 'shop_id' => 104, 'shop' => 'North Texas Fleet Wash', 'phone' => '(817) 555-1002', 'status' => 'active', 'matched' => true, 'accepted_7d' => 14.0, 'rejected_7d' => 1.5, 'last_session' => '2026-08-04 11:40'],
+        ['id' => 3, 'name' => 'Sam Okonkwo', 'shop_id' => 104, 'shop' => 'North Texas Fleet Wash', 'phone' => '(817) 555-1003', 'status' => 'active', 'matched' => true, 'accepted_7d' => 16.0, 'rejected_7d' => 3.0, 'last_session' => '2026-08-03 19:05'],
+        ['id' => 4, 'name' => 'Casey Nguyen', 'shop_id' => 104, 'shop' => 'North Texas Fleet Wash', 'phone' => '(817) 555-1004', 'status' => 'invited', 'matched' => false, 'accepted_7d' => 0.0, 'rejected_7d' => 0.0, 'last_session' => '—'],
+        ['id' => 5, 'name' => 'Seven Stone', 'shop_id' => 103, 'shop' => 'Seven Mobile Detail', 'phone' => '(972) 555-0199', 'status' => 'active', 'matched' => true, 'accepted_7d' => 6.2, 'rejected_7d' => 1.8, 'last_session' => '2026-08-04 16:01'],
+        ['id' => 6, 'name' => 'Kit Empanada A', 'shop_id' => 101, 'shop' => 'Empanada Empire — Richardson', 'phone' => '(214) 555-2001', 'status' => 'active', 'matched' => true, 'accepted_7d' => 20.0, 'rejected_7d' => 1.0, 'last_session' => '2026-08-04 15:22'],
+        ['id' => 7, 'name' => 'Kit Empanada B', 'shop_id' => 101, 'shop' => 'Empanada Empire — Richardson', 'phone' => '(214) 555-2002', 'status' => 'active', 'matched' => true, 'accepted_7d' => 12.5, 'rejected_7d' => 2.0, 'last_session' => '2026-08-04 09:18'],
+        ['id' => 8, 'name' => 'Kit Empanada C', 'shop_id' => 101, 'shop' => 'Empanada Empire — Richardson', 'phone' => '(214) 555-2003', 'status' => 'active', 'matched' => true, 'accepted_7d' => 10.0, 'rejected_7d' => 0.5, 'last_session' => '2026-08-03 21:44'],
+        ['id' => 9, 'name' => 'Pat Solo', 'shop_id' => 0, 'shop' => '— (individual)', 'phone' => '(469) 555-0188', 'status' => 'active', 'matched' => true, 'accepted_7d' => 9.5, 'rejected_7d' => 1.0, 'last_session' => '2026-08-04 13:55'],
     ];
 }
 
@@ -112,27 +112,33 @@ function repsDashMockSessions(): array
 {
     $rows = [];
     $ops = repsDashMockOperators();
-    $statuses = ['accepted', 'accepted', 'accepted', 'rejected', 'pending'];
-    $reasons = ['', '', '', 'REJECTED_HEALTH_TOO_LOW', ''];
+    // Status vocabulary matches Shift hours-feed: completed | rejected (+ pending for in-flight mock).
+    $statuses = ['completed', 'completed', 'completed', 'rejected', 'pending'];
+    $reasons = ['', '', '', 'REJECTED_HEALTH_TOO_LOW', '', 'REJECTED_REVIEWED_IV', 'QUARANTINED_FRAUD'];
     $n = 1;
     foreach ($ops as $op) {
         if ($op['status'] !== 'active') {
             continue;
         }
-        for ($i = 0; $i < 3; $i++) {
+        for ($i = 0; $i < 5; $i++) {
             $st = $statuses[($n + $i) % count($statuses)];
-            $hours = round(1.2 + (($n + $i) % 5) * 0.35, 2);
+            $hours = round(0.4 + (($n + $i) % 5) * 0.35, 2);
+            $accepted = $st === 'completed' ? round($hours * (0.55 + (($n + $i) % 4) * 0.1), 2) : 0.0;
+            $day = 1 + (($n + $i) % 5);
+            $hour = 3 + ($i * 2);
             $rows[] = [
                 'session_id' => 'sess_mock_' . str_pad((string) $n, 4, '0', STR_PAD_LEFT),
+                'operator_id' => (int) $op['id'],
                 'operator' => $op['name'],
                 'shop' => $op['shop'],
                 'shop_id' => $op['shop_id'],
                 'status' => $st,
                 'duration_hours' => $hours,
-                'accepted_hours' => $st === 'accepted' ? $hours : 0.0,
-                'rejection_reason' => $st === 'rejected' ? $reasons[($n + $i) % count($reasons)] : '',
+                'accepted_hours' => $accepted,
+                'rejection_reason' => $st === 'rejected' ? $reasons[($n + $i) % count($reasons)] ?: 'REJECTED_HEALTH_TOO_LOW' : '',
                 'partner_code' => 'C6N9T7',
-                'completed_at' => sprintf('2026-08-%02d %02d:%02d', 1 + (($n + $i) % 4), 9 + ($i * 3), 10 + $i),
+                'completed_at' => sprintf('2026-08-%02d %02d:%02d', $day, $hour, 10 + $i),
+                'day' => sprintf('2026-08-%02d', $day),
             ];
             $n++;
         }
@@ -223,6 +229,140 @@ function repsDashSessionsForUser(array $user): array
     ));
 }
 
+function repsDashFindOperator(int $id): ?array
+{
+    foreach (repsDashMockOperators() as $op) {
+        if ((int) $op['id'] === $id) {
+            return $op;
+        }
+    }
+    return null;
+}
+
+function repsDashCanViewOperator(array $user, int $operatorId): bool
+{
+    foreach (repsDashOperatorsForUser($user) as $op) {
+        if ((int) $op['id'] === $operatorId) {
+            return true;
+        }
+    }
+    // Sales has no Operators nav but may open drill-down from Money.
+    if (($user['role'] ?? '') === 'sales') {
+        $op = repsDashFindOperator($operatorId);
+        if (!$op) {
+            return false;
+        }
+        $shopIds = array_map('intval', array_column(repsDashShopsForUser($user), 'id'));
+        return in_array((int) $op['shop_id'], $shopIds, true);
+    }
+    return false;
+}
+
+/** @return list<array<string, mixed>> */
+function repsDashSessionsForOperator(int $operatorId): array
+{
+    return array_values(array_filter(
+        repsDashMockSessions(),
+        static fn(array $s): bool => (int) ($s['operator_id'] ?? 0) === $operatorId
+    ));
+}
+
+/**
+ * Shift-shaped worker rollup (Overview / Worker page fidelity).
+ *
+ * @return array<string, mixed>
+ */
+function repsDashOperatorDetailStats(int $operatorId, float $rate = 20.0): array
+{
+    $sessions = repsDashSessionsForOperator($operatorId);
+    $accepted = 0.0;
+    $recorded = 0.0;
+    $rejectedHours = 0.0;
+    $completed = 0;
+    $rejected = 0;
+    $pending = 0;
+    $reasons = [];
+    $byDay = [];
+
+    foreach ($sessions as $s) {
+        $dur = (float) $s['duration_hours'];
+        $acc = (float) $s['accepted_hours'];
+        $recorded += $dur;
+        $accepted += $acc;
+        $day = (string) ($s['day'] ?? substr((string) $s['completed_at'], 0, 10));
+        if (!isset($byDay[$day])) {
+            $byDay[$day] = [
+                'day' => $day,
+                'total_hours' => 0.0,
+                'accepted' => 0.0,
+                'sessions' => 0,
+                'earnings' => 0.0,
+            ];
+        }
+        $byDay[$day]['total_hours'] += $dur;
+        $byDay[$day]['accepted'] += $acc;
+        $byDay[$day]['sessions']++;
+        $byDay[$day]['earnings'] += $acc * $rate;
+
+        if ($s['status'] === 'completed') {
+            $completed++;
+        } elseif ($s['status'] === 'rejected') {
+            $rejected++;
+            $rejectedHours += $dur;
+            $reason = (string) ($s['rejection_reason'] ?: 'UNKNOWN');
+            if (!isset($reasons[$reason])) {
+                $reasons[$reason] = ['reason' => $reason, 'sessions' => 0, 'hours' => 0.0, 'lost' => 0.0];
+            }
+            $reasons[$reason]['sessions']++;
+            $reasons[$reason]['hours'] += $dur;
+            $reasons[$reason]['lost'] += $dur * $rate;
+        } elseif ($s['status'] === 'pending') {
+            $pending++;
+        }
+    }
+
+    $denom = $accepted + $rejectedHours;
+    $acceptance = $denom > 0 ? round(($accepted / $denom) * 100) : null;
+    $days = array_values($byDay);
+    usort($days, static fn($a, $b) => strcmp($b['day'], $a['day']));
+    foreach ($days as &$d) {
+        $d['acceptance'] = $d['total_hours'] > 0
+            ? round(($d['accepted'] / $d['total_hours']) * 100)
+            : 0;
+    }
+    unset($d);
+
+    return [
+        'sessions_count' => count($sessions),
+        'completed' => $completed,
+        'rejected' => $rejected,
+        'pending' => $pending,
+        'accepted_hours' => round($accepted, 1),
+        'recorded_hours' => round($recorded, 1),
+        'rejected_hours' => round($rejectedHours, 1),
+        'acceptance_rate' => $acceptance,
+        'earnings' => round($accepted * $rate, 0),
+        'lost_payouts' => round($rejectedHours * $rate, 0),
+        'reasons' => array_values($reasons),
+        'by_day' => $days,
+        'sessions' => $sessions,
+    ];
+}
+
+function repsDashOperatorHref(int $id): string
+{
+    return '/dashboard/operator.php?id=' . $id;
+}
+
+function repsDashDayHref(string $day, ?int $operatorId = null): string
+{
+    $q = 'date=' . rawurlencode($day);
+    if ($operatorId !== null) {
+        $q .= '&operator_id=' . $operatorId;
+    }
+    return '/dashboard/day.php?' . $q;
+}
+
 /** @return array<string, mixed> */
 function repsDashPulseForUser(array $user): array
 {
@@ -238,6 +378,7 @@ function repsDashPulseForUser(array $user): array
         if ($s['status'] === 'pending') {
             $pending++;
         }
+        // Shift uses completed (not "accepted") for successful sessions.
     }
     $shops = repsDashShopsForUser($user);
     $ops = repsDashOperatorsForUser($user);

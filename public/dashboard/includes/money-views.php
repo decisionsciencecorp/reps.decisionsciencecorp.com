@@ -403,7 +403,11 @@ function repsDashRenderMoneySales(array $user, array $shops): void
           <tbody>
           <?php foreach ($block['ops'] as $op): ?>
             <tr>
-              <td class="fw-semibold"><?php echo htmlspecialchars($op['name']); ?></td>
+              <td class="fw-semibold">
+                <a href="<?php echo htmlspecialchars(repsDashOperatorHref((int) $op['id'])); ?>">
+                  <?php echo htmlspecialchars($op['name']); ?>
+                </a>
+              </td>
               <td><?php repsDashStatusPill($op['status']); ?></td>
               <td><?php echo htmlspecialchars((string) $op['accepted_7d']); ?></td>
               <td><?php echo htmlspecialchars((string) $op['rejected_7d']); ?></td>
@@ -509,7 +513,11 @@ function repsDashRenderMoneyOwner(array $user, array $shops): void
                 $share = $teamHours > 0 ? round(((float) $op['accepted_7d'] / $teamHours) * 100) : 0;
                 ?>
               <tr>
-                <td class="fw-semibold"><?php echo htmlspecialchars($op['name']); ?></td>
+                <td class="fw-semibold">
+                  <a href="<?php echo htmlspecialchars(repsDashOperatorHref((int) $op['id'])); ?>">
+                    <?php echo htmlspecialchars($op['name']); ?>
+                  </a>
+                </td>
                 <td><?php repsDashStatusPill($op['status']); ?></td>
                 <td><?php echo htmlspecialchars((string) $op['accepted_7d']); ?></td>
                 <td class="small text-muted"><?php echo (int) $share; ?>%</td>
@@ -517,7 +525,11 @@ function repsDashRenderMoneyOwner(array $user, array $shops): void
             <?php endforeach; ?>
             <?php foreach ($invited as $op): ?>
               <tr class="text-muted">
-                <td><?php echo htmlspecialchars($op['name']); ?></td>
+                <td>
+                  <a href="<?php echo htmlspecialchars(repsDashOperatorHref((int) $op['id'])); ?>">
+                    <?php echo htmlspecialchars($op['name']); ?>
+                  </a>
+                </td>
                 <td><?php repsDashStatusPill($op['status']); ?></td>
                 <td>—</td>
                 <td class="small">Waiting on first hours</td>

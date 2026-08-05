@@ -37,11 +37,23 @@ $pathMap = [
     '/dashboard/money.php' => 'money',
     '/dashboard/users.php' => 'users',
     '/dashboard/settings.php' => 'settings',
-    '/dashboard/access.php' => 'access', // Dev Mode matrix — always allowed when Dev Mode on
+    '/dashboard/access.php' => 'access',
+    '/dashboard/operator.php' => 'operator',
+    '/dashboard/day.php' => 'day',
 ];
 $key = $pathMap[$path] ?? null;
-if ($key === 'access') {
-    // stay on access matrix after role switch
+if (in_array($key, ['access', 'operator', 'day'], true)) {
+    // drill-downs / matrix — re-check after switch; bounce home if out of scope
+    if ($key === 'operator') {
+        $oid = 0;
+        if (isset($_POST['return'])) {
+            parse_str((string) parse_url($return, PHP_URL_QUERY), $q);
+            $oid = (int) ($q['id'] ?? 0);
+        }
+        if ($oid > 0 && $user && !repsDashCanViewOperator($user, $oid)) {
+            $return = '/dashboard/';
+        }
+    }
 } elseif ($key !== null && !in_array($key, $navKeys, true)) {
     $return = '/dashboard/';
 }

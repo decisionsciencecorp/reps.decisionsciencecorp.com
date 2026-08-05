@@ -70,10 +70,15 @@ repsDashRenderPageHeader(
     Individual session rows (and any clip playback) only exist if <strong>Shift for Business</strong>
     (or a future DSC app) exposes them over API — no video player in Reps until then.
   </p>
-  <p class="mb-0 small text-muted">
+  <p class="mb-2 small text-muted">
     <strong>Money is four peers, not one table:</strong>
     Admin = DSC portfolio · Ops = hours/reject drag · Sales = book earnings + producers ·
     Owner = “My pay” (shop keep + who produced). Sales has no Operators nav — producers live in Money.
+  </p>
+  <p class="mb-0 small text-muted">
+    <strong>Drill-down (Shift-shaped):</strong>
+    Money / Team names → Worker detail → By day → Day sessions.
+    Live Shift walk 2026-08-05: Overview → Team → <code>/dashboard/worker/{userId}</code> → day → session rows (hours-feed).
   </p>
 </div>
 

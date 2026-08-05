@@ -8,9 +8,9 @@ if (!defined('REPS_DASH_LOADED')) {
 function repsDashPill(string $kind): string
 {
     return match (strtolower($kind)) {
-        'active', 'accepted', 'done', 'signed' => 'done',
+        'active', 'accepted', 'completed', 'done', 'signed', 'matched' => 'done',
         'pitched', 'pending', 'doing', 'invited' => 'doing',
-        'rejected', 'paused', 'blocked' => 'blocked',
+        'rejected', 'paused', 'blocked', 'quarantined_fraud' => 'blocked',
         'prospect', 'todo' => 'todo',
         default => 'info',
     };

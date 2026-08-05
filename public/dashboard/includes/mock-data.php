@@ -378,7 +378,6 @@ function repsDashPulseForUser(array $user): array
         if ($s['status'] === 'pending') {
             $pending++;
         }
-        // Shift uses completed (not "accepted") for successful sessions.
     }
     $shops = repsDashShopsForUser($user);
     $ops = repsDashOperatorsForUser($user);

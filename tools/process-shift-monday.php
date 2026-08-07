@@ -12,7 +12,7 @@ declare(strict_types=1);
  *
  * Options:
  *   --has-shop=0|1 --has-affiliate=0|1 --shop-id=N --affiliate=username
- *   --dry-run=1  (accrue only; do not write settlement/ledger)
+ *   --dry-run or --dry-run=1  (accrue only; do not write settlement/ledger)
  */
 
 $root = dirname(__DIR__);
@@ -27,7 +27,7 @@ $opts = getopt('', [
     'has-affiliate:',
     'shop-id:',
     'affiliate:',
-    'dry-run:',
+    'dry-run::',
 ]);
 
 $feedPath = (string) ($opts['feed'] ?? '');
@@ -72,7 +72,9 @@ if (isset($opts['amount-cents'])) {
     $processOpts['amount_cents'] = (int) $opts['amount-cents'];
 }
 
-$dry = ((string) ($opts['dry-run'] ?? '0')) === '1';
+// Bare --dry-run ⇒ false in getopt; --dry-run=1 ⇒ "1". Either means dry.
+$dryRaw = $opts['dry-run'] ?? null;
+$dry = $dryRaw !== null && ($dryRaw === false || $dryRaw === '' || (string) $dryRaw === '1');
 $exit = 0;
 
 foreach ($mondays as $monday) {

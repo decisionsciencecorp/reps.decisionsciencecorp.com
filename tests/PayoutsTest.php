@@ -225,6 +225,14 @@ final class PayoutsTest extends TestCase
 
     public function testStripeClientHelpers(): void
     {
+        // Isolate from ~/.ssh/reps-stripe.pass if present on the machine.
+        putenv('REPS_STRIPE_PASS_FILE=/tmp/reps-stripe-empty-phpunit.pass');
+        $_ENV['REPS_STRIPE_PASS_FILE'] = '/tmp/reps-stripe-empty-phpunit.pass';
+        @unlink('/tmp/reps-stripe-empty-phpunit.pass');
+        putenv('STRIPE_SECRET_KEY');
+        putenv('STRIPE_PUBLISHABLE_KEY');
+        unset($_ENV['STRIPE_SECRET_KEY'], $_ENV['STRIPE_PUBLISHABLE_KEY']);
+
         $this->assertFalse(repsStripeConfigured());
         $this->assertSame('', repsStripePublishableKey());
         $this->assertStringContainsString('api.stripe.com', repsStripeApiBase());
@@ -241,11 +249,13 @@ final class PayoutsTest extends TestCase
 
     public function testConfiguredAcceptsRestrictedKey(): void
     {
+        putenv('REPS_STRIPE_PASS_FILE=/tmp/reps-stripe-empty-phpunit.pass');
+        $_ENV['REPS_STRIPE_PASS_FILE'] = '/tmp/reps-stripe-empty-phpunit.pass';
         putenv('STRIPE_SECRET_KEY=rk_test_phpunit_fake');
         $_ENV['STRIPE_SECRET_KEY'] = 'rk_test_phpunit_fake';
         $this->assertTrue(repsStripeConfigured());
-        putenv('STRIPE_SECRET_KEY=');
-        $_ENV['STRIPE_SECRET_KEY'] = '';
+        putenv('STRIPE_SECRET_KEY');
+        unset($_ENV['STRIPE_SECRET_KEY']);
         $this->assertFalse(repsStripeConfigured());
     }
 

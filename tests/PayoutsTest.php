@@ -239,6 +239,16 @@ final class PayoutsTest extends TestCase
         $this->assertSame('ready', $row['onboarding_status']);
     }
 
+    public function testConfiguredAcceptsRestrictedKey(): void
+    {
+        putenv('STRIPE_SECRET_KEY=rk_test_phpunit_fake');
+        $_ENV['STRIPE_SECRET_KEY'] = 'rk_test_phpunit_fake';
+        $this->assertTrue(repsStripeConfigured());
+        putenv('STRIPE_SECRET_KEY=');
+        $_ENV['STRIPE_SECRET_KEY'] = '';
+        $this->assertFalse(repsStripeConfigured());
+    }
+
     public function testOpsByShopId(): void
     {
         $by = repsDashMoneyOpsByShopId([

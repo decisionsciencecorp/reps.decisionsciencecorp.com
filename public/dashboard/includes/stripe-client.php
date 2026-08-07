@@ -66,7 +66,8 @@ function repsStripeWebhookSecret(bool $connect = false): string
 function repsStripeConfigured(): bool
 {
     $k = repsStripeSecretKey();
-    return $k !== '' && str_starts_with($k, 'sk_');
+    // sk_* standard secret; rk_* restricted key (Dashboard → API keys → Restricted)
+    return $k !== '' && (str_starts_with($k, 'sk_') || str_starts_with($k, 'rk_'));
 }
 
 function repsStripeApiBase(): string

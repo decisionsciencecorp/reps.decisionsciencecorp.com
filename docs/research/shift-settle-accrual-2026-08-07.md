@@ -21,3 +21,7 @@ Per person: their accepted hours that week × $20 (sums to deposit).
 Book `settlement_events` on Monday cash → attach week → disburse 25/25/50 via Stripe Connect.
 
 Contract #707 14-day/tiers = legal fallback only.
+
+## Ops lane (Mark 2026-08-07)
+
+Run all operators as Shift **employees** under DSC’s single Partner account until MicroAGI is more extensible. Shops = Reps attribution only. One Monday gross → per-person from hours-feed → Connect to operators (+ affiliates).

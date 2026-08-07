@@ -1,33 +1,26 @@
-# Shift accrual calibration snapshot
+# Shift settle calibration — hours × bank (2026-08-07)
 
-- Pulled live: `GET /api/dashboard/hours-feed` (partner **C6N9T7**)
-- Sessions: **40** · range **2026-07-17 → 2026-08-07**
-- Totals: **9.000** accepted h · **$180.00** dashboard-equivalent (×$20)
-- 14-day windows anchored to first session day **2026-07-17** (candidate contract cadence)
+**Status:** Calibrated · Hybrid locked weekly  
+**Tasks:** Doc #1036 · #2403 · Phase PRD #1033 §7.2
 
-## 14-day accrual windows
+## Mark bank deposits
 
-| Window | Accepted h | Uploaded h | Quality | Dash $ (acc×20) | Contract est (uploaded×tier) |
-|--------|------------|------------|---------|-----------------|------------------------------|
-| 2026-07-17 to 2026-07-30 | 4.090 | 7.380 | 55% | $81.80 | $73.80 @$10 |
-| 2026-07-31 to 2026-08-13 | 4.910 | 6.460 | 76% | $98.20 | $129.20 @$20 |
+| Posted | Amount |
+|--------|--------|
+| 2026-07-20 | $55.00 |
+| 2026-07-27 | $26.80 |
+| 2026-08-03 | $46.40 |
 
-## ISO weeks
+## Rule
 
-| Week | Accepted h | Uploaded h | Dash $ |
-|------|------------|------------|--------|
-| 2026-W29 | 2.750 | 4.680 | $55.00 |
-| 2026-W30 | 1.340 | 2.510 | $26.80 |
-| 2026-W31 | 1.840 | 2.650 | $36.80 |
-| 2026-W32 | 3.070 | 4.000 | $61.40 |
+**America/Chicago Mon–Sun accepted hours × $20 → paid the following Monday.**
 
-## Bank correlation — NEED FROM MARK
+| Deposit Mon | Hours window | Accepted h | Expected | Bank | Notes |
+|-------------|--------------|------------|----------|------|-------|
+| 2026-07-20 | 07-13 → 07-19 | 2.750 | $55.00 | $55.00 | exact |
+| 2026-07-27 | 07-20 → 07-26 | 1.340 | $26.80 | $26.80 | exact |
+| 2026-08-03 | 07-27 → 08-02 | 2.320 | $46.40 | $46.40 | excludes 0.16h @ 22:14 CT Sun (batch cutoff) |
 
-Primary Gmail has **no Wise** / Grasshopper alert emails for Shift deposits (Square→Grasshopper noise only).
-Please provide for each payout since ~2026-07-17:
-1. **Date** cash hit the bank
-2. **Amount**
-3. **Bank** (Grasshopper vs other) + any Wise reference
-4. Optional: screenshot/CSV export
+Contract 14-day / quality tiers (#707) = legal fallback. **Automation uses weekly observed.**
 
-Then we match deposit → nearest closed 14-day window and measure lag.
+Next check: Mon 2026-08-10 ≈ prior week Aug 3–9 × $20.

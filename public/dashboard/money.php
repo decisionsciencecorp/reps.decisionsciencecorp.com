@@ -6,11 +6,29 @@ require_once __DIR__ . '/includes/money-views.php';
 
 $user = repsDashRequireLogin();
 repsDashRequireNavKey('money', $user);
+
+// Bootstrap ledger from mock accepted hours until Slice C Shift poll lands.
+$ledgerEmpty = (int) repsDashDb()->query('SELECT COUNT(*) FROM ledger_lines')->fetchColumn() === 0;
+if ($ledgerEmpty) {
+    repsLedgerSeedFromMockShops();
+}
+repsSettlementReconcileStripeBalance('money_page_open');
+
 $mode = repsDashMoneyModeForRole((string) $user['role']);
 $shops = repsDashShopsForUser($user);
 $repFilter = trim((string) ($_GET['rep'] ?? ''));
 if ($repFilter === '') {
     $repFilter = null;
+}
+
+if ((string) $user['role'] === 'admin' && ($_SERVER['REQUEST_METHOD'] === 'POST')) {
+    repsDashRequireCsrf();
+    $action = (string) ($_POST['action'] ?? '');
+    if ($action === 'disburse_batch') {
+        repsDisburseRunBatch('manual_' . gmdate('Ymd_His'), false);
+        header('Location: /dashboard/money.php?disbursed=1');
+        exit;
+    }
 }
 
 switch ($mode) {

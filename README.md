@@ -26,6 +26,7 @@ Login platform for DSC Reps ops + affiliate seats. PRD: Tasks Doc **#990**.
 - Slice B: real session auth, SQLite users, admin provisioning, CSRF, Dev Mode env-gated.
 - Join funnel + sales Leads CRM: migration `004_join_funnel`, public `/join*`, partial CRM.
 - Later: Shift sync (C), JSON API (D), SDK/SMCP (E).
+- Payouts phase: Stripe Connect Transfers, ledger 25/25/50, Money UI ledger totals — see `docs/STRIPE-INTEGRATION-PLAN-CONSTRAINED.md`, Tasks Docs **#1032** / **#1033**. Keys in `~/.ssh/reps-stripe.pass` (never commit).
 
 ### Auth (Slice B)
 

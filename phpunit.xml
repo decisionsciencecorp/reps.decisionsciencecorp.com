@@ -13,6 +13,11 @@
     <include>
       <file>public/dashboard/includes/leads-crm.php</file>
       <file>public/join-handler.php</file>
+      <file>public/dashboard/includes/economics.php</file>
+      <file>public/dashboard/includes/settlement.php</file>
+      <file>public/dashboard/includes/ledger.php</file>
+      <file>public/dashboard/includes/payouts-disburse.php</file>
+      <file>public/dashboard/includes/stripe-connect.php</file>
     </include>
   </source>
   <coverage>

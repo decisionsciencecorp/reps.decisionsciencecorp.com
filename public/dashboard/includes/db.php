@@ -137,6 +137,116 @@ function repsDashDbMigrate(PDO $pdo): void
         $pdo->prepare('INSERT INTO schema_migrations (version) VALUES (?)')->execute(['004_join_funnel']);
     }
 
+    if (!in_array('005_payouts', $applied, true)) {
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS settlement_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                source TEXT NOT NULL,
+                source_key TEXT NOT NULL,
+                amount_cents INTEGER NOT NULL DEFAULT 0,
+                currency TEXT NOT NULL DEFAULT \'usd\',
+                status TEXT NOT NULL DEFAULT \'recorded\',
+                meta_json TEXT NOT NULL DEFAULT \'{}\',
+                created_at TEXT NOT NULL DEFAULT (datetime(\'now\')),
+                updated_at TEXT NOT NULL DEFAULT (datetime(\'now\')),
+                UNIQUE(source, source_key)
+            )'
+        );
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_settlement_status ON settlement_events(status)');
+
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS payout_payees (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                entity_type TEXT NOT NULL,
+                entity_id INTEGER NOT NULL,
+                display_name TEXT NOT NULL DEFAULT \'\',
+                email TEXT NOT NULL DEFAULT \'\',
+                stripe_account_id TEXT,
+                onboarding_status TEXT NOT NULL DEFAULT \'none\',
+                payouts_enabled INTEGER NOT NULL DEFAULT 0,
+                charges_enabled INTEGER NOT NULL DEFAULT 0,
+                payouts_enabled_at TEXT,
+                created_at TEXT NOT NULL DEFAULT (datetime(\'now\')),
+                updated_at TEXT NOT NULL DEFAULT (datetime(\'now\')),
+                UNIQUE(entity_type, entity_id)
+            )'
+        );
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_payout_payees_acct ON payout_payees(stripe_account_id)');
+
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS ledger_lines (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                hour_key TEXT NOT NULL,
+                bucket TEXT NOT NULL,
+                amount_cents INTEGER NOT NULL,
+                hours REAL NOT NULL DEFAULT 0,
+                shop_id INTEGER,
+                operator_id INTEGER,
+                affiliate_user_id INTEGER,
+                affiliate_username TEXT,
+                capture_payee TEXT,
+                settlement_id INTEGER,
+                status TEXT NOT NULL DEFAULT \'pending\',
+                stripe_transfer_id TEXT,
+                disbursement_batch_id INTEGER,
+                accepted_at TEXT,
+                transferred_at TEXT,
+                created_at TEXT NOT NULL DEFAULT (datetime(\'now\')),
+                updated_at TEXT NOT NULL DEFAULT (datetime(\'now\'))
+            )'
+        );
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_ledger_hour ON ledger_lines(hour_key)');
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_ledger_status ON ledger_lines(status)');
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_ledger_bucket ON ledger_lines(bucket)');
+
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS disbursement_batches (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                label TEXT NOT NULL DEFAULT \'\',
+                status TEXT NOT NULL DEFAULT \'pending\',
+                line_count INTEGER NOT NULL DEFAULT 0,
+                transferred_count INTEGER NOT NULL DEFAULT 0,
+                skipped_count INTEGER NOT NULL DEFAULT 0,
+                failed_count INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT (datetime(\'now\')),
+                finished_at TEXT
+            )'
+        );
+
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS disbursement_transfers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                batch_id INTEGER NOT NULL,
+                ledger_line_id INTEGER NOT NULL,
+                stripe_transfer_id TEXT NOT NULL DEFAULT \'\',
+                amount_cents INTEGER NOT NULL,
+                destination TEXT NOT NULL DEFAULT \'\',
+                status TEXT NOT NULL DEFAULT \'created\',
+                error TEXT NOT NULL DEFAULT \'\',
+                created_at TEXT NOT NULL DEFAULT (datetime(\'now\'))
+            )'
+        );
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_disburse_tr_stripe ON disbursement_transfers(stripe_transfer_id)');
+
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS stripe_webhook_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_id TEXT NOT NULL UNIQUE,
+                type TEXT NOT NULL,
+                livemode INTEGER NOT NULL DEFAULT 0,
+                processed_at TEXT NOT NULL DEFAULT (datetime(\'now\'))
+            )'
+        );
+
+        $userCols = $pdo->query('PRAGMA table_info(users)')->fetchAll(PDO::FETCH_ASSOC);
+        $userNames = array_map(static fn($c) => (string) $c['name'], $userCols ?: []);
+        if (!in_array('stripe_account_id', $userNames, true)) {
+            $pdo->exec('ALTER TABLE users ADD COLUMN stripe_account_id TEXT');
+        }
+
+        $pdo->prepare('INSERT INTO schema_migrations (version) VALUES (?)')->execute(['005_payouts']);
+    }
+
     repsDashDbSeedUsers($pdo);
     repsDashDbSeedApplyLeads($pdo);
 }

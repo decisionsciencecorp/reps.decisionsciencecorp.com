@@ -47,19 +47,79 @@ function repsDashRenderMoneyAdmin(array $user, array $shops, ?string $repFilter 
     ksort($byRepAll);
     usort($rows, static fn($a, $b) => $b['e']['gross'] <=> $a['e']['gross']);
 
-    $subtitle = 'DSC portfolio — every shop, every dollar lane (mock)';
+    $subtitle = 'DSC portfolio — $20/hr · 25/25/50 ledger → Stripe Connect';
     if ($repFilter !== null) {
         $subtitle .= ' · filtered to @' . $repFilter;
     }
+    $ledger = repsLedgerTotals();
+    $coverage = repsSettlementCoverage();
+    $batches = repsDisburseListBatches(5);
+    $stripeReady = repsStripeConfigured();
 
     repsDashRenderHeader('Money', 'money');
     repsDashRenderPageHeader('Money', $subtitle);
     ?>
 <div class="alert alert-dark border-0 mb-3">
-  <strong>Admin peer.</strong> Full economics: DSC take, shop outflows, internal vs affiliate lanes, sales-rep attribution.
-  Mock $<?php echo number_format($rate, 0); ?>/hr · not payroll · rules TBD #1570.
+  <strong>Admin peer.</strong> Locked pie: DSC 25% · Affiliate 25% (none→DSC) · Capture 50% (shop XOR operator).
+  $<?php echo number_format($rate, 0); ?>/accepted hour · Transfers from platform Stripe.
   Tap a rep to filter the shop ledger.
 </div>
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="surface p-3 h-100">
+      <div class="text-muted small">Ledger owed (affiliate+capture)</div>
+      <div class="fs-3 fw-semibold">$<?php echo number_format($ledger['owed_cents'] / 100, 2); ?></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="surface p-3 h-100">
+      <div class="text-muted small">DSC retained (ledger)</div>
+      <div class="fs-3 fw-semibold">$<?php echo number_format($ledger['retained_cents'] / 100, 2); ?></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="surface p-3 h-100">
+      <div class="text-muted small">Transferred</div>
+      <div class="fs-3 fw-semibold">$<?php echo number_format($ledger['transferred_cents'] / 100, 2); ?></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="surface p-3 h-100">
+      <div class="text-muted small">Stripe available</div>
+      <div class="fs-3 fw-semibold"><?php
+        echo $coverage['stripe_available_cents'] === null
+            ? ($stripeReady ? '—' : 'keys pending')
+            : '$' . number_format($coverage['stripe_available_cents'] / 100, 2);
+      ?></div>
+    </div>
+  </div>
+</div>
+<?php if ($stripeReady): ?>
+<form method="post" class="mb-3">
+  <?php echo repsDashCsrfField(); ?>
+  <input type="hidden" name="action" value="disburse_batch">
+  <button type="submit" class="btn btn-sm btn-primary">Run disbursement batch</button>
+  <span class="text-muted small ms-2">Transfers pending lines to ready Connect payees.</span>
+</form>
+<?php else: ?>
+<div class="alert alert-warning border-0 mb-3">
+  Stripe API keys not loaded yet (<code>~/.ssh/reps-stripe.pass</code>). Ledger + UI are live; Transfers wait on test keys.
+</div>
+<?php endif; ?>
+<?php if ($batches !== []): ?>
+<div class="surface p-3 mb-4">
+  <div class="fw-semibold mb-2">Recent disbursement batches</div>
+  <ul class="mb-0 small">
+    <?php foreach ($batches as $b): ?>
+      <li>#<?php echo (int) $b['id']; ?> · <?php echo htmlspecialchars((string) $b['label']); ?> ·
+        <?php echo htmlspecialchars((string) $b['status']); ?> ·
+        ok <?php echo (int) $b['transferred_count']; ?> /
+        skip <?php echo (int) $b['skipped_count']; ?> /
+        fail <?php echo (int) $b['failed_count']; ?></li>
+    <?php endforeach; ?>
+  </ul>
+</div>
+<?php endif; ?>
 <?php if ($repFilter !== null): ?>
   <p class="mb-3">
     <a class="btn btn-sm btn-outline-secondary" href="/dashboard/money.php">Clear rep filter (@<?php echo htmlspecialchars($repFilter); ?>)</a>
@@ -369,11 +429,11 @@ function repsDashRenderMoneySales(array $user, array $shops): void
     ));
 
     repsDashRenderHeader('Money', 'money');
-    repsDashRenderPageHeader('Money', 'Your book — shops, sourced individuals, and who’s producing (mock)');
+    repsDashRenderPageHeader('Money', 'Your book — shops, sourced individuals · $20/hr 25/25/50');
     ?>
 <div class="alert alert-secondary border-0 mb-3">
   <strong>Sales peer.</strong> Pipeline economics for <em>your</em> book: shops you own <em>and</em> individuals you sourced.
-  Not the DSC ledger. Not a session inbox. Split math is lorem until #1570.
+  Affiliate share is 25% of accepted hours; capture stays with shop or solo operator.
 </div>
 
 <div class="row g-3 mb-4">
@@ -529,7 +589,7 @@ function repsDashRenderMoneyOwner(array $user, array $shops): void
     }
 
     repsDashRenderHeader('My pay', 'money');
-    repsDashRenderPageHeader('My pay', $shop['name'] . ' — what your shop keeps (mock)');
+    repsDashRenderPageHeader('My pay', $shop['name'] . ' — capture share (50% of $20/hr)');
     ?>
 <div class="alert alert-success border-0 mb-3">
   <strong>Business owner peer.</strong> This is <em>your</em> shop’s paycheck view — hours your team produced and what the shop keeps.
@@ -572,7 +632,7 @@ function repsDashRenderMoneyOwner(array $user, array $shops): void
         <dt class="col-6">Status</dt><dd class="col-6"><?php repsDashStatusPill($shop['status']); ?></dd>
         <dt class="col-6">Gross at rate</dt><dd class="col-6">$<?php echo number_format($e['gross'], 2); ?></dd>
         <dt class="col-6">Your keep</dt><dd class="col-6"><strong>$<?php echo number_format($e['shop_pay'], 2); ?></strong></dd>
-        <dt class="col-6">Split (mock)</dt><dd class="col-6"><?php echo htmlspecialchars((string) round((float) $shop['agreed_shop_split'] * 100)); ?>% shop</dd>
+        <dt class="col-6">Capture share</dt><dd class="col-6">50% of accepted hours ($10/hr) to this shop</dd>
         <dt class="col-6">Payout</dt><dd class="col-6 text-muted">Not wired (Slice C+)</dd>
       </dl>
       <p class="small text-muted mt-3 mb-0">Contact on file: <?php echo htmlspecialchars($shop['contact_name']); ?>

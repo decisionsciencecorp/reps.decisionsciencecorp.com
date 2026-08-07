@@ -564,4 +564,91 @@ final class PayoutsTest extends TestCase
         $this->assertNotNull($row);
         $this->assertSame(0, (int) $row['payouts_enabled']);
     }
+
+    public function testChicagoWeekContainingAndCashMonday(): void
+    {
+        $w = repsSettlementChicagoWeekContaining('2026-08-02T22:14:32-05:00');
+        $this->assertSame('2026-07-27', $w['week_start']);
+        $this->assertSame('2026-08-02', $w['week_end']);
+        $this->assertSame('2026-08-03', $w['cash_monday']);
+
+        $forCash = repsSettlementWeekForCashMonday('2026-08-03');
+        $this->assertSame('2026-07-27', $forCash['week_start']);
+        $this->assertSame('2026-08-02', $forCash['week_end']);
+        $this->assertSame(22, repsSettlementBatchCutoffHourCt());
+    }
+
+    public function testAccrueMondayBatchMatchesCalibrationCutoff(): void
+    {
+        // Calibrated Doc #1036: Aug 3 deposit $46.40 = 2.32h; Sun 22:14 session carried.
+        $sessions = [
+            [
+                'session_id' => 'sess_in_1',
+                'user_id' => 'u_mark',
+                'first_name' => 'Mark',
+                'last_name' => 'Hopkins',
+                'status' => 'completed',
+                'completed_at' => '2026-08-02T20:56:24-05:00',
+                'accepted_hours' => 0.48,
+            ],
+            [
+                'session_id' => 'sess_late',
+                'user_id' => 'u_mark',
+                'first_name' => 'Mark',
+                'last_name' => 'Hopkins',
+                'status' => 'completed',
+                'completed_at' => '2026-08-02T22:14:32-05:00',
+                'accepted_hours' => 0.16,
+            ],
+            [
+                'session_id' => 'sess_in_2',
+                'user_id' => 'u_mark',
+                'first_name' => 'Mark',
+                'last_name' => 'Hopkins',
+                'status' => 'completed',
+                'completed_at' => '2026-08-01T19:56:41-05:00',
+                'accepted_hours' => 1.84,
+            ],
+        ];
+        $acc = repsSettlementAccrueForCashMonday($sessions, '2026-08-03');
+        $this->assertTrue($acc['ok']);
+        $this->assertSame(4640, $acc['amount_cents']); // $46.40
+        $this->assertEqualsWithDelta(2.32, $acc['accepted_hours'], 0.0001);
+        $this->assertCount(2, $acc['sessions']);
+        $this->assertCount(1, $acc['carried']);
+        $this->assertSame('sess_late', $acc['carried'][0]['session_id']);
+    }
+
+    public function testProcessCashMondayBooksAndLedgers(): void
+    {
+        $sessions = [
+            [
+                'session_id' => 'proc_' . uniqid('', true),
+                'user_id' => 'u_mark',
+                'first_name' => 'Mark',
+                'last_name' => 'H',
+                'status' => 'completed',
+                'completed_at' => '2026-07-18T12:00:00-05:00',
+                'accepted_hours' => 2.75,
+            ],
+        ];
+        $r = repsSettlementProcessCashMonday($sessions, '2026-07-20', [
+            'has_shop' => false,
+            'has_affiliate' => false,
+        ]);
+        $this->assertTrue($r['ok']);
+        $this->assertSame(5500, $r['accrual']['amount_cents']);
+        $this->assertTrue($r['settlement']['ok']);
+        $this->assertSame(1, $r['ledger']['posted']);
+
+        // Idempotent re-run
+        $r2 = repsSettlementProcessCashMonday($sessions, '2026-07-20', [
+            'has_shop' => false,
+            'has_affiliate' => false,
+        ]);
+        $this->assertTrue($r2['ok']);
+        $this->assertFalse($r2['settlement']['created']);
+        $this->assertSame(0, $r2['ledger']['posted']);
+        $this->assertSame(1, $r2['ledger']['skipped']);
+    }
 }

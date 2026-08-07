@@ -8,8 +8,14 @@ if (!defined('REPS_DASH_LOADED')) {
 /**
  * Shift settlement discovery + reconcile against Stripe platform balance.
  *
- * Shift may not expose a settlement API yet — we accept ops import / webhook /
- * balance snapshots and keep an auditable settlement_events table.
+ * LOCKED (Mark 2026-08-07) — Doc #1036:
+ *   Partner cash = America/Chicago Mon–Sun accepted_hours × $20, paid next Monday.
+ *   No Shift remittance API; match hours-feed week to Monday deposit (bank/Stripe).
+ *   Per person = that worker's accepted hours × $20 in the week.
+ *   Late Sunday accepts may miss Monday batch → carry forward.
+ *   Contract #707 14-day/quality tiers = legal fallback only.
+ *
+ * Ops import / Stripe balance webhooks book settlement_events; then disburse.
  */
 
 require_once __DIR__ . '/stripe-client.php';

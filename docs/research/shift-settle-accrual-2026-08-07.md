@@ -1,26 +1,23 @@
-# Shift settle calibration — hours × bank (2026-08-07)
+# LOCKED — Shift → DSC settlement model (2026-08-07)
 
-**Status:** Calibrated · Hybrid locked weekly  
-**Tasks:** Doc #1036 · #2403 · Phase PRD #1033 §7.2
+Canonical Tasks copy: **Doc #1036**.
 
-## Mark bank deposits
+## Formula
 
-| Posted | Amount |
-|--------|--------|
-| 2026-07-20 | $55.00 |
-| 2026-07-27 | $26.80 |
-| 2026-08-03 | $46.40 |
+America/Chicago Mon–Sun **accepted hours × $20** → cash **following Monday**.
 
-## Rule
+Per person: their accepted hours that week × $20 (sums to deposit).
 
-**America/Chicago Mon–Sun accepted hours × $20 → paid the following Monday.**
+## Proof
 
-| Deposit Mon | Hours window | Accepted h | Expected | Bank | Notes |
-|-------------|--------------|------------|----------|------|-------|
-| 2026-07-20 | 07-13 → 07-19 | 2.750 | $55.00 | $55.00 | exact |
-| 2026-07-27 | 07-20 → 07-26 | 1.340 | $26.80 | $26.80 | exact |
-| 2026-08-03 | 07-27 → 08-02 | 2.320 | $46.40 | $46.40 | excludes 0.16h @ 22:14 CT Sun (batch cutoff) |
+| Deposit | Window | Bank |
+|---------|--------|------|
+| 2026-07-20 | prior week 2.750h | $55.00 |
+| 2026-07-27 | 1.340h | $26.80 |
+| 2026-08-03 | 2.320h (cutoff) | $46.40 |
 
-Contract 14-day / quality tiers (#707) = legal fallback. **Automation uses weekly observed.**
+## Reps
 
-Next check: Mon 2026-08-10 ≈ prior week Aug 3–9 × $20.
+Book `settlement_events` on Monday cash → attach week → disburse 25/25/50 via Stripe Connect.
+
+Contract #707 14-day/tiers = legal fallback only.

@@ -259,6 +259,25 @@ final class PayoutsTest extends TestCase
         $this->assertFalse(repsStripeConfigured());
     }
 
+    public function testStripeSecretsPreferAppMetaOverEnv(): void
+    {
+        putenv('REPS_STRIPE_PASS_FILE=/tmp/reps-stripe-empty-phpunit.pass');
+        $_ENV['REPS_STRIPE_PASS_FILE'] = '/tmp/reps-stripe-empty-phpunit.pass';
+        putenv('STRIPE_SECRET_KEY=sk_test_from_env');
+        $_ENV['STRIPE_SECRET_KEY'] = 'sk_test_from_env';
+        $store = repsStripeStoreSecretsInDb([
+            'secret_key' => 'rk_test_from_db',
+            'publishable_key' => 'pk_test_from_db',
+            'webhook_secret' => 'whsec_from_db',
+            'mode' => 'test',
+        ]);
+        $this->assertTrue($store['ok']);
+        $this->assertSame('rk_test_from_db', repsStripeSecretKey());
+        $this->assertSame('pk_test_from_db', repsStripePublishableKey());
+        $this->assertSame('whsec_from_db', repsStripeWebhookSecret(false));
+        $this->assertTrue(repsStripeConfigured());
+    }
+
     public function testOpsByShopId(): void
     {
         $by = repsDashMoneyOpsByShopId([
@@ -373,6 +392,10 @@ final class PayoutsTest extends TestCase
 
     public function testJsonRequestMockAndWebhookSecret(): void
     {
+        // Clear DB-backed secrets so this test exercises env fallback.
+        repsDashDb()->exec(
+            "DELETE FROM app_meta WHERE key LIKE 'stripe.%'"
+        );
         putenv('STRIPE_SECRET_KEY=sk_test_mock');
         $_ENV['STRIPE_SECRET_KEY'] = 'sk_test_mock';
         putenv('STRIPE_WEBHOOK_SECRET=whsec_plat');

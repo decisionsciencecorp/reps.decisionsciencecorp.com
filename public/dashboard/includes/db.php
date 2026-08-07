@@ -33,6 +33,23 @@ function repsDashDb(): PDO
     return $pdo;
 }
 
+function repsDashAppMetaGet(string $key, string $default = ''): string
+{
+    $stmt = repsDashDb()->prepare('SELECT value FROM app_meta WHERE key = ? LIMIT 1');
+    $stmt->execute([$key]);
+    $v = $stmt->fetchColumn();
+    return $v === false ? $default : (string) $v;
+}
+
+function repsDashAppMetaSet(string $key, string $value): void
+{
+    $stmt = repsDashDb()->prepare(
+        'INSERT INTO app_meta (key, value, updated_at) VALUES (?, ?, datetime(\'now\'))
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime(\'now\')'
+    );
+    $stmt->execute([$key, $value]);
+}
+
 function repsDashDbMigrate(PDO $pdo): void
 {
     $pdo->exec(

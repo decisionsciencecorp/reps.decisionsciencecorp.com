@@ -6,9 +6,25 @@ if (!defined('REPS_DASH_LOADED')) {
 }
 
 /**
- * Minimal Stripe HTTP client (no Composer SDK). Keys from env / pass file.
+ * Minimal Stripe HTTP client (no Composer SDK).
+ *
+ * Canonical keys: SQLite app_meta (stripe.*). Optional pass-file/env is local
+ * deposit/dev fallback only — never commit secrets; not multihost site env.
  */
 
+/** @var array<string, string> */
+const REPS_STRIPE_META_KEYS = [
+    'secret' => 'stripe.secret_key',
+    'publishable' => 'stripe.publishable_key',
+    'webhook' => 'stripe.webhook_secret',
+    'webhook_connect' => 'stripe.connect_webhook_secret',
+    'api_base' => 'stripe.api_base',
+    'mode' => 'stripe.mode',
+];
+
+/**
+ * Optional ~/.ssh/reps-stripe.pass (or REPS_STRIPE_PASS_FILE) for Otto deposit scripts.
+ */
 function repsStripeLoadPassFile(): void
 {
     static $loaded = false;
@@ -39,20 +55,85 @@ function repsStripeLoadPassFile(): void
     }
 }
 
+function repsStripeMetaGet(string $metaKey): string
+{
+    try {
+        return trim(repsDashAppMetaGet($metaKey, ''));
+    } catch (Throwable $e) {
+        return '';
+    }
+}
+
+/**
+ * Upsert Stripe secrets into app_meta. Never log values.
+ *
+ * @param array{
+ *   secret_key?: string,
+ *   publishable_key?: string,
+ *   webhook_secret?: string,
+ *   connect_webhook_secret?: string,
+ *   api_base?: string,
+ *   mode?: string
+ * } $keys
+ * @return array{ok: bool, written: list<string>}
+ */
+function repsStripeStoreSecretsInDb(array $keys): array
+{
+    $map = [
+        'secret_key' => REPS_STRIPE_META_KEYS['secret'],
+        'publishable_key' => REPS_STRIPE_META_KEYS['publishable'],
+        'webhook_secret' => REPS_STRIPE_META_KEYS['webhook'],
+        'connect_webhook_secret' => REPS_STRIPE_META_KEYS['webhook_connect'],
+        'api_base' => REPS_STRIPE_META_KEYS['api_base'],
+        'mode' => REPS_STRIPE_META_KEYS['mode'],
+    ];
+    $written = [];
+    foreach ($map as $in => $metaKey) {
+        if (!array_key_exists($in, $keys)) {
+            continue;
+        }
+        $val = trim((string) $keys[$in]);
+        if ($val === '') {
+            continue;
+        }
+        repsDashAppMetaSet($metaKey, $val);
+        $written[] = $metaKey;
+    }
+    return ['ok' => $written !== [], 'written' => $written];
+}
+
 function repsStripeSecretKey(): string
 {
+    $fromDb = repsStripeMetaGet(REPS_STRIPE_META_KEYS['secret']);
+    if ($fromDb !== '') {
+        return $fromDb;
+    }
     repsStripeLoadPassFile();
     return (string) (getenv('STRIPE_SECRET_KEY') ?: '');
 }
 
 function repsStripePublishableKey(): string
 {
+    $fromDb = repsStripeMetaGet(REPS_STRIPE_META_KEYS['publishable']);
+    if ($fromDb !== '') {
+        return $fromDb;
+    }
     repsStripeLoadPassFile();
     return (string) (getenv('STRIPE_PUBLISHABLE_KEY') ?: '');
 }
 
 function repsStripeWebhookSecret(bool $connect = false): string
 {
+    if ($connect) {
+        $c = repsStripeMetaGet(REPS_STRIPE_META_KEYS['webhook_connect']);
+        if ($c !== '') {
+            return $c;
+        }
+    }
+    $w = repsStripeMetaGet(REPS_STRIPE_META_KEYS['webhook']);
+    if ($w !== '') {
+        return $w;
+    }
     repsStripeLoadPassFile();
     if ($connect) {
         $c = (string) (getenv('STRIPE_CONNECT_WEBHOOK_SECRET') ?: '');
@@ -72,6 +153,10 @@ function repsStripeConfigured(): bool
 
 function repsStripeApiBase(): string
 {
+    $fromDb = repsStripeMetaGet(REPS_STRIPE_META_KEYS['api_base']);
+    if ($fromDb !== '') {
+        return rtrim($fromDb, '/');
+    }
     repsStripeLoadPassFile();
     $b = (string) (getenv('STRIPE_API_BASE') ?: 'https://api.stripe.com');
     return rtrim($b, '/');

@@ -43,7 +43,8 @@ repsDashRenderHeader((string) $session['session_id'], $activeNav);
 <?php
 repsDashRenderPageHeader(
     (string) $session['session_id'],
-    'Hours-feed session · Shift field shape (Doc #818) · mock until Slice C sync'
+    'Hours-feed session · Shift field shape (Doc #818)'
+        . (repsDashLiveDataEnabled() ? ' · live' : ' · fixture fallback')
 );
 ?>
 

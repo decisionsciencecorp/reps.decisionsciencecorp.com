@@ -7,9 +7,9 @@ require_once __DIR__ . '/includes/money-views.php';
 $user = repsDashRequireLogin();
 repsDashRequireNavKey('money', $user);
 
-// Bootstrap ledger from mock accepted hours until Slice C Shift poll lands.
+// Bootstrap ledger from fixtures only when live Shift data is not in play.
 $ledgerEmpty = (int) repsDashDb()->query('SELECT COUNT(*) FROM ledger_lines')->fetchColumn() === 0;
-if ($ledgerEmpty) {
+if ($ledgerEmpty && !repsDashLiveDataEnabled()) {
     repsLedgerSeedFromMockShops();
 }
 repsSettlementReconcileStripeBalance('money_page_open');

@@ -6,7 +6,7 @@ declare(strict_types=1);
  *
  * Load order:
  *   config → csrf → db → skin → mock → operators → shift-sync → repository
- *   → scope → economics → auth → access → onboarding → education → rollups → layout
+ *   → scope → economics → auth → api → access → onboarding → education → rollups → layout
  */
 
 define('REPS_DASH_LOADED', true);
@@ -35,6 +35,7 @@ require_once __DIR__ . '/settlement.php';
 require_once __DIR__ . '/ledger.php';
 require_once __DIR__ . '/payouts-disburse.php';
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/api.php';
 require_once __DIR__ . '/leads-crm.php';
 require_once __DIR__ . '/access.php';
 require_once __DIR__ . '/onboarding.php';

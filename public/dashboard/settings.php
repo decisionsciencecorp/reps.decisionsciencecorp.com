@@ -57,19 +57,20 @@ repsDashRenderPageHeader('Settings', match ($role) {
       <dl class="row mb-0 small">
         <dt class="col-5">Partner code</dt><dd class="col-7"><code><?php echo htmlspecialchars($pulse['partner_code']); ?></code></dd>
         <dt class="col-5">Last sync</dt><dd class="col-7"><?php echo htmlspecialchars($pulse['last_sync']); ?></dd>
-        <dt class="col-5">Worker</dt><dd class="col-7 text-muted">Not built (Slice C)</dd>
-        <dt class="col-5">Re-auth</dt><dd class="col-7 text-muted">OTP runbook placeholder</dd>
+        <dt class="col-5">Live data</dt><dd class="col-7"><?php echo !empty($pulse['live_data']) ? 'yes' : 'no (fixtures)'; ?></dd>
+        <dt class="col-5">Worker</dt><dd class="col-7"><code>tools/poll-shift.php</code> · Shift match UI</dd>
+        <dt class="col-5">Re-auth</dt><dd class="col-7 text-muted">Cookie jar / OTP runbook</dd>
       </dl>
     </div>
     <?php endif; ?>
 
     <?php if (in_array('platform', $panels, true)): ?>
     <div class="surface p-3">
-      <h2 class="h5 mb-2">Platform stubs</h2>
+      <h2 class="h5 mb-2">Platform</h2>
       <ul class="small mb-0">
-        <li><code>/dashboard/api/</code> — Slice D</li>
-        <li><code>reps_sdk/</code> — Slice E</li>
-        <li><code>smcp_plugin/</code> — Slice E</li>
+        <li><code>/dashboard/api/</code> — Slice D JSON (see <a href="/dashboard/api/">README</a>)</li>
+        <li><code>reps_sdk/</code> — Slice E (next)</li>
+        <li><code>smcp_plugin/</code> — Slice E (next)</li>
       </ul>
     </div>
     <?php endif; ?>

@@ -281,9 +281,36 @@ function repsDashDbMigrate(PDO $pdo): void
         $pdo->prepare('INSERT INTO schema_migrations (version) VALUES (?)')->execute(['006_shift_sync']);
     }
 
+    if (!in_array('007_api_keys', $applied, true)) {
+        repsDashMigrate007ApiKeys($pdo);
+        $pdo->prepare('INSERT INTO schema_migrations (version) VALUES (?)')->execute(['007_api_keys']);
+    }
+
     repsDashDbSeedUsers($pdo);
     repsDashDbSeedApplyLeads($pdo);
     repsDashDbSeedShops($pdo);
+}
+
+/**
+ * Slice D — API keys for /dashboard/api/* (session auth also accepted).
+ */
+function repsDashMigrate007ApiKeys(PDO $pdo): void
+{
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS api_keys (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            key_name TEXT NOT NULL DEFAULT \'default\',
+            api_key_hash TEXT NOT NULL UNIQUE,
+            key_preview TEXT NOT NULL DEFAULT \'\',
+            created_by_user_id INTEGER,
+            last_used_at TEXT,
+            revoked_at TEXT,
+            created_at TEXT NOT NULL DEFAULT (datetime(\'now\'))
+        )'
+    );
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id)');
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_api_keys_revoked ON api_keys(revoked_at)');
 }
 
 /**

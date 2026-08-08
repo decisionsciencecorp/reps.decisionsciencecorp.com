@@ -12,6 +12,7 @@ if (!repsDashIsAdmin($user)) {
 
 $flash = '';
 $flashErr = '';
+$flashKey = '';
 $roles = repsDashValidRoles();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -56,6 +57,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $flashErr = $result['error'] ?? 'Could not reset password.';
         }
+    } elseif ($action === 'create_api_key') {
+        $id = (int) ($_POST['user_id'] ?? 0);
+        $name = trim((string) ($_POST['key_name'] ?? 'default'));
+        $result = repsApiCreateKey($id, $name !== '' ? $name : 'default', (int) $user['id']);
+        if ($result['ok']) {
+            $flash = 'API key created — copy it now; it will not be shown again.';
+            $flashKey = (string) ($result['key'] ?? '');
+        } else {
+            $flashErr = $result['error'] ?? 'Could not create API key.';
+        }
+    } elseif ($action === 'revoke_api_key') {
+        $keyId = (int) ($_POST['key_id'] ?? 0);
+        $result = repsApiRevokeKey($keyId, (int) $user['id']);
+        if ($result['ok']) {
+            $flash = 'API key revoked.';
+        } else {
+            $flashErr = $result['error'] ?? 'Could not revoke API key.';
+        }
     }
 }
 
@@ -70,6 +89,12 @@ repsDashRenderPageHeader('Users', 'Provision seats — roles, shop/operator scop
 <?php endif; ?>
 <?php if ($flashErr !== ''): ?>
   <div class="alert alert-danger"><?php echo htmlspecialchars($flashErr); ?></div>
+<?php endif; ?>
+<?php if ($flashKey !== ''): ?>
+  <div class="alert alert-warning">
+    <strong>New API key (copy once):</strong>
+    <code class="user-select-all"><?php echo htmlspecialchars($flashKey); ?></code>
+  </div>
 <?php endif; ?>
 
 <div class="surface p-3 mb-4">
@@ -187,6 +212,37 @@ repsDashRenderPageHeader('Users', 'Provision seats — roles, shop/operator scop
                 <button type="submit" class="btn btn-sm btn-outline-secondary">Reset password</button>
               </div>
             </form>
+            <form method="post" class="row g-2 align-items-end mt-2">
+              <?php echo repsDashCsrfField(); ?>
+              <input type="hidden" name="action" value="create_api_key">
+              <input type="hidden" name="user_id" value="<?php echo (int) $acct['id']; ?>">
+              <div class="col-md-4">
+                <label class="form-label small mb-0">API key name</label>
+                <input class="form-control form-control-sm" type="text" name="key_name" value="default" maxlength="80">
+              </div>
+              <div class="col-md-3">
+                <button type="submit" class="btn btn-sm btn-outline-dark">Create API key</button>
+              </div>
+            </form>
+            <?php
+            $keys = repsApiListKeysForUser((int) $acct['id'], false);
+            if ($keys !== []):
+            ?>
+              <ul class="small text-muted mb-0 mt-2">
+                <?php foreach ($keys as $k): ?>
+                  <li class="d-flex flex-wrap gap-2 align-items-center">
+                    <code><?php echo htmlspecialchars((string) $k['key_preview']); ?></code>
+                    <span><?php echo htmlspecialchars((string) $k['key_name']); ?></span>
+                    <form method="post" class="m-0">
+                      <?php echo repsDashCsrfField(); ?>
+                      <input type="hidden" name="action" value="revoke_api_key">
+                      <input type="hidden" name="key_id" value="<?php echo (int) $k['id']; ?>">
+                      <button type="submit" class="btn btn-link btn-sm p-0 text-danger">Revoke</button>
+                    </form>
+                  </li>
+                <?php endforeach; ?>
+              </ul>
+            <?php endif; ?>
           </td>
         </tr>
       <?php endforeach; ?>
@@ -195,6 +251,6 @@ repsDashRenderPageHeader('Users', 'Provision seats — roles, shop/operator scop
   </div>
 </div>
 
-<p class="text-muted small mt-3 mb-0">Agent API keys arrive with Slice D/E. Seed seats use the shared demo password until you reset them.</p>
+<p class="text-muted small mt-3 mb-0">API keys authenticate <code>/dashboard/api/</code> (Slice D). Prefer keys on the <strong>agent</strong> seat for automation. Seed seats use the shared demo password until you reset them.</p>
 
 <?php repsDashRenderFooter(); ?>

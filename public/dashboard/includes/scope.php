@@ -21,7 +21,7 @@ function repsDashShopsForUser(array $user): array
     $shops = repsDashAllShops();
     $role = (string) ($user['role'] ?? '');
 
-    // Agent is an API principal — no human shop directory.
+    // Agent human chrome: no shop directory. API key principals elevate via repsApiDataUser.
     if ($role === 'agent') {
         return [];
     }

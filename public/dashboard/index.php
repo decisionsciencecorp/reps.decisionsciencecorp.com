@@ -11,11 +11,13 @@ $blocks = repsDashHomeBlocksForRole($role);
 $wizard = repsDashIsWizardHome($user);
 $steps = $wizard ? repsDashWizardStepsForRole($role) : [];
 
+$live = !empty($pulse['live_data']);
+$dataTag = $live ? 'live Shift data' : 'fixture fallback';
 $subtitle = match ($role) {
-    'employee', 'individual' => 'Your personal pulse · mock data',
-    'business_owner' => 'Your shop pulse · mock data',
-    'agent' => 'Service principal · not a human desk',
-    default => 'Pulse for your seat · mock Shift sync'
+    'employee', 'individual' => 'Your personal pulse · ' . $dataTag,
+    'business_owner' => 'Your shop pulse · ' . $dataTag,
+    'agent' => 'Service principal · use /dashboard/api/ with an API key',
+    default => 'Pulse for your seat · ' . $dataTag
         . (repsDashCanSeePartnerCode($user) ? ' · Partner ' . $pulse['partner_code'] : ''),
 };
 
@@ -108,11 +110,12 @@ repsDashRenderPageHeader('Home', $subtitle);
 
 <?php else: ?>
 
+<?php if (!empty($pulse['demo_banner'])): ?>
 <div class="alert alert-warning border-0 mb-3">
-  <strong>Slice A — mock data.</strong> Numbers are fake for layout and scoping audit.
-  Real Shift polling is Slice C (PRD Doc #990).
+  <strong>Fixture fallback.</strong> No live Shift sessions in this database yet — numbers come from seed fixtures.
+  Run Shift sync (Admin → Shift match → Pull, or <code>tools/poll-shift.php</code>) to load the book.
   <?php if (repsDashCanSeePartnerCode($user)): ?>
-    Last sync shown: <?php echo htmlspecialchars($pulse['last_sync']); ?>.
+    Last sync: <?php echo htmlspecialchars($pulse['last_sync']); ?>.
   <?php endif; ?>
   <?php if (repsDashUsesLearnerChrome($role)): ?>
     <span class="d-block d-md-inline ms-md-1">
@@ -125,6 +128,22 @@ repsDashRenderPageHeader('Home', $subtitle);
     </span>
   <?php endif; ?>
 </div>
+<?php elseif (repsDashCanSeePartnerCode($user)): ?>
+<div class="alert alert-success border-0 mb-3">
+  <strong>Live Shift data.</strong>
+  Last sync: <?php echo htmlspecialchars($pulse['last_sync']); ?>.
+  JSON API: <a href="/dashboard/api/">/dashboard/api/</a>.
+  <?php if (repsDashUsesLearnerChrome($role)): ?>
+    <span class="d-block d-md-inline ms-md-1">
+      <form method="post" action="/dashboard/onboarding.php" class="d-inline">
+        <?php echo repsDashCsrfField(); ?>
+        <input type="hidden" name="action" value="restart">
+        <button type="submit" class="btn btn-link btn-sm p-0 align-baseline">Replay Home wizard</button>
+      </form>
+    </span>
+  <?php endif; ?>
+</div>
+<?php endif; ?>
 
 <?php if (in_array('shop_metrics', $blocks, true)): ?>
 <div class="row g-3 mb-4">

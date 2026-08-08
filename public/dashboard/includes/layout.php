@@ -167,13 +167,19 @@ function repsDashRenderHeader(string $title = '', string $active = 'home'): void
 
 function repsDashRenderFooter(): void
 {
-    $partner = repsDashCanSeePartnerCode()
-        ? ' · Partner code C6N9T7'
-        : '';
+    $partnerCode = '';
+    if (repsDashCanSeePartnerCode()) {
+        $code = repsDashAppMetaGet('shift.partner_code', '');
+        if ($code === '') {
+            $code = 'C6N9T7';
+        }
+        $partnerCode = ' · Partner code ' . $code;
+    }
+    $dataLabel = repsDashLiveDataEnabled() ? 'live Shift data' : 'fixture fallback';
     ?>
   </main>
   <footer class="container-fluid px-3 px-lg-4 pb-4">
-    <p class="text-muted small mb-0">Reps Dashboard · Slice A mock data<?php echo htmlspecialchars($partner); ?> · <a href="/">Marketing site</a></p>
+    <p class="text-muted small mb-0">Reps Dashboard · <?php echo htmlspecialchars($dataLabel); ?><?php echo htmlspecialchars($partnerCode); ?> · <a href="/">Marketing site</a> · <a href="/dashboard/api/">API</a></p>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

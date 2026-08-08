@@ -167,9 +167,18 @@ function repsDashPulseForUser(array $user): array
         $ops,
         static fn(array $o): bool => ($o['status'] ?? '') === 'active'
     ));
+    $live = repsDashLiveDataEnabled();
+    $lastSync = repsDashAppMetaGet('shift.last_sync_at', '');
+    if ($lastSync === '') {
+        $lastSync = $live ? 'live data · sync time unknown' : 'fixtures (mock)';
+    }
+    $partner = repsDashAppMetaGet('shift.partner_code', '');
+    if ($partner === '') {
+        $partner = 'C6N9T7';
+    }
     return [
-        'last_sync' => '2026-08-04 18:45 CDT (mock)',
-        'partner_code' => 'C6N9T7',
+        'last_sync' => $lastSync,
+        'partner_code' => $partner,
         'accepted_hours_sample' => round($accepted, 1),
         'rejected_sessions' => $rejected,
         'pending_sessions' => $pending,
@@ -179,6 +188,7 @@ function repsDashPulseForUser(array $user): array
         'apply_leads_open' => in_array($user['role'], ['admin', 'ops', 'sales'], true)
             ? repsDashCountOpenApplyLeads()
             : 0,
-        'demo_banner' => true,
+        'demo_banner' => !$live,
+        'live_data' => $live,
     ];
 }

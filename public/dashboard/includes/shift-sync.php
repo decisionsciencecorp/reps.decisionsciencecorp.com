@@ -7,10 +7,11 @@ if (!defined('REPS_DASH_LOADED')) {
 
 /**
  * Shift for Business → Reps SQLite sync (Slice C).
- * Auth: Netscape cookie jar (session for app.joinshift.us) or offline JSON files.
+ * HTTP: see shift-client.php (CARDINAL: live Partner is prod — writes via fake in tests).
  */
 
 require_once __DIR__ . '/operators.php';
+require_once __DIR__ . '/shift-client.php';
 
 function repsDashLiveDataEnabled(): bool
 {
@@ -31,49 +32,6 @@ function repsDashLiveDataEnabled(): bool
 function repsDashSetLiveDataEnabled(bool $on): void
 {
     repsDashAppMetaSet('shift.live_data', $on ? '1' : '0');
-}
-
-/**
- * @return array{ok: bool, status?: int, body?: array<string, mixed>, error?: string}
- */
-function repsShiftHttpGet(string $path): array
-{
-    $base = rtrim((string) (getenv('REPS_SHIFT_API_BASE') ?: 'https://app.joinshift.us'), '/');
-    $cookie = (string) (getenv('REPS_SHIFT_COOKIE_JAR') ?: (getenv('HOME') ?: '/root') . '/.ssh/joinshift-cookies.txt');
-    if (!is_readable($cookie)) {
-        $cookie = '/tmp/joinshift/cookies.txt';
-    }
-    if (!is_readable($cookie)) {
-        return ['ok' => false, 'error' => 'missing_cookie_jar'];
-    }
-    $url = $base . $path;
-    $ch = curl_init($url);
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_TIMEOUT => 60,
-        CURLOPT_HTTPHEADER => [
-            'Accept: application/json',
-            'User-Agent: Mozilla/5.0 (compatible; RepsShiftSync/1.0)',
-        ],
-        CURLOPT_COOKIEFILE => $cookie,
-        CURLOPT_COOKIEJAR => $cookie,
-    ]);
-    $raw = curl_exec($ch);
-    $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $cerr = curl_error($ch);
-    curl_close($ch);
-    if ($raw === false || $raw === '') {
-        return ['ok' => false, 'status' => $status, 'error' => $cerr !== '' ? $cerr : 'empty_body'];
-    }
-    $body = json_decode($raw, true);
-    if (!is_array($body)) {
-        return ['ok' => false, 'status' => $status, 'error' => 'invalid_json'];
-    }
-    if ($status < 200 || $status >= 300) {
-        return ['ok' => false, 'status' => $status, 'body' => $body, 'error' => 'http_' . $status];
-    }
-    return ['ok' => true, 'status' => $status, 'body' => $body];
 }
 
 /**
@@ -287,12 +245,16 @@ function repsShiftRecomputeOperatorRollups(): void
  */
 function repsShiftPollLive(): array
 {
-    $feedRes = repsShiftHttpGet('/api/dashboard/hours-feed');
+    // Live read-only GETs are approved (CARDINAL). Cookie required only for joinshift host.
+    if (repsShiftIsLiveJoinshiftBase() && !is_readable(repsShiftCookieJarPath())) {
+        return ['ok' => false, 'error' => 'missing_cookie_jar'];
+    }
+    $feedRes = repsShiftGetHoursFeed();
     if (!($feedRes['ok'] ?? false)) {
         return ['ok' => false, 'error' => 'hours_feed:' . ($feedRes['error'] ?? 'fail'), 'detail' => $feedRes];
     }
-    $teamRes = repsShiftHttpGet('/api/team/members');
-    $workersRes = repsShiftHttpGet('/api/dashboard/workers');
+    $teamRes = repsShiftGetTeamMembers();
+    $workersRes = repsShiftGetWorkers();
     $team = ($teamRes['ok'] ?? false) ? $teamRes['body'] : null;
     $workers = ($workersRes['ok'] ?? false) ? $workersRes['body'] : null;
     $ingested = repsShiftIngestFeed($feedRes['body'], $team, $workers);

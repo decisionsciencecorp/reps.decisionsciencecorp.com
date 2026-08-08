@@ -52,6 +52,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $flashErr = 'Unmatch failed: ' . (string) ($res['error'] ?? 'unknown');
         }
+    } elseif ($action === 'invite') {
+        $name = trim((string) ($_POST['name'] ?? ''));
+        $phone = trim((string) ($_POST['phone'] ?? ''));
+        if ($name === '' || $phone === '') {
+            $flashErr = 'Invite needs name and phone.';
+        } else {
+            try {
+                $res = repsShiftInviteTeamMember($name, $phone);
+                if ($res['ok'] ?? false) {
+                    $sync = repsShiftPollLive();
+                    $flash = 'Invite sent via Shift Partner API.'
+                        . (($sync['ok'] ?? false) ? ' Local book refreshed.' : ' (re-sync skipped or failed — pull manually)');
+                } else {
+                    $flashErr = 'Invite failed: ' . (string) ($res['error'] ?? 'unknown');
+                }
+            } catch (Throwable $e) {
+                $flashErr = $e->getMessage();
+            }
+        }
     }
 }
 
@@ -96,16 +115,48 @@ repsDashRenderPageHeader('Shift ↔ Reps match', 'Link Shift team workers to das
   <div class="alert alert-danger"><?php echo htmlspecialchars($flashErr); ?></div>
 <?php endif; ?>
 
+<?php
+$shiftBase = repsShiftApiBase();
+$shiftLiveBase = repsShiftIsLiveJoinshiftBase($shiftBase);
+?>
+<div class="alert alert-warning border-0 mb-3">
+  <strong>CARDINAL:</strong> <code>app.joinshift.us</code> is production — no sandbox.
+  Read-only pulls are fine. <strong>Invite writes to whatever <code>REPS_SHIFT_API_BASE</code> is set to</strong>
+  (currently <code><?php echo htmlspecialchars($shiftBase); ?></code><?php echo $shiftLiveBase ? ' — LIVE PARTNER' : ' — not live joinshift'; ?>).
+  Automated tests must use the fake stub (<code>fake://shift</code> / <code>tools/fake-shift-partner</code>), not prod invites.
+</div>
+
 <div class="surface p-3 mb-4 d-flex flex-wrap gap-3 align-items-center justify-content-between">
   <div class="small">
     <div>Live data: <strong><?php echo $live ? 'on' : 'off (mock)'; ?></strong></div>
     <div>Partner code: <code><?php echo htmlspecialchars($partner !== '' ? $partner : '—'); ?></code></div>
     <div>Last sync: <?php echo htmlspecialchars($lastSync !== '' ? $lastSync : 'never'); ?></div>
+    <div>Shift API base: <code><?php echo htmlspecialchars($shiftBase); ?></code></div>
   </div>
   <form method="post" class="m-0">
     <?php echo repsDashCsrfField(); ?>
     <input type="hidden" name="action" value="poll">
     <button type="submit" class="btn btn-sm btn-primary">Pull from Shift now</button>
+  </form>
+</div>
+
+<div class="surface p-3 mb-4">
+  <h2 class="h6 mb-2">Invite worker (Shift Partner)</h2>
+  <p class="small text-muted mb-3">Name + phone → Shift texts them. Same as Team invite on the Partner dashboard.</p>
+  <form method="post" class="row g-2 align-items-end">
+    <?php echo repsDashCsrfField(); ?>
+    <input type="hidden" name="action" value="invite">
+    <div class="col-md-4">
+      <label class="form-label small mb-0">Name</label>
+      <input class="form-control form-control-sm" name="name" required autocomplete="off">
+    </div>
+    <div class="col-md-4">
+      <label class="form-label small mb-0">Phone</label>
+      <input class="form-control form-control-sm" name="phone" required placeholder="+1…" autocomplete="off">
+    </div>
+    <div class="col-md-3">
+      <button type="submit" class="btn btn-sm btn-outline-danger">Send invite</button>
+    </div>
   </form>
 </div>
 

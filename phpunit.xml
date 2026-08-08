@@ -22,6 +22,8 @@
       <file>public/dashboard/includes/operators.php</file>
       <file>public/dashboard/includes/repository.php</file>
       <file>public/dashboard/includes/api.php</file>
+      <file>public/dashboard/includes/shift-client.php</file>
+      <file>public/dashboard/includes/shift-derived.php</file>
     </include>
   </source>
   <coverage>

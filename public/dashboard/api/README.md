@@ -1,51 +1,63 @@
-# Reps Dashboard API (Slice D)
+# Reps Dashboard API v1
 
-JSON endpoints under `/dashboard/api/*.php`. Same entities and seat scope as the HTML dashboard. Pattern matches Sanctum Tasks / Docket (`X-API-Key` or session cookie).
+Base: `https://reps.decisionsciencecorp.com/dashboard/api/`
 
-**Base:** `https://reps.decisionsciencecorp.com/dashboard/api/`
+Auth: session cookie **or** `X-API-Key` / `Authorization: Bearer` (no query-string keys).
 
-## Auth
+---
 
-| Method | How |
-|--------|-----|
-| **API key** | Header `X-API-Key: reps_…` **or** `Authorization: Bearer reps_…` |
-| **Session** | Logged-in dashboard cookie (browser / same-origin tools) |
+## CARDINAL — Shift Partner is production
 
-Query-string `?api_key=` is **rejected** (400).
+**`app.joinshift.us` is PROD. There is no Shift sandbox.**
 
-**Agent role:** human chrome stays empty-book; with an API key, agent is elevated to **ops-equivalent** read of the full book (service principal).
+| Allowed against live Partner | Forbidden against live Partner |
+|------------------------------|--------------------------------|
+| **Read-only GETs** (hours-feed, workers, team/members, other mapped GETs) for sync and verification | Invites, deletes, bank/profile/split/SMS/address changes, logout, support spam, admin/impersonate, OTP “for a test” |
+| Cookie/session health (non-destructive) | Any create/mutate/remove of Partner state for verification |
 
-Create keys: `POST create-api-key.php` as **admin** (JSON `user_id`, optional `name`), or Users admin UI. The raw key is returned **once**.
+**Writes** are developed and proven against the **fake Shift stub** (`tools/fake-shift-partner/`, `REPS_SHIFT_API_BASE=fake://shift` or a local `php -S` base). PHPUnit sets `REPS_SHIFT_FORBID_LIVE_WRITES=1` and refuses live write bases.
 
-## Endpoints
+Human Admin/Ops may intentionally invite against live when `REPS_SHIFT_API_BASE` points at joinshift — that is real ops, not automated proof.
 
-| Endpoint | Auth | Notes |
-|----------|------|--------|
-| `GET health.php` | none | Liveness + `live_data` flag |
-| `GET me.php` | yes | Principal + auth mode |
-| `GET list-shops.php` | yes | Scoped shops |
-| `GET get-shop.php?id=` | yes | One shop |
-| `GET list-operators.php` | yes | Scoped operators |
-| `GET get-operator.php?id=` | yes | Operator + rollup stats |
-| `GET list-sessions.php` | yes | `limit` (default 100, max 500), `offset` |
-| `GET get-session.php?id=` | yes | Hours-feed session id |
-| `GET money-summary.php` | yes | Pulse + mode; ledger totals for admin/ops/agent |
-| `POST create-api-key.php` | admin | Body JSON: `user_id`, `name` |
-| `GET list-api-keys.php` | yes | Own keys; admin may pass `user_id` |
-| `POST revoke-api-key.php` | yes | Body JSON: `id` |
-| `POST stripe-webhook.php` | Stripe signature | Not session/API-key auth |
+Mini-PRD: Tasks Doc **#1038**. Partner RE: Doc **#818**.
 
-## Example
+---
 
-```bash
-curl -sS -H "X-API-Key: $REPS_API_KEY" \
-  'https://reps.decisionsciencecorp.com/dashboard/api/list-sessions.php?limit=20'
-```
+## Surfaces
 
-## UI wiring
+### A. Reps book (Slice D — SQLite)
 
-HTML pages read through `repository.php` + `scope.php` (not `mock-data.php` directly). When Shift sync has landed rows, `live_data` is true and chrome drops the Slice A mock banner. Fixtures remain the fallback when `REPS_DASH_FORCE_MOCK=1` or the sessions table is empty.
+| Endpoint | Notes |
+|----------|--------|
+| `GET health.php` | Liveness |
+| `GET me.php` | Principal |
+| `GET list-shops.php` / `get-shop.php?id=` | Scoped shops |
+| `GET list-operators.php` / `get-operator.php?id=` | Scoped operators |
+| `GET list-sessions.php` / `get-session.php?id=` | Sessions |
+| `GET money-summary.php` | Pulse + ledger (role-aware) |
+| `POST create-api-key.php` | Admin |
+| `GET list-api-keys.php` / `POST revoke-api-key.php` | Keys |
+| `POST stripe-webhook.php` | Stripe signature |
 
-## Slice E
+### B. Shift Partner proxy (`v1/shift/*`) — admin / ops / agent
 
-Python `reps_sdk/` and SMCP stubs call this surface.
+| Endpoint | Shift / behavior |
+|----------|------------------|
+| `GET v1/shift/hours-feed.php` | Live GET (+ optional `?ingest=1`) |
+| `GET v1/shift/workers.php` | Live GET |
+| `GET\|POST\|DELETE v1/shift/team-members.php` | Team roster / invite / delete (`DELETE ?id=`) |
+| `POST v1/shift/sync.php` | Poll + ingest |
+| `POST v1/shift/account/*.php` | payout-split, sms-schedule, bank-info, profile, legal-address, shipping-address, active-view, reminders |
+| `POST v1/shift/auth/*.php` | request-code, verify-code, logout |
+| `POST v1/shift/support-chat.php` | Support |
+| `GET v1/shift/derived/worker.php?id=` | Computed from SQLite |
+| `GET v1/shift/derived/day.php?date=` | Computed |
+| `GET v1/shift/derived/issues.php` | Computed |
+
+Configure base: `REPS_SHIFT_API_BASE` (default `https://app.joinshift.us`). Cookie jar for live: `REPS_SHIFT_COOKIE_JAR`.
+
+Fake stub: see `tools/fake-shift-partner/README.md`.
+
+### C. Parked
+
+Consumer `api.micro-agi.com` (Doc #816) — Tasks card parked on list **Shift Partner API v1**.

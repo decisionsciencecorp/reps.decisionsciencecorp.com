@@ -27,7 +27,8 @@ Login platform for DSC Reps ops + affiliate seats. PRD: Tasks Doc **#990**.
 - Join funnel + sales Leads CRM: migration `004_join_funnel`, public `/join*`, partial CRM.
 - Slice C: Shift hours/workers poll + Admin/Ops worker matcher (`shift-match.php`).
 - Slice D: JSON API under `/dashboard/api/` (session + API key) — see `public/dashboard/api/README.md`.
-- Later: SDK/SMCP (E).
+- Shift Partner API v1: `/dashboard/api/v1/shift/*` + fake stub `tools/fake-shift-partner/` — **CARDINAL:** live Partner is prod (reads OK; writes tested on fake only). Tasks Doc **#1038**.
+- Later: SDK/SMCP (E); consumer MicroAGI API parked.
 - Payouts phase: Stripe Connect Transfers, ledger 25/25/50, Money UI ledger totals — see `docs/STRIPE-INTEGRATION-PLAN-CONSTRAINED.md`, Tasks Docs **#1032** / **#1033**. Keys in `~/.ssh/reps-stripe.pass` (never commit).
 
 ### Auth (Slice B)

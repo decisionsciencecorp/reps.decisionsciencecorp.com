@@ -231,6 +231,33 @@ function repsApiMePayload(array $user): array
  * @param array<string, mixed> $user
  * @return array<string, mixed>
  */
+/**
+ * Shift Partner proxy: admin / ops / agent only.
+ *
+ * @return array<string, mixed>
+ */
+function repsApiRequireShiftCaller(): array
+{
+    $user = repsApiRequireUser();
+    if (!repsShiftApiCallerAllowed($user)) {
+        repsApiError('forbidden', 'Shift Partner proxy requires admin, ops, or agent.', 403);
+    }
+    return $user;
+}
+
+/**
+ * After a successful Shift write, refresh local SQLite from configured base.
+ *
+ * @return array<string, mixed>|null
+ */
+function repsApiShiftIngestAfterWrite(bool $doIngest): ?array
+{
+    if (!$doIngest) {
+        return null;
+    }
+    return repsShiftPollLive();
+}
+
 function repsApiMoneySummary(array $user): array
 {
     $dataUser = repsApiDataUser($user);

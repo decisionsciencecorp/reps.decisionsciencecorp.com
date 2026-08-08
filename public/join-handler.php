@@ -24,6 +24,7 @@ function repsJoinBootstrap(): void
     require_once __DIR__ . '/dashboard/includes/csrf.php';
     require_once __DIR__ . '/dashboard/includes/db.php';
     require_once __DIR__ . '/dashboard/includes/leads-crm.php';
+    require_once __DIR__ . '/includes/affiliate_pages.php';
     try {
         repsDashDb();
     } catch (Throwable $e) { // @codeCoverageIgnore
@@ -60,6 +61,14 @@ function repsJoinHandlePost(string $mode): array
         ]);
     }
 
+    $affiliateCode = trim((string) ($_POST['affiliate_code'] ?? ''));
+    if ($affiliateCode === '') {
+        $affiliateCode = trim((string) ($_GET['rep'] ?? ''));
+    }
+    if ($affiliateCode === '') {
+        $affiliateCode = (string) (reps_affiliate_slug_from_host() ?? '');
+    }
+
     return repsDashCreateApplyLead([
         'name' => $_POST['name'] ?? '',
         'phone' => $_POST['phone'] ?? '',
@@ -68,6 +77,6 @@ function repsJoinHandlePost(string $mode): array
         'notes' => trim((string) ($_POST['notes'] ?? '')),
         'metro' => trim((string) ($_POST['metro'] ?? '')),
         'expectations_ack' => !empty($_POST['expectations_ack']) ? 1 : 0,
-        'affiliate_code' => $_POST['affiliate_code'] ?? ($_GET['rep'] ?? ''),
+        'affiliate_code' => $affiliateCode,
     ]);
 }

@@ -1,5 +1,10 @@
 <?php
 declare(strict_types=1);
+
+require_once __DIR__ . '/includes/affiliate_page_render.php';
+reps_affiliate_guard_reserved_host();
+reps_affiliate_try_dispatch();
+
 $page_title = 'Reps — Capture work. Get paid.';
 $page_description = 'Reps is Decision Science Corp’s capture network. Record everyday work with a headset, upload accepted sessions, and get paid. Companies enroll their teams under the DSC brand.';
 $canonical = 'https://reps.decisionsciencecorp.com/';

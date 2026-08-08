@@ -2,9 +2,16 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/join-handler.php';
+require_once __DIR__ . '/includes/affiliate_pages.php';
 repsJoinBootstrap();
 
 $prefRep = strtolower(trim((string) ($_GET['rep'] ?? '')));
+if ($prefRep === '') {
+    $hostRep = reps_affiliate_slug_from_host();
+    if ($hostRep !== null && reps_affiliate_resolve_sales_user($hostRep) !== null) {
+        $prefRep = $hostRep;
+    }
+}
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

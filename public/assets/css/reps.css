@@ -1011,3 +1011,22 @@ a {
     transition: none !important;
   }
 }
+
+/* Affiliate pages ({slug}.reps… /a/{slug}/) */
+.aff-byline {
+  margin: 0 0 0.65rem;
+  font-size: clamp(0.95rem, 2.2vw, 1.1rem);
+  color: var(--lime);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.aff-byline strong {
+  color: var(--text);
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.aff-hero .hero-sub {
+  max-width: 36rem;
+}

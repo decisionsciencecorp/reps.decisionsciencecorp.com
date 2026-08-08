@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/bootstrap.php';
+require_once dirname(__DIR__) . '/includes/affiliate_pages.php';
 $user = repsDashRequireLogin();
 repsDashRequireNavKey('users', $user);
 
@@ -208,6 +209,8 @@ repsDashRenderPageHeader(
         }
         $scopeLabel = $scopeBits !== [] ? implode(' · ', $scopeBits) : '—';
         $activeOn = !empty($acct['is_active']);
+        $affSlug = strtolower((string) ($acct['username'] ?? ''));
+        $showAff = ($acct['role'] ?? '') === 'sales' && $activeOn && reps_affiliate_slug_valid($affSlug);
         ?>
         <tr class="rd-ledger__row<?php echo $open ? ' rd-ledger__row--open' : ''; ?>">
           <td>
@@ -276,6 +279,14 @@ repsDashRenderPageHeader(
                         <button type="submit" class="btn btn-sm btn-primary">Save</button>
                       </div>
                     </form>
+                    <?php if ($showAff): ?>
+                      <div class="small mt-3 p-2 border rounded bg-white">
+                        <div class="fw-semibold mb-1">Affiliate page</div>
+                        <div><a href="<?php echo htmlspecialchars(reps_affiliate_canonical_url($affSlug)); ?>" target="_blank" rel="noopener"><?php echo htmlspecialchars(reps_affiliate_canonical_url($affSlug)); ?></a></div>
+                        <div class="text-muted">Path fallback: <a href="<?php echo htmlspecialchars(reps_affiliate_path_url($affSlug)); ?>" target="_blank" rel="noopener"><?php echo htmlspecialchars(reps_affiliate_path_url($affSlug)); ?></a></div>
+                        <div class="text-muted mt-1">After adding a sales seat, run <code>php tools/sync_affiliate_page_stubs.php</code>.</div>
+                      </div>
+                    <?php endif; ?>
                   </div>
                   <div class="col-lg-5">
                     <h3 class="h6 mb-2">Reset password</h3>

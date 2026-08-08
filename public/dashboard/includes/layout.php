@@ -98,16 +98,22 @@ function repsDashRenderHeader(string $title = '', string $active = 'home'): void
         'shops' => [$shopsLabel, '/dashboard/shops.php', 'bi-shop'],
         'leads' => ['Leads', '/dashboard/leads.php', 'bi-inbox'],
         'operators' => [$opsLabel, '/dashboard/operators.php', 'bi-people'],
-        'shift_match' => ['Shift match', '/dashboard/shift-match.php', 'bi-link-45deg'],
         'sessions' => [$sessionsLabel, '/dashboard/sessions.php', 'bi-camera-reels'],
         'money' => [$moneyLabel, '/dashboard/money.php', 'bi-cash-coin'],
         'education' => ['Education', '/dashboard/education.php', 'bi-mortarboard'],
         'users' => ['Users', '/dashboard/users.php', 'bi-person-gear'],
+        'help' => ['Help', '/dashboard/help.php', 'bi-journal-text'],
         'settings' => ['Settings', '/dashboard/settings.php', 'bi-gear'],
     ];
     $allowed = $user ? repsDashNavKeysForRole($role) : ['home'];
+    $canUsersRoster = $user && repsDashIsAdmin($user);
+    $canShiftMatch = $user && in_array('shift_match', $allowed, true);
     $nav = [];
     foreach ($allowed as $key) {
+        // shift_match is nested under the Users dropdown — never a top-level button.
+        if ($key === 'shift_match') {
+            continue;
+        }
         if (isset($navAll[$key])) {
             $nav[$key] = $navAll[$key];
         }
@@ -126,7 +132,7 @@ function repsDashRenderHeader(string $title = '', string $active = 'home'): void
   <title><?php echo $safeTitle; ?></title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-  <link href="/dashboard/assets/css/dashboard.css?v=7" rel="stylesheet">
+  <link href="/dashboard/assets/css/dashboard.css?v=8" rel="stylesheet">
   <link href="<?php echo htmlspecialchars(repsDashSkinStylesheetHref($skin)); ?>" rel="stylesheet">
 </head>
 <body class="<?php echo htmlspecialchars($bodyClass); ?>">
@@ -144,12 +150,37 @@ function repsDashRenderHeader(string $title = '', string $active = 'home'): void
         <?php if ($user): ?>
         <div class="d-flex flex-column flex-lg-row flex-lg-nowrap gap-2 ms-lg-auto align-items-stretch align-items-lg-center py-3 py-lg-0">
           <?php foreach ($nav as $key => [$label, $href, $icon]): ?>
-            <a class="btn btn-outline-light text-center text-lg-start <?php echo $active === $key ? 'active' : ''; ?>" href="<?php echo htmlspecialchars($href); ?>">
-              <i class="bi <?php echo htmlspecialchars($icon); ?> me-1"></i><?php echo htmlspecialchars($label); ?>
-              <?php if ($key === 'leads' && $leadsBadge > 0): ?>
-                <span class="badge text-bg-danger ms-1"><?php echo $leadsBadge > 99 ? '99+' : (int) $leadsBadge; ?></span>
-              <?php endif; ?>
-            </a>
+            <?php if ($key === 'users' && ($canUsersRoster || $canShiftMatch)): ?>
+              <?php $usersActive = in_array($active, ['users', 'shift_match'], true); ?>
+              <div class="dropdown rd-nav-dropdown">
+                <button class="btn btn-outline-light dropdown-toggle text-center text-lg-start w-100 <?php echo $usersActive ? 'active' : ''; ?>" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="rdNavUsers">
+                  <i class="bi bi-person-gear me-1"></i>Users
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="rdNavUsers">
+                  <?php if ($canUsersRoster): ?>
+                    <li>
+                      <a class="dropdown-item<?php echo $active === 'users' ? ' active' : ''; ?>" href="/dashboard/users.php">
+                        <i class="bi bi-people me-2"></i>Roster &amp; seats
+                      </a>
+                    </li>
+                  <?php endif; ?>
+                  <?php if ($canShiftMatch): ?>
+                    <li>
+                      <a class="dropdown-item<?php echo $active === 'shift_match' ? ' active' : ''; ?>" href="/dashboard/shift-match.php">
+                        <i class="bi bi-link-45deg me-2"></i>Shift match
+                      </a>
+                    </li>
+                  <?php endif; ?>
+                </ul>
+              </div>
+            <?php else: ?>
+              <a class="btn btn-outline-light text-center text-lg-start <?php echo $active === $key ? 'active' : ''; ?>" href="<?php echo htmlspecialchars($href); ?>">
+                <i class="bi <?php echo htmlspecialchars($icon); ?> me-1"></i><?php echo htmlspecialchars($label); ?>
+                <?php if ($key === 'leads' && $leadsBadge > 0): ?>
+                  <span class="badge text-bg-danger ms-1"><?php echo $leadsBadge > 99 ? '99+' : (int) $leadsBadge; ?></span>
+                <?php endif; ?>
+              </a>
+            <?php endif; ?>
           <?php endforeach; ?>
           <span class="navbar-text small px-2 text-nowrap">
             <?php echo htmlspecialchars($user['display_name']); ?>
@@ -179,7 +210,7 @@ function repsDashRenderFooter(): void
     ?>
   </main>
   <footer class="container-fluid px-3 px-lg-4 pb-4">
-    <p class="text-muted small mb-0">Reps Dashboard · <?php echo htmlspecialchars($dataLabel); ?><?php echo htmlspecialchars($partnerCode); ?> · <a href="/">Marketing site</a> · <a href="/dashboard/api/">API</a></p>
+    <p class="text-muted small mb-0">Reps Dashboard · <?php echo htmlspecialchars($dataLabel); ?><?php echo htmlspecialchars($partnerCode); ?> · <a href="/">Marketing site</a> · <a href="/dashboard/help.php">Help</a> · <a href="/dashboard/api/">API</a></p>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

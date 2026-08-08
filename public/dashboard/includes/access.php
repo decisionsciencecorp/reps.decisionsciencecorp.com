@@ -26,20 +26,51 @@ function repsDashAllRoles(): array
 function repsDashNavKeysForRole(string $role): array
 {
     return match ($role) {
-        'admin' => ['home', 'shops', 'leads', 'operators', 'shift_match', 'sessions', 'money', 'users', 'settings'],
-        'ops' => ['home', 'shops', 'leads', 'operators', 'shift_match', 'sessions', 'money', 'settings'],
+        // users = Users dropdown host (roster + Shift match). shift_match stays for route ACL.
+        'admin' => ['home', 'shops', 'leads', 'operators', 'sessions', 'money', 'users', 'shift_match', 'help', 'settings'],
+        'ops' => ['home', 'shops', 'leads', 'operators', 'sessions', 'money', 'users', 'shift_match', 'help', 'settings'],
         // Sales = pipeline (Shops) + Money. Operators appear inside Money, not a roster desk.
         // No session drill-down / vids.
-        'sales' => ['home', 'shops', 'leads', 'money', 'education', 'settings'],
+        'sales' => ['home', 'shops', 'leads', 'money', 'education', 'help', 'settings'],
         // Owner: "Shops" = their shop card (not a pipeline book).
-        'business_owner' => ['home', 'shops', 'operators', 'sessions', 'money', 'education', 'settings'],
+        'business_owner' => ['home', 'shops', 'operators', 'sessions', 'money', 'education', 'help', 'settings'],
         // Solo operators get My pay (Connect payout setup). Shop employees do not — shop keeps capture $.
-        'individual' => ['home', 'sessions', 'money', 'education', 'settings'],
-        'employee' => ['home', 'sessions', 'education', 'settings'],
-        // Agent is an API principal — not a human ops desk.
-        'agent' => ['home', 'settings'],
-        default => ['home', 'settings'],
+        'individual' => ['home', 'sessions', 'money', 'education', 'help', 'settings'],
+        'employee' => ['home', 'sessions', 'education', 'help', 'settings'],
+        // Agent is an API principal — Help carries API book; desk is minimal.
+        'agent' => ['home', 'help', 'settings'],
+        default => ['home', 'help', 'settings'],
     };
+}
+
+/**
+ * Help map pages this role may open (CRM/Tasks-style in-app docs).
+ *
+ * @return list<string> page slugs
+ */
+function repsDashHelpPagesForRole(string $role): array
+{
+    $common = ['overview', 'desks', 'roles'];
+    return match ($role) {
+        'admin' => array_merge($common, ['users', 'shift', 'money', 'api', 'api-shift', 'sync', 'troubleshooting']),
+        'ops' => array_merge($common, ['users', 'shift', 'money', 'api', 'api-shift', 'sync', 'troubleshooting']),
+        'agent' => ['overview', 'roles', 'api', 'api-shift', 'troubleshooting'],
+        'sales' => array_merge($common, ['money', 'api-session']),
+        'business_owner' => array_merge($common, ['money', 'api-session']),
+        'individual' => array_merge($common, ['money', 'api-session']),
+        'employee' => array_merge($common, ['api-session']),
+        default => $common,
+    };
+}
+
+/** @return bool */
+function repsDashCanSeeHelpPage(string $slug, ?array $user = null): bool
+{
+    $user = $user ?? repsDashCurrentUser();
+    if (!$user) {
+        return false;
+    }
+    return in_array($slug, repsDashHelpPagesForRole((string) $user['role']), true);
 }
 
 /**
@@ -110,7 +141,7 @@ function repsDashScopeBlurb(string $role): string
 {
     return match ($role) {
         'admin' => 'Full desk: all shops, hours, economics, and user provisioning.',
-        'ops' => 'Same operational desk as admin, without user provisioning or platform keys.',
+        'ops' => 'Same operational desk as admin, without user provisioning or platform keys. Users menu → Shift match only.',
         'sales' => 'Pipeline (Shops) plus Money for your book — shops and individuals you sourced. No session inbox.',
         'business_owner' => 'Your shop only: roster, hours, and your shop’s pay display.',
         'employee' => 'Your own sessions and hours — not the shop ledger or other workers.',
@@ -252,16 +283,44 @@ function repsDashViewsRolesMatrix(): array
         ],
         [
             'view' => 'users',
-            'label' => 'Users',
-            'purpose' => 'Provision DSC / platform seats',
+            'label' => 'Users (dropdown)',
+            'purpose' => 'Roster + Shift match under Users menu',
             'cells' => $cells([
-                'admin' => 'Full',
-                'ops' => '—',
+                'admin' => 'Roster + Shift match',
+                'ops' => 'Shift match (no provisioning)',
                 'sales' => '—',
                 'business_owner' => '— (team invite = Slice B)',
                 'employee' => '—',
                 'individual' => '—',
                 'agent' => '—',
+            ]),
+        ],
+        [
+            'view' => 'shift_match',
+            'label' => 'Shift match',
+            'purpose' => 'Link Shift workers ↔ Reps seats (under Users)',
+            'cells' => $cells([
+                'admin' => 'Yes',
+                'ops' => 'Yes',
+                'sales' => '—',
+                'business_owner' => '—',
+                'employee' => '—',
+                'individual' => '—',
+                'agent' => '—',
+            ]),
+        ],
+        [
+            'view' => 'help',
+            'label' => 'Help',
+            'purpose' => 'In-app docs (API gated by role)',
+            'cells' => $cells([
+                'admin' => 'Full + API + Shift proxy',
+                'ops' => 'Full + API + Shift proxy',
+                'sales' => 'Desk + session API note',
+                'business_owner' => 'Desk + session API note',
+                'employee' => 'Desk + session API note',
+                'individual' => 'Desk + session API note',
+                'agent' => 'API book + Shift proxy',
             ]),
         ],
         [

@@ -630,3 +630,77 @@ table.table td.col-status {
     font-size: 1.05rem;
 }
 
+/* Users dropdown in top nav */
+.rd-nav-dropdown .dropdown-toggle::after {
+    margin-left: 0.35rem;
+    vertical-align: 0.15em;
+}
+.rd-nav-dropdown .dropdown-menu {
+    min-width: 12rem;
+    box-shadow: var(--dk-shadow-md);
+    border-color: var(--dk-border-subtle);
+}
+.admin-nav.navbar-light .rd-nav-dropdown .btn-outline-light {
+    border-color: rgba(20, 22, 26, 0.2);
+    color: var(--dk-text-primary);
+}
+.admin-nav.navbar-light .rd-nav-dropdown .btn-outline-light:hover,
+.admin-nav.navbar-light .rd-nav-dropdown .btn-outline-light.active,
+.admin-nav.navbar-light .rd-nav-dropdown .btn-outline-light.show {
+    background: var(--dk-accent-soft);
+    border-color: var(--dk-accent);
+    color: var(--dk-text-primary);
+}
+
+/* Users seat ledger */
+.rd-ledger__table thead th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--dk-text-muted);
+    font-weight: 600;
+    border-bottom-width: 1px;
+    white-space: nowrap;
+}
+.rd-ledger__row td {
+    border-bottom-color: var(--dk-border-subtle);
+}
+.rd-ledger__row--open td {
+    background: var(--dk-bg-soft);
+}
+.rd-ledger__toggle {
+    color: var(--dk-text-secondary);
+    text-decoration: none;
+}
+.rd-ledger__toggle:hover { color: var(--dk-accent); }
+.rd-ledger__detail > td { background: transparent; }
+.rd-ledger__panel {
+    background: var(--dk-bg-soft);
+    border-top: 1px solid var(--dk-border-subtle);
+    border-bottom: 1px solid var(--dk-border-subtle);
+}
+.rd-users-create > summary {
+    cursor: pointer;
+    list-style: none;
+}
+.rd-users-create > summary::-webkit-details-marker { display: none; }
+.rd-users-create > summary::before {
+    content: "▸";
+    display: inline-block;
+    margin-right: 0.4rem;
+    color: var(--dk-text-muted);
+}
+.rd-users-create[open] > summary::before { content: "▾"; }
+
+/* Help (CRM/Tasks-style) */
+.rd-help__nav .list-group-item {
+    border-left: 0;
+    border-right: 0;
+    font-size: 0.92rem;
+}
+.rd-help__nav .list-group-item:first-child { border-top: 0; }
+.rd-help__body h2 { margin-top: 0; }
+.rd-help__body h3.h5 { margin-top: 1.25rem; }
+.rd-help__body pre code { font-size: 0.8rem; }
+.rd-help__body .lead { font-size: 1.05rem; }
+

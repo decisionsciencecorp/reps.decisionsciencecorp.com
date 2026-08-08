@@ -29,6 +29,7 @@ require_once __DIR__ . '/scope.php';
 require_once __DIR__ . '/economics.php';
 require_once __DIR__ . '/stripe-client.php';
 require_once __DIR__ . '/stripe-connect.php';
+require_once __DIR__ . '/operators.php';
 require_once __DIR__ . '/settlement.php';
 require_once __DIR__ . '/ledger.php';
 require_once __DIR__ . '/payouts-disburse.php';

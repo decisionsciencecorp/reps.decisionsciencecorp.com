@@ -172,6 +172,18 @@ function repsDashDbMigrate(PDO $pdo): void
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_settlement_status ON settlement_events(status)');
 
         $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS operators (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                shift_user_id TEXT NOT NULL UNIQUE,
+                display_name TEXT NOT NULL DEFAULT \'\',
+                email TEXT NOT NULL DEFAULT \'\',
+                created_at TEXT NOT NULL DEFAULT (datetime(\'now\')),
+                updated_at TEXT NOT NULL DEFAULT (datetime(\'now\'))
+            )'
+        );
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_operators_shift ON operators(shift_user_id)');
+
+        $pdo->exec(
             'CREATE TABLE IF NOT EXISTS payout_payees (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 entity_type TEXT NOT NULL,

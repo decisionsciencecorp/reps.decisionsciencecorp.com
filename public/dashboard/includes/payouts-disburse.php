@@ -77,6 +77,11 @@ function repsDisburseResolveDestination(array $line): ?string
 /**
  * Create a batch and attempt Transfers for pending lines.
  *
+ * @param array{
+ *   hour_key_prefix?: string,
+ *   settlement_id?: int,
+ *   line_ids?: list<int>
+ * } $filters
  * @return array{
  *   ok: bool,
  *   batch_id?: int,
@@ -87,10 +92,33 @@ function repsDisburseResolveDestination(array $line): ?string
  *   dry_run?: bool
  * }
  */
-function repsDisburseRunBatch(string $label = '', bool $dryRun = false): array
+function repsDisburseRunBatch(string $label = '', bool $dryRun = false, array $filters = []): array
 {
     $pdo = repsDashDb();
     $lines = repsLedgerListPending(200);
+    $prefix = trim((string) ($filters['hour_key_prefix'] ?? ''));
+    $settlementId = isset($filters['settlement_id']) ? (int) $filters['settlement_id'] : 0;
+    /** @var list<int> $onlyIds */
+    $onlyIds = [];
+    if (!empty($filters['line_ids']) && is_array($filters['line_ids'])) {
+        foreach ($filters['line_ids'] as $lid) {
+            $onlyIds[] = (int) $lid;
+        }
+    }
+    if ($prefix !== '' || $settlementId > 0 || $onlyIds !== []) {
+        $lines = array_values(array_filter($lines, static function (array $line) use ($prefix, $settlementId, $onlyIds): bool {
+            if ($onlyIds !== [] && !in_array((int) ($line['id'] ?? 0), $onlyIds, true)) {
+                return false;
+            }
+            if ($settlementId > 0 && (int) ($line['settlement_id'] ?? 0) !== $settlementId) {
+                return false;
+            }
+            if ($prefix !== '' && !str_starts_with((string) ($line['hour_key'] ?? ''), $prefix)) {
+                return false;
+            }
+            return true;
+        }));
+    }
     if ($lines === []) {
         return ['ok' => true, 'transferred' => 0, 'skipped' => 0, 'failed' => 0];
     }

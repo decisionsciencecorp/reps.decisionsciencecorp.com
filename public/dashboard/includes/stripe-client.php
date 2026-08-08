@@ -366,3 +366,33 @@ function repsStripeBalance(): array
     }
     return ['ok' => true, 'available_cents' => $available, 'pending_cents' => $pending, 'raw' => $res['body']];
 }
+
+/**
+ * Test-mode only: charge tok_bypassPending so funds land in available balance
+ * (needed before Transfers). Refuses non-test secret keys.
+ *
+ * @return array{ok: bool, charge_id?: string, available_cents?: int, error?: string}
+ */
+function repsStripeSandboxTopUpAvailable(int $amountCents = 20000): array
+{
+    $key = repsStripeSecretKey();
+    if ($key === '' || (!str_starts_with($key, 'sk_test_') && !str_starts_with($key, 'rk_test_'))) {
+        return ['ok' => false, 'error' => 'sandbox_topup_requires_test_key'];
+    }
+    $amountCents = max(50, min(500000, $amountCents));
+    $res = repsStripeRequest('POST', '/v1/charges', [
+        'amount' => (string) $amountCents,
+        'currency' => 'usd',
+        'source' => 'tok_bypassPending',
+        'description' => 'Reps sandbox available-balance top-up',
+    ], 'reps-sandbox-topup-' . $amountCents . '-' . gmdate('YmdHis'));
+    if (!$res['ok']) {
+        return ['ok' => false, 'error' => $res['error'] ?? 'topup_failed'];
+    }
+    $bal = repsStripeBalance();
+    return [
+        'ok' => true,
+        'charge_id' => (string) ($res['body']['id'] ?? ''),
+        'available_cents' => (int) ($bal['available_cents'] ?? 0),
+    ];
+}

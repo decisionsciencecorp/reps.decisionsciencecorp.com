@@ -684,6 +684,15 @@ final class PayoutsTest extends TestCase
         $this->assertTrue($r['settlement']['ok']);
         $this->assertSame(1, $r['ledger']['posted']);
 
+        $hk = 'shift_sess_' . $sessions[0]['session_id'];
+        $opId = (int) repsDashDb()->query(
+            "SELECT operator_id FROM ledger_lines WHERE hour_key = " . repsDashDb()->quote($hk) . " AND bucket = 'capture' LIMIT 1"
+        )->fetchColumn();
+        $this->assertGreaterThan(0, $opId);
+        $op = repsOperatorById($opId);
+        $this->assertNotNull($op);
+        $this->assertSame('u_mark', $op['shift_user_id']);
+
         // Idempotent re-run
         $r2 = repsSettlementProcessCashMonday($sessions, '2026-07-20', [
             'has_shop' => false,
@@ -693,5 +702,37 @@ final class PayoutsTest extends TestCase
         $this->assertFalse($r2['settlement']['created']);
         $this->assertSame(0, $r2['ledger']['posted']);
         $this->assertSame(1, $r2['ledger']['skipped']);
+    }
+
+    public function testSandboxTopUpRefusesNonTestKey(): void
+    {
+        repsDashAppMetaSet(REPS_STRIPE_META_KEYS['secret'], 'sk_live_fake');
+        $r = repsStripeSandboxTopUpAvailable(1000);
+        $this->assertFalse($r['ok']);
+        $this->assertSame('sandbox_topup_requires_test_key', $r['error']);
+        repsDashAppMetaSet(REPS_STRIPE_META_KEYS['secret'], '');
+    }
+
+    public function testDisburseBatchHourKeyFilter(): void
+    {
+        repsLedgerPostAcceptedHour([
+            'hour_key' => 'sandbox_smoke_filter_a',
+            'hours' => 1.0,
+            'operator_id' => 7,
+            'has_shop' => false,
+            'has_affiliate' => false,
+        ]);
+        repsLedgerPostAcceptedHour([
+            'hour_key' => 'other_hour_b',
+            'hours' => 1.0,
+            'operator_id' => 7,
+            'has_shop' => false,
+            'has_affiliate' => false,
+        ]);
+        // dry_run + prefix filter: only sandbox hour's capture line is considered
+        $batch = repsDisburseRunBatch('filter_test', true, ['hour_key_prefix' => 'sandbox_smoke_']);
+        $this->assertTrue($batch['ok']);
+        $this->assertSame(1, $batch['skipped']);
+        $this->assertSame(0, $batch['transferred']);
     }
 }

@@ -431,6 +431,8 @@ function repsSettlementProcessCashMonday(
     $shopId = array_key_exists('shop_id', $opts) ? $opts['shop_id'] : null;
     $affName = $opts['affiliate_username'] ?? null;
 
+    require_once __DIR__ . '/operators.php';
+
     $posted = 0;
     $skipped = 0;
     $errors = [];
@@ -441,10 +443,12 @@ function repsSettlementProcessCashMonday(
             continue;
         }
         $hours = (float) ($s['accepted_hours'] ?? 0);
+        $opId = repsOperatorEnsureFromShiftSession($s);
         $res = repsLedgerPostAcceptedHour([
             'hour_key' => 'shift_sess_' . $sid,
             'hours' => $hours,
             'shop_id' => $shopId !== null ? (int) $shopId : null,
+            'operator_id' => $opId > 0 ? $opId : null,
             'has_shop' => $hasShop,
             'has_affiliate' => $hasAff,
             'affiliate_username' => is_string($affName) ? $affName : null,

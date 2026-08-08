@@ -89,7 +89,7 @@ function repsDashRenderHeader(string $title = '', string $active = 'home'): void
     $opsLabel = $role === 'business_owner' ? 'Team' : 'Operators';
     $sessionsLabel = in_array($role, ['employee', 'individual'], true) ? 'My sessions' : 'Sessions';
     $moneyLabel = match ($role) {
-        'business_owner' => 'My pay',
+        'business_owner', 'individual' => 'My pay',
         'sales' => 'Money',
         default => 'Money',
     };

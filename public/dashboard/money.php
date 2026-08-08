@@ -44,6 +44,9 @@ switch ($mode) {
     case 'owner_payout':
         repsDashRenderMoneyOwner($user, $shops);
         break;
+    case 'solo_payout':
+        repsDashRenderMoneySolo($user);
+        break;
     default:
         header('Location: /dashboard/');
         exit;

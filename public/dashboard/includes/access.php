@@ -33,7 +33,9 @@ function repsDashNavKeysForRole(string $role): array
         'sales' => ['home', 'shops', 'leads', 'money', 'education', 'settings'],
         // Owner: "Shops" = their shop card (not a pipeline book).
         'business_owner' => ['home', 'shops', 'operators', 'sessions', 'money', 'education', 'settings'],
-        'employee', 'individual' => ['home', 'sessions', 'education', 'settings'],
+        // Solo operators get My pay (Connect payout setup). Shop employees do not — shop keeps capture $.
+        'individual' => ['home', 'sessions', 'money', 'education', 'settings'],
+        'employee' => ['home', 'sessions', 'education', 'settings'],
         // Agent is an API principal — not a human ops desk.
         'agent' => ['home', 'settings'],
         default => ['home', 'settings'],
@@ -81,6 +83,7 @@ function repsDashSettingsPanelsForRole(string $role): array
  * - ops_pulse: production / reject-drag monitoring
  * - affiliate_book: sales earnings + producers
  * - owner_payout: single-shop keep + team contribution
+ * - solo_payout: individual capture pay + Connect bank setup
  */
 function repsDashMoneyModeForRole(string $role): string
 {
@@ -89,6 +92,7 @@ function repsDashMoneyModeForRole(string $role): string
         'ops' => 'ops_pulse',
         'sales' => 'affiliate_book',
         'business_owner' => 'owner_payout',
+        'individual' => 'solo_payout',
         default => 'none',
     };
 }
@@ -240,9 +244,9 @@ function repsDashViewsRolesMatrix(): array
                 'admin' => 'DSC portfolio command',
                 'ops' => 'Hours health + reject drag',
                 'sales' => 'Affiliate book $ + shop & individual producers',
-                'business_owner' => 'My pay (shop keep + team)',
+                'business_owner' => 'My pay (shop keep + Connect bank)',
                 'employee' => '—',
-                'individual' => '—',
+                'individual' => 'My pay (solo capture + Connect bank)',
                 'agent' => '—',
             ]),
         ],

@@ -9,6 +9,64 @@ if (!defined('REPS_DASH_LOADED')) {
  * Money page HTML peers only — rates/economics live in economics.php.
  */
 
+/**
+ * Stripe Connect bank setup for business_owner (shop) and individual (solo).
+ * Lives on dashboard Money — never on public join/signup.
+ */
+function repsDashRenderConnectPayoutPanel(array $user): void
+{
+    $target = repsStripePayeeTargetForUser($user);
+    if ($target === null) {
+        return;
+    }
+    $payee = repsStripePayeeForUser($user);
+    $ready = $payee && (int) ($payee['payouts_enabled'] ?? 0) === 1;
+    $pending = $payee && !$ready && trim((string) ($payee['stripe_account_id'] ?? '')) !== '';
+    $stripeOk = repsStripeConfigured();
+    $who = $target['audience'] === 'shop'
+        ? 'your shop’s capture payouts'
+        : 'your solo capture payouts';
+    ?>
+<div class="surface p-3 mb-4 border-primary border-opacity-25">
+  <h2 class="h5 mb-2">Payout bank account</h2>
+  <p class="small text-muted mb-3">
+    Reps pays <?php echo htmlspecialchars($who); ?> through Stripe.
+    Add your bank details here (hosted by Stripe). This is not part of signup.
+  </p>
+  <?php if ($ready): ?>
+    <div class="alert alert-success border-0 mb-3 py-2 small">
+      <strong>Ready.</strong> Payouts can be sent to your linked account
+      (<code><?php echo htmlspecialchars((string) $payee['stripe_account_id']); ?></code>).
+    </div>
+    <form method="post" action="/dashboard/connect/start.php" class="d-inline">
+      <?php echo repsDashCsrfField(); ?>
+      <button type="submit" class="btn btn-sm btn-outline-primary">Update payout details</button>
+    </form>
+  <?php elseif ($pending): ?>
+    <div class="alert alert-warning border-0 mb-3 py-2 small">
+      Setup started but not finished yet
+      <?php if (!empty($payee['onboarding_status'])): ?>
+        (status: <?php echo htmlspecialchars((string) $payee['onboarding_status']); ?>)
+      <?php endif; ?>.
+      Finish the Stripe form to receive transfers.
+    </div>
+    <form method="post" action="/dashboard/connect/start.php" class="d-inline">
+      <?php echo repsDashCsrfField(); ?>
+      <button type="submit" class="btn btn-sm btn-primary"<?php echo $stripeOk ? '' : ' disabled'; ?>>Continue payout setup</button>
+    </form>
+  <?php else: ?>
+    <form method="post" action="/dashboard/connect/start.php" class="d-inline">
+      <?php echo repsDashCsrfField(); ?>
+      <button type="submit" class="btn btn-sm btn-primary"<?php echo $stripeOk ? '' : ' disabled'; ?>>Set up payouts</button>
+    </form>
+  <?php endif; ?>
+  <?php if (!$stripeOk): ?>
+    <p class="small text-muted mt-2 mb-0">Stripe is not configured on this environment yet — the button unlocks when DSC turns on test/live keys.</p>
+  <?php endif; ?>
+</div>
+    <?php
+}
+
 function repsDashRenderMoneyAdmin(array $user, array $shops, ?string $repFilter = null): void
 {
     $rate = repsDashMoneyHourlyRate();
@@ -595,6 +653,7 @@ function repsDashRenderMoneyOwner(array $user, array $shops): void
   <strong>Business owner peer.</strong> This is <em>your</em> shop’s paycheck view — hours your team produced and what the shop keeps.
   You do not see DSC’s books, other shops, or affiliate commission math.
 </div>
+<?php repsDashRenderConnectPayoutPanel($user); ?>
 
 <div class="row g-3 mb-4">
   <div class="col-6 col-md-3">
@@ -633,7 +692,7 @@ function repsDashRenderMoneyOwner(array $user, array $shops): void
         <dt class="col-6">Gross at rate</dt><dd class="col-6">$<?php echo number_format($e['gross'], 2); ?></dd>
         <dt class="col-6">Your keep</dt><dd class="col-6"><strong>$<?php echo number_format($e['shop_pay'], 2); ?></strong></dd>
         <dt class="col-6">Capture share</dt><dd class="col-6">50% of accepted hours ($10/hr) to this shop</dd>
-        <dt class="col-6">Payout</dt><dd class="col-6 text-muted">Not wired (Slice C+)</dd>
+        <dt class="col-6">Payout</dt><dd class="col-6">Stripe Connect — use <strong>Payout bank account</strong> above</dd>
       </dl>
       <p class="small text-muted mt-3 mb-0">Contact on file: <?php echo htmlspecialchars($shop['contact_name']); ?>
         <?php if ($shop['contact_phone'] !== ''): ?> · <?php echo htmlspecialchars($shop['contact_phone']); ?><?php endif; ?></p>
@@ -679,6 +738,66 @@ function repsDashRenderMoneyOwner(array $user, array $shops): void
     </div>
   </div>
 </div>
+    <?php
+    repsDashRenderFooter();
+}
+
+function repsDashRenderMoneySolo(array $user): void
+{
+    $rate = repsDashMoneyHourlyRate();
+    $opId = (int) ($user['operator_id'] ?? 0);
+    $ops = repsDashOperatorsForUser($user);
+    $self = null;
+    foreach ($ops as $op) {
+        if ((int) ($op['id'] ?? 0) === $opId) {
+            $self = $op;
+            break;
+        }
+    }
+    // Fallback: economics from empty solo operator shape
+    if ($self === null) {
+        $self = [
+            'id' => $opId,
+            'name' => (string) ($user['display_name'] ?? 'You'),
+            'accepted_7d' => 0.0,
+            'status' => 'active',
+            'assigned_sales_rep' => '',
+        ];
+    }
+    $e = repsDashMoneyIndividualEconomics($self, $rate);
+
+    repsDashRenderHeader('My pay', 'money');
+    repsDashRenderPageHeader('My pay', 'Solo capture — 50% of $20/hr to you');
+    ?>
+<div class="alert alert-success border-0 mb-3">
+  <strong>Solo operator.</strong> When your sessions are accepted, the capture share ($10/hr) is owed to you — not a shop.
+  Link a bank account below so Reps can pay you through Stripe.
+</div>
+<?php repsDashRenderConnectPayoutPanel($user); ?>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-4">
+    <div class="surface p-3 h-100">
+      <div class="text-muted small">Your capture (7d)</div>
+      <div class="fs-3 fw-semibold">$<?php echo number_format((float) ($e['capture_pay'] ?? $e['shop_pay'] ?? 0), 2); ?></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4">
+    <div class="surface p-3 h-100">
+      <div class="text-muted small">Accepted hours (7d)</div>
+      <div class="fs-3 fw-semibold"><?php echo htmlspecialchars((string) ($e['hours'] ?? 0)); ?></div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="surface p-3 h-100">
+      <div class="text-muted small">Gross at rate (7d)</div>
+      <div class="fs-3 fw-semibold">$<?php echo number_format((float) ($e['gross'] ?? 0), 2); ?></div>
+    </div>
+  </div>
+</div>
+<p class="small text-muted mb-0">
+  Shop employees are paid by their shop outside Reps. You are on the solo path — Connect details stay on this page, not on the public join form.
+</p>
     <?php
     repsDashRenderFooter();
 }

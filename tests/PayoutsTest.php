@@ -704,6 +704,46 @@ final class PayoutsTest extends TestCase
         $this->assertSame(1, $r2['ledger']['skipped']);
     }
 
+    public function testPayeeTargetOwnerAndSolo(): void
+    {
+        $owner = [
+            'id' => 50,
+            'role' => 'business_owner',
+            'shop_id' => 104,
+            'email' => 'owner@example.com',
+            'display_name' => 'Owner',
+            'username' => 'owner',
+        ];
+        $t = repsStripePayeeTargetForUser($owner);
+        $this->assertNotNull($t);
+        $this->assertSame('shop', $t['entity_type']);
+        $this->assertSame(104, $t['entity_id']);
+        $this->assertSame('shop', $t['audience']);
+
+        $solo = [
+            'id' => 51,
+            'role' => 'individual',
+            'email' => 'solo@example.com',
+            'display_name' => 'Solo Pat',
+            'username' => 'solo',
+            'operator_id' => null,
+        ];
+        // Need a real users row for operator_id update
+        repsDashDb()->prepare(
+            'INSERT INTO users (username, email, password_hash, display_name, role)
+             VALUES (?, ?, ?, ?, ?)'
+        )->execute(['solo_payee_test', 'solo@example.com', 'x', 'Solo Pat', 'individual']);
+        $solo['id'] = (int) repsDashDb()->lastInsertId();
+        $t2 = repsStripePayeeTargetForUser($solo);
+        $this->assertNotNull($t2);
+        $this->assertSame('operator', $t2['entity_type']);
+        $this->assertSame('solo', $t2['audience']);
+        $this->assertGreaterThan(0, $t2['entity_id']);
+
+        $emp = ['id' => 9, 'role' => 'employee', 'shop_id' => 104];
+        $this->assertNull(repsStripePayeeTargetForUser($emp));
+    }
+
     public function testSandboxTopUpRefusesNonTestKey(): void
     {
         repsDashAppMetaSet(REPS_STRIPE_META_KEYS['secret'], 'sk_live_fake');

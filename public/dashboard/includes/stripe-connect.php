@@ -10,6 +10,125 @@ if (!defined('REPS_DASH_LOADED')) {
  */
 
 require_once __DIR__ . '/stripe-client.php';
+require_once __DIR__ . '/operators.php';
+
+/**
+ * Who this dashboard user is paid as (capture shop XOR solo operator).
+ * Affilate sales seats use entity_type=user when we expose Connect there later.
+ *
+ * @return array{
+ *   entity_type: 'shop'|'operator'|'user',
+ *   entity_id: int,
+ *   email: string,
+ *   display_name: string,
+ *   audience: 'shop'|'solo'
+ * }|null
+ */
+function repsStripePayeeTargetForUser(array $user): ?array
+{
+    $role = (string) ($user['role'] ?? '');
+    $email = trim((string) ($user['email'] ?? ''));
+    $name = trim((string) ($user['display_name'] ?? $user['username'] ?? 'Payee'));
+    if ($email === '') {
+        $email = 'payee+' . (int) ($user['id'] ?? 0) . '@reps.local';
+    }
+
+    if ($role === 'business_owner') {
+        $shopId = (int) ($user['shop_id'] ?? 0);
+        if ($shopId <= 0) {
+            return null;
+        }
+        return [
+            'entity_type' => 'shop',
+            'entity_id' => $shopId,
+            'email' => $email,
+            'display_name' => $name,
+            'audience' => 'shop',
+        ];
+    }
+
+    if ($role === 'individual') {
+        $uid = (int) ($user['id'] ?? 0);
+        if ($uid <= 0) {
+            return null;
+        }
+        $opId = repsOperatorEnsure('reps-user-' . $uid, $name, $email);
+        if ($opId <= 0) {
+            return null;
+        }
+        // Keep users.operator_id aligned with local operators row when unset/stale mock id.
+        $pdo = repsDashDb();
+        $cur = (int) ($user['operator_id'] ?? 0);
+        if ($cur !== $opId) {
+            $pdo->prepare(
+                'UPDATE users SET operator_id = ?, updated_at = datetime(\'now\') WHERE id = ?'
+            )->execute([$opId, $uid]);
+        }
+        return [
+            'entity_type' => 'operator',
+            'entity_id' => $opId,
+            'email' => $email,
+            'display_name' => $name,
+            'audience' => 'solo',
+        ];
+    }
+
+    return null;
+}
+
+/**
+ * Start or resume Express onboarding for the signed-in payee seat.
+ *
+ * @return array{ok: bool, onboarding_url?: string, payee_id?: int, account_id?: string, payee?: array<string, mixed>, error?: string}
+ */
+function repsStripeStartOnboardingForUser(array $user): array
+{
+    $target = repsStripePayeeTargetForUser($user);
+    if ($target === null) {
+        return ['ok' => false, 'error' => 'no_payee_target_for_role'];
+    }
+    if (!repsStripeConfigured()) {
+        return ['ok' => false, 'error' => 'stripe_not_configured'];
+    }
+    $ensured = repsStripeEnsurePayee(
+        $target['entity_type'],
+        $target['entity_id'],
+        $target['email'],
+        $target['display_name']
+    );
+    if (!($ensured['ok'] ?? false)) {
+        return ['ok' => false, 'error' => $ensured['error'] ?? 'ensure_failed'];
+    }
+    $payee = repsStripePayeeById((int) ($ensured['payee_id'] ?? 0));
+    $out = [
+        'ok' => true,
+        'payee_id' => (int) ($ensured['payee_id'] ?? 0),
+        'account_id' => (string) ($ensured['account_id'] ?? ''),
+        'payee' => $payee,
+    ];
+    if (!empty($ensured['onboarding_url'])) {
+        $out['onboarding_url'] = (string) $ensured['onboarding_url'];
+    } else {
+        $out['ok'] = false;
+        $out['error'] = $ensured['error'] ?? 'missing_onboarding_url';
+    }
+    return $out;
+}
+
+/** @return array<string, mixed>|null */
+function repsStripePayeeForUser(array $user): ?array
+{
+    $target = repsStripePayeeTargetForUser($user);
+    if ($target === null) {
+        return null;
+    }
+    $stmt = repsDashDb()->prepare(
+        'SELECT * FROM payout_payees WHERE entity_type = ? AND entity_id = ? LIMIT 1'
+    );
+    $stmt->execute([$target['entity_type'], $target['entity_id']]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $row ?: null;
+}
 
 /**
  * Create Express-style recipient (v1 fallback — reliable without preview headers).

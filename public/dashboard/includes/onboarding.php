@@ -106,7 +106,7 @@ function repsDashWizardStepsForRole(string $role): array
             [
                 'id' => 'pay',
                 'title' => 'My pay',
-                'body' => 'See what your shop keeps and who produced hours. Names link into the same worker drill-down as Team.',
+                'body' => 'See what your shop keeps and who produced hours. Set up the shop’s Stripe payout bank account on that page (not during signup).',
                 'cta' => 'Open My pay',
                 'href' => '/dashboard/money.php',
             ],
@@ -123,13 +123,44 @@ function repsDashWizardStepsForRole(string $role): array
                 'body' => 'Finish to land on your normal Home pulse for the shop.',
             ],
         ],
-        'employee', 'individual' => [
+        'individual' => [
             [
                 'id' => 'welcome',
-                'title' => $role === 'individual' ? 'Welcome — your personal desk' : 'Welcome — your worker desk',
-                'body' => $role === 'individual'
-                    ? 'You’re capturing on your own (not under a shop book). This tour covers sessions and where to learn the basics.'
-                    : 'You’re on a shop team. This tour covers your hours and where to learn capture basics.',
+                'title' => 'Welcome — your personal desk',
+                'body' => 'You’re capturing on your own (not under a shop book). This tour covers sessions, payout setup, and where to learn the basics.',
+            ],
+            [
+                'id' => 'sessions',
+                'title' => 'My sessions',
+                'body' => 'Accepted and rejected captures show here. Open a day or session row to see duration, accepted hours, and rejection reasons.',
+                'cta' => 'Open My sessions',
+                'href' => '/dashboard/sessions.php',
+            ],
+            [
+                'id' => 'pay',
+                'title' => 'My pay',
+                'body' => 'Link your bank for solo capture payouts through Stripe. This stays on My pay in the dashboard — never on the public join form.',
+                'cta' => 'Open My pay',
+                'href' => '/dashboard/money.php',
+            ],
+            [
+                'id' => 'edu',
+                'title' => 'Education Center',
+                'body' => 'Hands in frame, steady camera, FPS, and other acceptance tips live in Education Center — revisit anytime.',
+                'cta' => 'Open Education',
+                'href' => '/dashboard/education.php',
+            ],
+            [
+                'id' => 'done',
+                'title' => 'You’re set',
+                'body' => 'Finish the tour for your normal Home pulse (your hours and recent sessions).',
+            ],
+        ],
+        'employee' => [
+            [
+                'id' => 'welcome',
+                'title' => 'Welcome — your worker desk',
+                'body' => 'You’re on a shop team. This tour covers your hours and where to learn capture basics. Your shop handles payouts outside Reps.',
             ],
             [
                 'id' => 'sessions',

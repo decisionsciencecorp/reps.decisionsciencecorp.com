@@ -98,6 +98,7 @@ function repsDashRenderHeader(string $title = '', string $active = 'home'): void
         'shops' => [$shopsLabel, '/dashboard/shops.php', 'bi-shop'],
         'leads' => ['Leads', '/dashboard/leads.php', 'bi-inbox'],
         'operators' => [$opsLabel, '/dashboard/operators.php', 'bi-people'],
+        'shift_match' => ['Shift match', '/dashboard/shift-match.php', 'bi-link-45deg'],
         'sessions' => [$sessionsLabel, '/dashboard/sessions.php', 'bi-camera-reels'],
         'money' => [$moneyLabel, '/dashboard/money.php', 'bi-cash-coin'],
         'education' => ['Education', '/dashboard/education.php', 'bi-mortarboard'],

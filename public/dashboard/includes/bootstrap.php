@@ -5,8 +5,8 @@ declare(strict_types=1);
  * Reps Dashboard bootstrap.
  *
  * Load order:
- *   config → csrf → db → skin → mock → repository → scope → economics
- *   → auth → access → onboarding → education → rollups → partials → layout
+ *   config → csrf → db → skin → mock → operators → shift-sync → repository
+ *   → scope → economics → auth → access → onboarding → education → rollups → layout
  */
 
 define('REPS_DASH_LOADED', true);
@@ -24,12 +24,13 @@ require_once __DIR__ . '/csrf.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/skin.php';
 require_once __DIR__ . '/mock-data.php';
+require_once __DIR__ . '/operators.php';
+require_once __DIR__ . '/shift-sync.php';
 require_once __DIR__ . '/repository.php';
 require_once __DIR__ . '/scope.php';
 require_once __DIR__ . '/economics.php';
 require_once __DIR__ . '/stripe-client.php';
 require_once __DIR__ . '/stripe-connect.php';
-require_once __DIR__ . '/operators.php';
 require_once __DIR__ . '/settlement.php';
 require_once __DIR__ . '/ledger.php';
 require_once __DIR__ . '/payouts-disburse.php';

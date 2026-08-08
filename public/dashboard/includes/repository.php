@@ -6,13 +6,20 @@ if (!defined('REPS_DASH_LOADED')) {
 }
 
 /**
- * Data access seam — Slice A reads mock fixtures.
- * Slice C: swap bodies to Shift sync / SQLite / API without rewriting pages or scope.php.
+ * Data access seam — Slice A mock fixtures; Slice C live SQLite when sync has run.
  */
+
+require_once __DIR__ . '/shift-sync.php';
 
 /** @return list<array<string, mixed>> */
 function repsDashAllShops(): array
 {
+    if (repsDashLiveDataEnabled()) {
+        $shops = repsDashDbShopsAsRows();
+        if ($shops !== []) {
+            return $shops;
+        }
+    }
     $shops = repsDashMockShops();
     try {
         $overlays = repsDashShopNotesMap();
@@ -33,15 +40,125 @@ function repsDashAllShops(): array
 }
 
 /** @return list<array<string, mixed>> */
+function repsDashDbShopsAsRows(): array
+{
+    $pdo = repsDashDb();
+    $rows = $pdo->query('SELECT * FROM shops ORDER BY id')->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    if ($rows === []) {
+        return [];
+    }
+    $notes = [];
+    try {
+        $notes = repsDashShopNotesMap();
+    } catch (Throwable $e) {
+        $notes = [];
+    }
+    $out = [];
+    foreach ($rows as $r) {
+        $id = (int) $r['id'];
+        $opCount = (int) $pdo->query(
+            'SELECT COUNT(*) FROM operators WHERE shop_id = ' . $id
+        )->fetchColumn();
+        $acc = (float) $pdo->query(
+            'SELECT COALESCE(SUM(accepted_7d),0) FROM operators WHERE shop_id = ' . $id
+        )->fetchColumn();
+        $rej = (float) $pdo->query(
+            'SELECT COALESCE(SUM(rejected_7d),0) FROM operators WHERE shop_id = ' . $id
+        )->fetchColumn();
+        $den = $acc + $rej;
+        $out[] = [
+            'id' => $id,
+            'name' => (string) $r['name'],
+            'status' => (string) $r['status'],
+            'assigned_sales_rep' => $r['assigned_sales_rep'] ?? null,
+            'contact_name' => (string) ($r['contact_name'] ?? ''),
+            'contact_phone' => (string) ($r['contact_phone'] ?? ''),
+            'agreed_shop_split' => (float) ($r['agreed_shop_split'] ?? 0.5),
+            'notes' => array_key_exists($id, $notes) ? $notes[$id] : (string) ($r['notes'] ?? ''),
+            'operators' => $opCount,
+            'accepted_hours_7d' => $acc,
+            'reject_rate' => $den > 0 ? round($rej / $den, 4) : 0.0,
+        ];
+    }
+    return $out;
+}
+
+/** @return list<array<string, mixed>> */
 function repsDashAllOperators(): array
 {
+    if (repsDashLiveDataEnabled()) {
+        $ops = repsDashDbOperatorsAsRows();
+        if ($ops !== []) {
+            return $ops;
+        }
+    }
     return repsDashMockOperators();
+}
+
+/** @return list<array<string, mixed>> */
+function repsDashDbOperatorsAsRows(): array
+{
+    $pdo = repsDashDb();
+    $shopNames = [];
+    foreach ($pdo->query('SELECT id, name FROM shops')->fetchAll(PDO::FETCH_ASSOC) ?: [] as $s) {
+        $shopNames[(int) $s['id']] = (string) $s['name'];
+    }
+    $rows = $pdo->query(
+        "SELECT * FROM operators
+         WHERE shift_user_id NOT LIKE 'reps-user-%'
+         ORDER BY display_name COLLATE NOCASE"
+    )->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    $out = [];
+    foreach ($rows as $r) {
+        $sid = isset($r['shop_id']) ? (int) $r['shop_id'] : 0;
+        $out[] = repsOperatorToRepoRow($r, $shopNames[$sid] ?? '');
+    }
+    return $out;
 }
 
 /** @return list<array<string, mixed>> */
 function repsDashAllSessions(): array
 {
+    if (repsDashLiveDataEnabled()) {
+        $sessions = repsDashDbSessionsAsRows();
+        if ($sessions !== []) {
+            return $sessions;
+        }
+    }
     return repsDashMockSessions();
+}
+
+/** @return list<array<string, mixed>> */
+function repsDashDbSessionsAsRows(): array
+{
+    $pdo = repsDashDb();
+    $sql = 'SELECT s.*, o.display_name AS operator_name, sh.name AS shop_name
+            FROM sessions s
+            LEFT JOIN operators o ON o.id = s.operator_id
+            LEFT JOIN shops sh ON sh.id = s.shop_id
+            ORDER BY s.completed_at DESC, s.session_id DESC
+            LIMIT 2000';
+    $rows = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    $out = [];
+    foreach ($rows as $r) {
+        $shopId = isset($r['shop_id']) && $r['shop_id'] !== null ? (int) $r['shop_id'] : 0;
+        $out[] = [
+            'session_id' => (string) $r['session_id'],
+            'operator_id' => (int) ($r['operator_id'] ?? 0),
+            'operator' => (string) ($r['operator_name'] ?? ''),
+            'shop' => (string) ($r['shop_name'] ?? ($shopId > 0 ? 'Shop #' . $shopId : '—')),
+            'shop_id' => $shopId,
+            'status' => (string) ($r['status'] ?? ''),
+            'duration_hours' => (float) ($r['duration_hours'] ?? 0),
+            'accepted_hours' => (float) ($r['accepted_hours'] ?? 0),
+            'rejection_reason' => (string) ($r['rejection_reason'] ?? ''),
+            'partner_code' => (string) ($r['partner_code'] ?? ''),
+            'completed_at' => (string) ($r['completed_at'] ?? ''),
+            'day' => (string) ($r['day'] ?? ''),
+            'shift_user_id' => (string) ($r['shift_user_id'] ?? ''),
+        ];
+    }
+    return $out;
 }
 
 function repsDashFindOperator(int $id): ?array

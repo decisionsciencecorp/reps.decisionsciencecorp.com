@@ -131,6 +131,9 @@ assertTrue(in_array('money', repsDashNavKeysForRole('individual'), true), 'indiv
 assertTrue(!in_array('money', repsDashNavKeysForRole('employee'), true), 'employee no money (shop keeps capture)');
 assertTrue(repsDashMoneyModeForRole('individual') === 'solo_payout', 'individual solo_payout mode');
 assertTrue(repsDashMoneyModeForRole('business_owner') === 'owner_payout', 'owner_payout mode');
+assertTrue(in_array('shift_match', repsDashNavKeysForRole('admin'), true), 'admin shift match');
+assertTrue(in_array('shift_match', repsDashNavKeysForRole('ops'), true), 'ops shift match');
+assertTrue(!in_array('shift_match', repsDashNavKeysForRole('sales'), true), 'sales no shift match');
 
 // --- Economics single source ---
 assertEq(repsDashMoneyHourlyRate(), 20.0, 'hourly rate constant');

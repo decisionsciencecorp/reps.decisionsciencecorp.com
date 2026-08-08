@@ -26,8 +26,8 @@ function repsDashAllRoles(): array
 function repsDashNavKeysForRole(string $role): array
 {
     return match ($role) {
-        'admin' => ['home', 'shops', 'leads', 'operators', 'sessions', 'money', 'users', 'settings'],
-        'ops' => ['home', 'shops', 'leads', 'operators', 'sessions', 'money', 'settings'],
+        'admin' => ['home', 'shops', 'leads', 'operators', 'shift_match', 'sessions', 'money', 'users', 'settings'],
+        'ops' => ['home', 'shops', 'leads', 'operators', 'shift_match', 'sessions', 'money', 'settings'],
         // Sales = pipeline (Shops) + Money. Operators appear inside Money, not a roster desk.
         // No session drill-down / vids.
         'sales' => ['home', 'shops', 'leads', 'money', 'education', 'settings'],

@@ -276,8 +276,142 @@ function repsDashDbMigrate(PDO $pdo): void
         $pdo->prepare('INSERT INTO schema_migrations (version) VALUES (?)')->execute(['005_payouts']);
     }
 
+    if (!in_array('006_shift_sync', $applied, true)) {
+        repsDashMigrate006ShiftSync($pdo);
+        $pdo->prepare('INSERT INTO schema_migrations (version) VALUES (?)')->execute(['006_shift_sync']);
+    }
+
     repsDashDbSeedUsers($pdo);
     repsDashDbSeedApplyLeads($pdo);
+    repsDashDbSeedShops($pdo);
+}
+
+/**
+ * Slice C — shops/sessions + expand operators for Shift poll + Admin match.
+ */
+function repsDashMigrate006ShiftSync(PDO $pdo): void
+{
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS shops (
+            id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT \'prospect\',
+            assigned_sales_rep TEXT,
+            contact_name TEXT NOT NULL DEFAULT \'\',
+            contact_phone TEXT NOT NULL DEFAULT \'\',
+            agreed_shop_split REAL NOT NULL DEFAULT 0.5,
+            notes TEXT NOT NULL DEFAULT \'\',
+            created_at TEXT NOT NULL DEFAULT (datetime(\'now\')),
+            updated_at TEXT NOT NULL DEFAULT (datetime(\'now\'))
+        )'
+    );
+
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS operators (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            shift_user_id TEXT NOT NULL UNIQUE,
+            display_name TEXT NOT NULL DEFAULT \'\',
+            email TEXT NOT NULL DEFAULT \'\',
+            phone TEXT NOT NULL DEFAULT \'\',
+            shop_id INTEGER,
+            status TEXT NOT NULL DEFAULT \'active\',
+            assigned_sales_rep TEXT,
+            matched_user_id INTEGER,
+            matched_at TEXT,
+            matched_by_user_id INTEGER,
+            team_member_id TEXT,
+            partner_code TEXT NOT NULL DEFAULT \'\',
+            accepted_7d REAL NOT NULL DEFAULT 0,
+            rejected_7d REAL NOT NULL DEFAULT 0,
+            last_session_at TEXT,
+            created_at TEXT NOT NULL DEFAULT (datetime(\'now\')),
+            updated_at TEXT NOT NULL DEFAULT (datetime(\'now\'))
+        )'
+    );
+    // Expand operators created by 005_payouts (minimal columns).
+    $opCols = $pdo->query('PRAGMA table_info(operators)')->fetchAll(PDO::FETCH_ASSOC);
+    $opNames = array_map(static fn($c) => (string) $c['name'], $opCols ?: []);
+    $addOp = static function (PDO $pdo, array $names, string $col, string $ddl) {
+        if (!in_array($col, $names, true)) {
+            $pdo->exec('ALTER TABLE operators ADD COLUMN ' . $ddl);
+        }
+    };
+    $addOp($pdo, $opNames, 'phone', "phone TEXT NOT NULL DEFAULT ''");
+    $addOp($pdo, $opNames, 'shop_id', 'shop_id INTEGER');
+    $addOp($pdo, $opNames, 'status', "status TEXT NOT NULL DEFAULT 'active'");
+    $addOp($pdo, $opNames, 'assigned_sales_rep', 'assigned_sales_rep TEXT');
+    $addOp($pdo, $opNames, 'matched_user_id', 'matched_user_id INTEGER');
+    $addOp($pdo, $opNames, 'matched_at', 'matched_at TEXT');
+    $addOp($pdo, $opNames, 'matched_by_user_id', 'matched_by_user_id INTEGER');
+    $addOp($pdo, $opNames, 'team_member_id', 'team_member_id TEXT');
+    $addOp($pdo, $opNames, 'partner_code', "partner_code TEXT NOT NULL DEFAULT ''");
+    $addOp($pdo, $opNames, 'accepted_7d', 'accepted_7d REAL NOT NULL DEFAULT 0');
+    $addOp($pdo, $opNames, 'rejected_7d', 'rejected_7d REAL NOT NULL DEFAULT 0');
+    $addOp($pdo, $opNames, 'last_session_at', 'last_session_at TEXT');
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_operators_shift ON operators(shift_user_id)');
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_operators_matched ON operators(matched_user_id)');
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_operators_shop ON operators(shop_id)');
+
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS sessions (
+            session_id TEXT PRIMARY KEY,
+            operator_id INTEGER,
+            shop_id INTEGER,
+            shift_user_id TEXT NOT NULL DEFAULT \'\',
+            status TEXT NOT NULL DEFAULT \'\',
+            duration_hours REAL NOT NULL DEFAULT 0,
+            accepted_hours REAL NOT NULL DEFAULT 0,
+            rejection_reason TEXT NOT NULL DEFAULT \'\',
+            partner_code TEXT NOT NULL DEFAULT \'\',
+            created_at TEXT,
+            completed_at TEXT,
+            day TEXT,
+            updated_at TEXT NOT NULL DEFAULT (datetime(\'now\'))
+        )'
+    );
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_sessions_operator ON sessions(operator_id)');
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_sessions_day ON sessions(day)');
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_sessions_shift_user ON sessions(shift_user_id)');
+
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS operator_match_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            operator_id INTEGER NOT NULL,
+            user_id INTEGER,
+            actor_user_id INTEGER,
+            event_type TEXT NOT NULL,
+            note TEXT NOT NULL DEFAULT \'\',
+            created_at TEXT NOT NULL DEFAULT (datetime(\'now\'))
+        )'
+    );
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_op_match_op ON operator_match_events(operator_id)');
+}
+
+/** Seed CRM shops from Slice A fixtures (idempotent by id). */
+function repsDashDbSeedShops(PDO $pdo): void
+{
+    if (!function_exists('repsDashMockShops')) {
+        return;
+    }
+    $stmt = $pdo->prepare(
+        'INSERT INTO shops (id, name, status, assigned_sales_rep, contact_name, contact_phone, agreed_shop_split, notes)
+         SELECT ?, ?, ?, ?, ?, ?, ?, ?
+         WHERE NOT EXISTS (SELECT 1 FROM shops WHERE id = ?)'
+    );
+    foreach (repsDashMockShops() as $shop) {
+        $id = (int) $shop['id'];
+        $stmt->execute([
+            $id,
+            (string) $shop['name'],
+            (string) $shop['status'],
+            $shop['assigned_sales_rep'] ?? null,
+            (string) ($shop['contact_name'] ?? ''),
+            (string) ($shop['contact_phone'] ?? ''),
+            (float) ($shop['agreed_shop_split'] ?? 0.5),
+            (string) ($shop['notes'] ?? ''),
+            $id,
+        ]);
+    }
 }
 
 /**

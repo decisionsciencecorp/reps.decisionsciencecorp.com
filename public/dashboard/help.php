@@ -13,7 +13,7 @@ function repsDashHelpPageMeta(): array
     return [
         'overview' => [
             'label' => 'Overview',
-            'deck' => 'What Reps is and how this desk fits Shift + money',
+            'deck' => 'What Reps is and how this desk fits Partner hours + money',
             'icon' => 'bi-house',
         ],
         'desks' => [
@@ -32,7 +32,7 @@ function repsDashHelpPageMeta(): array
             'icon' => 'bi-person-gear',
         ],
         'shift' => [
-            'label' => 'Shift sync & match',
+            'label' => 'Partner sync & match',
             'deck' => 'Ingest hours, match workers, invite rules',
             'icon' => 'bi-link-45deg',
         ],
@@ -47,8 +47,8 @@ function repsDashHelpPageMeta(): array
             'icon' => 'bi-code-slash',
         ],
         'api-shift' => [
-            'label' => 'Shift Partner API',
-            'deck' => 'Proxy routes, CARDINAL prod rule, fake stub',
+            'label' => 'Partner API',
+            'deck' => 'Proxy routes for hours, workers, team, and account',
             'icon' => 'bi-broadcast',
         ],
         'api-session' => [
@@ -100,7 +100,7 @@ repsDashRenderPageHeader(
           </a>
         <?php endforeach; ?>
       </div>
-      <p class="small text-muted mt-3 mb-0">Your role (<strong><?php echo htmlspecialchars(repsDashRoleLabel((string) $user['role'])); ?></strong>) gates which chapters appear. Full API and Shift proxy docs are for admin, ops, and agent.</p>
+      <p class="small text-muted mt-3 mb-0">Your role (<strong><?php echo htmlspecialchars(repsDashRoleLabel((string) $user['role'])); ?></strong>) gates which chapters appear. Full API and Partner proxy docs are for admin, ops, and agent.</p>
     </div>
   </div>
   <div class="col-12 col-lg-9">

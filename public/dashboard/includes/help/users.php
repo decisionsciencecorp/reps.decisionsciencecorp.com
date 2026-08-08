@@ -13,11 +13,11 @@ if (!defined('REPS_DASH_LOADED')) {
   <li>Create username (2–40: letters, numbers, <code>._-</code>), display name, role, password.</li>
   <li>Set <strong>Shop ID</strong> / <strong>Operator ID</strong> when the seat should be scoped (owner, employee, individual).</li>
   <li>For automation, create an <strong>agent</strong> seat and issue an API key from the expanded row (shown once).</li>
-  <li>Link Shift workers under <a href="/dashboard/shift-match.php">Users → Shift match</a> (admin + ops).</li>
+  <li>Link workers under <a href="/dashboard/shift-match.php">Users → Worker match</a> (admin + ops).</li>
 </ol>
 
 <h3 class="h5 mt-4">Who can provision</h3>
-<p>Only <strong>admin</strong> can open the roster and create/reset seats. Ops sees the Users menu for <em>Shift match</em> only — if they hit the roster URL they are redirected to Shift match.</p>
+<p>Only <strong>admin</strong> can open the roster and create/reset seats. Ops sees the Users menu for <em>Worker match</em> only — if they hit the roster URL they are redirected there.</p>
 
 <h3 class="h5 mt-4">API keys (UI)</h3>
 <ul>

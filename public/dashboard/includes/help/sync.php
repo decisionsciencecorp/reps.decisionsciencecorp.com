@@ -11,19 +11,12 @@ if (!defined('REPS_DASH_LOADED')) {
 
 <h3 class="h5 mt-4">Sync (admin / ops)</h3>
 <ul>
-  <li>Controls whether the desk prefers live Shift polling vs fixture fallback.</li>
-  <li>Footer shows <em>live Shift data</em> or <em>fixture fallback</em>.</li>
+  <li>Controls whether the desk prefers live Partner polling vs fixture fallback.</li>
+  <li>Footer shows <em>live</em> data or <em>fixture fallback</em>.</li>
   <li>Partner code may be stored in app meta (<code>shift.partner_code</code>).</li>
 </ul>
 
 <h3 class="h5 mt-4">Platform (admin / agent)</h3>
 <p>Stubs and keys that belong on the host env, not in browser localStorage. API keys for agents are managed under Users (admin UI) or <code>create-api-key.php</code>.</p>
 
-<h3 class="h5 mt-4">Host configuration (ops reference)</h3>
-<p>Common env names (values live only on the server / pass files):</p>
-<ul>
-  <li><code>REPS_SHIFT_API_BASE</code> — Partner base (default joinshift) or <code>fake://shift</code> for tests</li>
-  <li><code>REPS_SHIFT_COOKIE_JAR</code> — cookie file for live GETs</li>
-  <li><code>REPS_SHIFT_FORBID_LIVE_WRITES</code> — set in PHPUnit / CI</li>
-  <li><code>REPS_DASH_DEV_MODE</code> — role switcher bar</li>
-</ul>
+<p class="small text-muted mb-0">Host env names for Partner base and cookie jar are documented in the repo API README for developers — not required to operate the desk day to day.</p>

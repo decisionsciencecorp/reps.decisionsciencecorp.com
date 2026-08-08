@@ -167,7 +167,7 @@ function repsDashRenderHeader(string $title = '', string $active = 'home'): void
                   <?php if ($canShiftMatch): ?>
                     <li>
                       <a class="dropdown-item<?php echo $active === 'shift_match' ? ' active' : ''; ?>" href="/dashboard/shift-match.php">
-                        <i class="bi bi-link-45deg me-2"></i>Shift match
+                        <i class="bi bi-link-45deg me-2"></i>Worker match
                       </a>
                     </li>
                   <?php endif; ?>
@@ -206,7 +206,7 @@ function repsDashRenderFooter(): void
         }
         $partnerCode = ' · Partner code ' . $code;
     }
-    $dataLabel = repsDashLiveDataEnabled() ? 'live Shift data' : 'fixture fallback';
+    $dataLabel = repsDashLiveDataEnabled() ? 'live Partner data' : 'fixture fallback';
     ?>
   </main>
   <footer class="container-fluid px-3 px-lg-4 pb-4">

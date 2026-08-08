@@ -23,7 +23,7 @@ if (!defined('REPS_DASH_LOADED')) {
 <h3 class="h5 mt-4">Scope fields</h3>
 <ul>
   <li><code>shop_id</code> — ties a seat to one shop (owners, shop employees).</li>
-  <li><code>operator_id</code> — ties a seat to one Shift/operator worker (individuals, matched employees).</li>
+  <li><code>operator_id</code> — ties a seat to one Partner/operator worker (individuals, matched employees).</li>
 </ul>
 
 <h3 class="h5 mt-4">Views × roles matrix</h3>

@@ -17,9 +17,9 @@ $base = 'https://reps.decisionsciencecorp.com/dashboard/api';
   <strong>Success:</strong> <code>{"ok": true, …}</code> · <strong>Error:</strong> <code>{"ok": false, "error": "code", "message": "…"}</code> + HTTP status.
 </div>
 
-<p>This chapter covers the <strong>SQLite book</strong> endpoints (Slice D). Shift Partner proxy is a separate chapter:
+<p>This chapter covers the <strong>book</strong> endpoints. Partner proxy routes are a separate chapter:
 <?php if (repsDashCanSeeHelpPage('api-shift')): ?>
-  <a href="/dashboard/help.php?page=api-shift">Shift Partner API</a>.
+  <a href="/dashboard/help.php?page=api-shift">Partner API</a>.
 <?php else: ?>
   (not available for your role).
 <?php endif; ?>
@@ -112,7 +112,7 @@ $base = 'https://reps.decisionsciencecorp.com/dashboard/api';
     <div id="rdApiC3" class="accordion-collapse collapse" data-bs-parent="#rdApiBook">
       <div class="accordion-body">
         <p><code>GET list-sessions.php</code> — capture/hours list (query filters may apply per implementation).</p>
-        <p><code>GET get-session.php?id={int}</code> — one session; media availability depends on Shift exposing clips.</p>
+        <p><code>GET get-session.php?id={int}</code> — one session; media availability depends on upstream exposing clips.</p>
       </div>
     </div>
   </div>

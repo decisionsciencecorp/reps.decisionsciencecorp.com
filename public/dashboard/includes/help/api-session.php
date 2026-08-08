@@ -9,7 +9,7 @@ if (!defined('REPS_DASH_LOADED')) {
 <p>You can call the Reps HTTP API while signed into the dashboard — the browser session cookie authenticates you. Responses are <strong>scoped to your role</strong> the same way the UI is (your shops, your sessions, your money pulse).</p>
 
 <div class="alert alert-info">
-  Staff API keys and the Shift Partner proxy are documented for admin / ops / agent only.
+  Staff API keys and the Partner proxy are documented for admin / ops / agent only.
   If you need a long-lived key, ask an admin to create one on an appropriate seat.
 </div>
 

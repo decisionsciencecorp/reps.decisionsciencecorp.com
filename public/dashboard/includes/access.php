@@ -26,7 +26,7 @@ function repsDashAllRoles(): array
 function repsDashNavKeysForRole(string $role): array
 {
     return match ($role) {
-        // users = Users dropdown host (roster + Shift match). shift_match stays for route ACL.
+        // users = Users dropdown host (roster + worker match). shift_match stays for route ACL.
         'admin' => ['home', 'shops', 'leads', 'operators', 'sessions', 'money', 'users', 'shift_match', 'help', 'settings'],
         'ops' => ['home', 'shops', 'leads', 'operators', 'sessions', 'money', 'users', 'shift_match', 'help', 'settings'],
         // Sales = pipeline (Shops) + Money. Operators appear inside Money, not a roster desk.
@@ -141,7 +141,7 @@ function repsDashScopeBlurb(string $role): string
 {
     return match ($role) {
         'admin' => 'Full desk: all shops, hours, economics, and user provisioning.',
-        'ops' => 'Same operational desk as admin, without user provisioning or platform keys. Users menu → Shift match only.',
+        'ops' => 'Same operational desk as admin, without user provisioning or platform keys. Users menu → Worker match only.',
         'sales' => 'Pipeline (Shops) plus Money for your book — shops and individuals you sourced. No session inbox.',
         'business_owner' => 'Your shop only: roster, hours, and your shop’s pay display.',
         'employee' => 'Your own sessions and hours — not the shop ledger or other workers.',
@@ -186,7 +186,7 @@ function repsDashViewsRolesMatrix(): array
         [
             'view' => 'education',
             'label' => 'Education Center',
-            'purpose' => 'Shift FAQ + reject catalog + field coaching (learner seats)',
+            'purpose' => 'Partner FAQ + reject catalog + field coaching (learner seats)',
             'cells' => $cells([
                 'admin' => '—',
                 'ops' => '—',
@@ -258,10 +258,10 @@ function repsDashViewsRolesMatrix(): array
             'label' => 'Session video / media',
             'purpose' => 'Playback of capture clips',
             'cells' => $cells([
-                'admin' => 'Only if Shift API exposes it*',
-                'ops' => 'Only if Shift API exposes it*',
+                'admin' => 'Only if Partner API exposes it*',
+                'ops' => 'Only if Partner API exposes it*',
                 'sales' => '—',
-                'business_owner' => 'Only if Shift API exposes it*',
+                'business_owner' => 'Only if Partner API exposes it*',
                 'employee' => 'Self · if API allows*',
                 'individual' => 'Self · if API allows*',
                 'agent' => 'API only*',
@@ -284,10 +284,10 @@ function repsDashViewsRolesMatrix(): array
         [
             'view' => 'users',
             'label' => 'Users (dropdown)',
-            'purpose' => 'Roster + Shift match under Users menu',
+            'purpose' => 'Roster + Worker match under Users menu',
             'cells' => $cells([
-                'admin' => 'Roster + Shift match',
-                'ops' => 'Shift match (no provisioning)',
+                'admin' => 'Roster + Worker match',
+                'ops' => 'Worker match (no provisioning)',
                 'sales' => '—',
                 'business_owner' => '— (team invite = Slice B)',
                 'employee' => '—',
@@ -297,8 +297,8 @@ function repsDashViewsRolesMatrix(): array
         ],
         [
             'view' => 'shift_match',
-            'label' => 'Shift match',
-            'purpose' => 'Link Shift workers ↔ Reps seats (under Users)',
+            'label' => 'Worker match',
+            'purpose' => 'Link Partner workers ↔ Reps seats (under Users)',
             'cells' => $cells([
                 'admin' => 'Yes',
                 'ops' => 'Yes',
@@ -314,13 +314,13 @@ function repsDashViewsRolesMatrix(): array
             'label' => 'Help',
             'purpose' => 'In-app docs (API gated by role)',
             'cells' => $cells([
-                'admin' => 'Full + API + Shift proxy',
-                'ops' => 'Full + API + Shift proxy',
+                'admin' => 'Full + API + Partner proxy',
+                'ops' => 'Full + API + Partner proxy',
                 'sales' => 'Desk + session API note',
                 'business_owner' => 'Desk + session API note',
                 'employee' => 'Desk + session API note',
                 'individual' => 'Desk + session API note',
-                'agent' => 'API book + Shift proxy',
+                'agent' => 'API book + Partner proxy',
             ]),
         ],
         [
@@ -340,7 +340,7 @@ function repsDashViewsRolesMatrix(): array
         [
             'view' => 'partner_code',
             'label' => 'Partner code (C6N9T7)',
-            'purpose' => 'Shift partner identifier in chrome',
+            'purpose' => 'Partner identifier in chrome',
             'cells' => $cells([
                 'admin' => 'Yes',
                 'ops' => 'Yes',

@@ -44,12 +44,12 @@ if (!defined('REPS_DASH_LOADED')) {
     </tr>
     <tr>
       <td><strong>Education</strong></td>
-      <td>Shift FAQ, reject catalog, field coaching for learner seats.</td>
+      <td>Partner FAQ, reject catalog, field coaching for learner seats.</td>
       <td>Sales, Owner, Employee, Individual</td>
     </tr>
     <tr>
       <td><strong>Users ▾</strong></td>
-      <td>Dropdown: roster (admin) and Shift match (admin + ops).</td>
+      <td>Dropdown: roster (admin) and Worker match (admin + ops).</td>
       <td>Admin, Ops</td>
     </tr>
     <tr>

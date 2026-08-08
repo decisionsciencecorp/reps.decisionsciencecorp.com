@@ -25,18 +25,13 @@ if (!defined('REPS_DASH_LOADED')) {
       <td>Re-login or rotate key; never query-string keys</td>
     </tr>
     <tr>
-      <td>API <code>403 forbidden</code> on Shift routes</td>
+      <td>API <code>403 forbidden</code> on Partner routes</td>
       <td>Caller not admin/ops/agent</td>
       <td>Use a permitted seat or key</td>
     </tr>
     <tr>
-      <td><code>cardinal_blocked</code></td>
-      <td>Write attempted against live Joinshift from a forbid path</td>
-      <td>Use fake stub for automation; live writes only intentional ops</td>
-    </tr>
-    <tr>
-      <td><code>shift_upstream</code></td>
-      <td>Partner HTTP failure / cookie / network</td>
+      <td><code>shift_upstream</code> / upstream errors</td>
+      <td>Partner HTTP failure, cookie, or network</td>
       <td>Check cookie jar, base URL, Partner status</td>
     </tr>
     <tr>

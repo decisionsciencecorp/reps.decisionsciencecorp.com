@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Admin/Ops: match Shift workers to Reps accounts.
+ * Admin/Ops: match Partner workers to Reps accounts.
  */
 
 require_once __DIR__ . '/includes/bootstrap.php';
@@ -28,19 +28,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $res = repsShiftPollLive();
         if ($res['ok'] ?? false) {
             $flash = sprintf(
-                'Shift sync OK — %d session rows, partner %s.',
+                'Sync OK — %d session rows, partner %s.',
                 (int) ($res['sessions_upserted'] ?? 0),
                 (string) ($res['partner_code'] ?? '—')
             );
         } else {
-            $flashErr = 'Shift sync failed: ' . (string) ($res['error'] ?? 'unknown');
+            $flashErr = 'Sync failed: ' . (string) ($res['error'] ?? 'unknown');
         }
     } elseif ($action === 'match') {
         $opId = (int) ($_POST['operator_id'] ?? 0);
         $userId = (int) ($_POST['user_id'] ?? 0);
         $res = repsOperatorMatchUser($opId, $userId, $actorId);
         if ($res['ok'] ?? false) {
-            $flash = 'Matched Shift worker to Reps account.';
+            $flash = 'Matched worker to Reps account.';
         } else {
             $flashErr = 'Match failed: ' . (string) ($res['error'] ?? 'unknown');
         }
@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $res = repsShiftInviteTeamMember($name, $phone);
                 if ($res['ok'] ?? false) {
                     $sync = repsShiftPollLive();
-                    $flash = 'Invite sent via Shift Partner API.'
+                    $flash = 'Invite sent.'
                         . (($sync['ok'] ?? false) ? ' Local book refreshed.' : ' (re-sync skipped or failed — pull manually)');
                 } else {
                     $flashErr = 'Invite failed: ' . (string) ($res['error'] ?? 'unknown');
@@ -99,13 +99,13 @@ $lastSync = repsDashAppMetaGet('shift.last_sync_at', '');
 $partner = repsDashAppMetaGet('shift.partner_code', '');
 $live = repsDashLiveDataEnabled();
 
-repsDashRenderHeader('Shift match', 'shift_match');
-repsDashRenderPageHeader('Shift ↔ Reps match', 'Link Shift team workers to dashboard seats');
+repsDashRenderHeader('Worker match', 'shift_match');
+repsDashRenderPageHeader('Worker match', 'Link Partner workers to dashboard seats');
 ?>
 
 <div class="alert alert-dark border-0 mb-3">
   <strong>Admin / Ops.</strong> Reps pays the shop owner or solo operator — not shop employees via Stripe.
-  Matching tells the ledger and Connect who a Shift <code>user_id</code> is on our side.
+  Matching tells the ledger and Connect which Partner <code>user_id</code> maps to a Reps seat.
 </div>
 
 <?php if ($flash !== ''): ?>
@@ -117,32 +117,24 @@ repsDashRenderPageHeader('Shift ↔ Reps match', 'Link Shift team workers to das
 
 <?php
 $shiftBase = repsShiftApiBase();
-$shiftLiveBase = repsShiftIsLiveJoinshiftBase($shiftBase);
 ?>
-<div class="alert alert-warning border-0 mb-3">
-  <strong>CARDINAL:</strong> <code>app.joinshift.us</code> is production — no sandbox.
-  Read-only pulls are fine. <strong>Invite writes to whatever <code>REPS_SHIFT_API_BASE</code> is set to</strong>
-  (currently <code><?php echo htmlspecialchars($shiftBase); ?></code><?php echo $shiftLiveBase ? ' — LIVE PARTNER' : ' — not live joinshift'; ?>).
-  Automated tests must use the fake stub (<code>fake://shift</code> / <code>tools/fake-shift-partner</code>), not prod invites.
-</div>
-
 <div class="surface p-3 mb-4 d-flex flex-wrap gap-3 align-items-center justify-content-between">
   <div class="small">
     <div>Live data: <strong><?php echo $live ? 'on' : 'off (mock)'; ?></strong></div>
     <div>Partner code: <code><?php echo htmlspecialchars($partner !== '' ? $partner : '—'); ?></code></div>
     <div>Last sync: <?php echo htmlspecialchars($lastSync !== '' ? $lastSync : 'never'); ?></div>
-    <div>Shift API base: <code><?php echo htmlspecialchars($shiftBase); ?></code></div>
+    <div>API base: <code><?php echo htmlspecialchars($shiftBase); ?></code></div>
   </div>
   <form method="post" class="m-0">
     <?php echo repsDashCsrfField(); ?>
     <input type="hidden" name="action" value="poll">
-    <button type="submit" class="btn btn-sm btn-primary">Pull from Shift now</button>
+    <button type="submit" class="btn btn-sm btn-primary">Pull from Partner now</button>
   </form>
 </div>
 
 <div class="surface p-3 mb-4">
-  <h2 class="h6 mb-2">Invite worker (Shift Partner)</h2>
-  <p class="small text-muted mb-3">Name + phone → Shift texts them. Same as Team invite on the Partner dashboard.</p>
+  <h2 class="h6 mb-2">Invite worker</h2>
+  <p class="small text-muted mb-3">Name + phone → Partner texts them. Same as Team invite on the Partner dashboard.</p>
   <form method="post" class="row g-2 align-items-end">
     <?php echo repsDashCsrfField(); ?>
     <input type="hidden" name="action" value="invite">
@@ -162,8 +154,8 @@ $shiftLiveBase = repsShiftIsLiveJoinshiftBase($shiftBase);
 
 <?php if ($workers === []): ?>
   <div class="surface p-3 text-muted">
-    No Shift workers in the database yet. Run <strong>Pull from Shift now</strong>
-    (needs a valid cookie jar at <code>~/.ssh/joinshift-cookies.txt</code> or <code>/tmp/joinshift/cookies.txt</code>),
+    No workers in the database yet. Run <strong>Pull from Partner now</strong>
+    (needs a valid Partner cookie jar on the host),
     or ingest offline JSON via <code>tools/poll-shift.php</code>.
   </div>
 <?php else: ?>
@@ -172,8 +164,8 @@ $shiftLiveBase = repsShiftIsLiveJoinshiftBase($shiftBase);
       <table class="table table-sm align-middle mb-0">
         <thead>
           <tr>
-            <th>Shift worker</th>
-            <th>Shift user id</th>
+            <th>Worker</th>
+            <th>Partner user id</th>
             <th>7d accepted</th>
             <th>Matched Reps seat</th>
             <th></th>

@@ -162,7 +162,7 @@ repsDashRenderPageHeader(
       <button type="submit" class="btn btn-primary">Create</button>
     </div>
   </form>
-  <p class="small text-muted mt-2 mb-0">Shop ID / Operator ID tie seats to Shift scope. Prefer the <strong>agent</strong> seat for automation API keys.</p>
+  <p class="small text-muted mt-2 mb-0">Shop ID / Operator ID tie seats to Partner scope. Prefer the <strong>agent</strong> seat for automation API keys.</p>
 </details>
 
 <form method="get" class="d-flex flex-wrap gap-2 align-items-center mb-3">
@@ -336,7 +336,7 @@ repsDashRenderPageHeader(
 </div>
 
 <p class="text-muted small mt-3 mb-0">
-  Shift worker linking lives under <a href="/dashboard/shift-match.php">Users → Shift match</a>.
+  Worker linking lives under <a href="/dashboard/shift-match.php">Users → Worker match</a>.
   API keys authenticate <code>/dashboard/api/</code> — see <a href="/dashboard/help.php?page=api">Help → HTTP API</a>.
 </p>
 

@@ -69,8 +69,8 @@ repsDashRenderPageHeader('Settings', match ($role) {
       <h2 class="h5 mb-2">Platform</h2>
       <ul class="small mb-0">
         <li><code>/dashboard/api/</code> — Slice D JSON (see <a href="/dashboard/api/">README</a>)</li>
-        <li><code>reps_sdk/</code> — Slice E (next)</li>
-        <li><code>smcp_plugin/</code> — Slice E (next)</li>
+        <li><code>reps_sdk/</code> — Python client over <code>/dashboard/api/</code></li>
+        <li><code>smcp_plugin/reps/</code> — SMCP CLI stub (<code>--describe</code>)</li>
       </ul>
     </div>
     <?php endif; ?>

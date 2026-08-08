@@ -169,4 +169,5 @@ curl -sS -X POST -H 'X-API-Key: ADMIN_KEY' -H 'Content-Type: application/json' \
   -d '{"user_id":12,"name":"worker"}' \
   '<?php echo htmlspecialchars($base); ?>/create-api-key.php'</code></pre>
 
+<p class="mb-2">Python client: repo <code>reps_sdk/</code> (<code>RepsClient</code>). SMCP stub: <code>smcp_plugin/reps/cli.py</code>.</p>
 <p class="small text-muted mb-0">Canonical machine notes also live in <code>public/dashboard/api/README.md</code> in the repo.</p>

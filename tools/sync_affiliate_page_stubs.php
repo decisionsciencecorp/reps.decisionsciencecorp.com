@@ -90,8 +90,7 @@ echo json_encode([
     'urls' => array_map(static function (string $s): array {
         return [
             'slug' => $s,
-            'subdomain' => reps_affiliate_canonical_url($s),
-            'path' => reps_affiliate_path_url($s),
+            'canonical' => reps_affiliate_canonical_url($s),
         ];
     }, array_keys($want)),
 ], JSON_PRETTY_PRINT) . "\n";

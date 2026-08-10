@@ -65,9 +65,6 @@ function repsJoinHandlePost(string $mode): array
     if ($affiliateCode === '') {
         $affiliateCode = trim((string) ($_GET['rep'] ?? ''));
     }
-    if ($affiliateCode === '') {
-        $affiliateCode = (string) (reps_affiliate_slug_from_host() ?? '');
-    }
 
     return repsDashCreateApplyLead([
         'name' => $_POST['name'] ?? '',

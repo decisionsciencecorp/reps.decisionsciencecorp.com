@@ -38,7 +38,6 @@ function reps_affiliate_render_page(string $slug): bool
     }
     $joinUrl = reps_affiliate_join_url($slug);
     $canonical = reps_affiliate_canonical_url($slug);
-    $pathAlt = reps_affiliate_path_url($slug);
     $apex = 'https://' . reps_affiliate_apex_host() . '/';
     $pageTitle = 'Reps with ' . $name . ' — Capture work. Get paid.';
     $pageDescription = $name . ' invites you to join Reps by Decision Science Corp. Record everyday work with a headset and get paid for accepted uploads.';
@@ -162,10 +161,6 @@ function reps_affiliate_render_page(string $slug): bool
           <summary>Is this a job?</summary>
           <p>No. Pay is for accepted capture uploads after quality review, through Decision Science Corp.</p>
         </details>
-        <details>
-          <summary>What if the subdomain doesn’t load?</summary>
-          <p>Use the path URL instead: <a href="<?= htmlspecialchars($pathAlt, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($pathAlt, ENT_QUOTES, 'UTF-8') ?></a>.</p>
-        </details>
       </div>
     </section>
   </main>
@@ -182,23 +177,11 @@ function reps_affiliate_render_page(string $slug): bool
 }
 
 /**
- * Front-door dispatch. Returns true if handled (exits on success/404 for known slug paths).
+ * Front-door dispatch for /a/{slug}/ stubs or ?affiliate= preview.
  */
 function reps_affiliate_try_dispatch(?string $forcedSlug = null): bool
 {
-    $slug = $forcedSlug;
-    if ($slug === null) {
-        $slug = reps_affiliate_slug_from_host();
-        if ($slug !== null) {
-            $path = parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
-            $path = is_string($path) ? $path : '/';
-            if ($path !== '/' && $path !== '') {
-                return false;
-            }
-        } else {
-            $slug = reps_affiliate_slug_from_path() ?? reps_affiliate_slug_from_query();
-        }
-    }
+    $slug = $forcedSlug ?? reps_affiliate_detect_slug();
     if ($slug === null) {
         return false;
     }

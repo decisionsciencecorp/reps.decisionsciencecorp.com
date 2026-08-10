@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/affiliate_page_render.php';
-reps_affiliate_guard_reserved_host();
+// Path preview only: /?affiliate=chuck (real pages live at /a/{slug}/ stubs).
 reps_affiliate_try_dispatch();
 
 $page_title = 'Reps — Capture work. Get paid.';

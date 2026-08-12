@@ -143,4 +143,83 @@ final class ShiftSyncTest extends TestCase
         }
         $this->assertTrue($found);
     }
+
+    public function testEmptyFeedRefusedWhenLocalSessionsExist(): void
+    {
+        $feed = [
+            'partnerCode' => 'C6N9T7',
+            'sessions' => [
+                [
+                    'session_id' => 'guard_sess_keep',
+                    'user_id' => 'shift-guard-user',
+                    'first_name' => 'Guard',
+                    'last_name' => 'Keep',
+                    'status' => 'completed',
+                    'duration_hours' => 1.0,
+                    'accepted_hours' => 1.0,
+                    'rejection_reason' => '',
+                    'completed_at' => '2026-08-07T14:00:00-05:00',
+                ],
+            ],
+        ];
+        $ok = repsShiftIngestFeed($feed);
+        $this->assertTrue($ok['ok']);
+        $before = (int) repsDashDb()->query('SELECT COUNT(*) FROM sessions')->fetchColumn();
+        $this->assertGreaterThan(0, $before);
+
+        $empty = [
+            'partnerCode' => 'C6N9T7',
+            'sessions' => [],
+            'bannedUserIds' => [],
+        ];
+        $refused = repsShiftIngestFeed($empty);
+        $this->assertFalse($refused['ok']);
+        $this->assertSame('empty_feed_refused', $refused['error'] ?? null);
+        $this->assertTrue($refused['refused'] ?? false);
+        $after = (int) repsDashDb()->query('SELECT COUNT(*) FROM sessions')->fetchColumn();
+        $this->assertSame($before, $after);
+
+        $forced = repsShiftIngestFeed($empty, null, null, ['allow_empty_sessions' => true]);
+        $this->assertTrue($forced['ok']);
+        $this->assertSame(0, (int) ($forced['sessions_upserted'] ?? -1));
+    }
+
+    public function testPartnerMismatchRefused(): void
+    {
+        repsShiftIngestFeed([
+            'partnerCode' => 'C6N9T7',
+            'sessions' => [
+                [
+                    'session_id' => 'partner_guard_sess',
+                    'user_id' => 'shift-partner-guard',
+                    'first_name' => 'P',
+                    'last_name' => 'G',
+                    'status' => 'completed',
+                    'duration_hours' => 0.1,
+                    'accepted_hours' => 0.1,
+                    'rejection_reason' => '',
+                    'completed_at' => '2026-08-07T15:00:00-05:00',
+                ],
+            ],
+        ]);
+        $bad = repsShiftIngestFeed([
+            'partnerCode' => 'OTHER99',
+            'sessions' => [
+                [
+                    'session_id' => 'evil_sess',
+                    'user_id' => 'evil',
+                    'first_name' => 'Evil',
+                    'last_name' => 'Feed',
+                    'status' => 'completed',
+                    'duration_hours' => 9.0,
+                    'accepted_hours' => 9.0,
+                    'rejection_reason' => '',
+                    'completed_at' => '2026-08-07T16:00:00-05:00',
+                ],
+            ],
+        ]);
+        $this->assertFalse($bad['ok']);
+        $this->assertSame('partner_mismatch', $bad['error'] ?? null);
+        $this->assertNull(repsOperatorByShiftUserId('evil'));
+    }
 }

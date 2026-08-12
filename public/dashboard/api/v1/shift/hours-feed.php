@@ -9,7 +9,11 @@ if (!($res['ok'] ?? false)) {
 $ingest = isset($_GET['ingest']) && (string)$_GET['ingest'] === '1';
 $ingested = null;
 if ($ingest) {
-    $ingested = repsShiftIngestFeed($res['body'], null, null);
+    $allowEmpty = isset($_GET['force_empty']) && (string)$_GET['force_empty'] === '1';
+    $ingested = repsShiftIngestFeed($res['body'], null, null, $allowEmpty ? ['allow_empty_sessions' => true] : []);
+    if (!($ingested['ok'] ?? false) && !empty($ingested['refused'])) {
+        repsApiError('ingest_refused', (string)($ingested['error'] ?? 'refused'), 409, ['detail' => $ingested]);
+    }
 }
 repsApiJson(['ok' => true, 'live_base' => repsShiftIsLiveJoinshiftBase(), 'hours_feed' => $res['body'], 'ingest' => $ingested]);
 

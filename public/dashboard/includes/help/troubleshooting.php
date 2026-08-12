@@ -35,6 +35,21 @@ if (!defined('REPS_DASH_LOADED')) {
       <td>Check cookie jar, base URL, Partner status</td>
     </tr>
     <tr>
+      <td>Partner web shows no hours / empty feed</td>
+      <td>Temporary Partner outage (auth can still work)</td>
+      <td>Do <strong>not</strong> force-ingest. Sync refuses empty feeds when we already have local sessions. Wait; re-poll later.</td>
+    </tr>
+    <tr>
+      <td>Sync <code>empty_feed_refused</code> (HTTP 409)</td>
+      <td>Hours-feed returned <code>sessions: []</code> while SQLite still has rows</td>
+      <td>Expected protection. Only override with <code>--force-empty</code> / <code>REPS_SHIFT_ALLOW_EMPTY_INGEST=1</code> if you truly mean it.</td>
+    </tr>
+    <tr>
+      <td>Sync <code>missing_cookie_jar</code></td>
+      <td>Host cannot read Partner cookie file</td>
+      <td>Place Netscape jar where <code>REPS_SHIFT_COOKIE_JAR</code> points (readable by the PHP user)</td>
+    </tr>
+    <tr>
       <td>Stripe webhook ignored</td>
       <td>Bad signature or wrong endpoint secret</td>
       <td>Verify host Stripe webhook secret; check logs</td>

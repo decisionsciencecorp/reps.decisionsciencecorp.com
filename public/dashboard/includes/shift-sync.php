@@ -35,15 +35,104 @@ function repsDashSetLiveDataEnabled(bool $on): void
 }
 
 /**
+ * Whether an empty hours-feed may replace / advance sync state.
+ * Default: refuse when we already hold sessions (upstream outage must not look like a clean sync).
+ */
+function repsShiftAllowEmptySessionsIngest(?bool $explicit = null): bool
+{
+    if ($explicit === true) {
+        return true;
+    }
+    if ($explicit === false) {
+        return false;
+    }
+    return filter_var(getenv('REPS_SHIFT_ALLOW_EMPTY_INGEST') ?: '0', FILTER_VALIDATE_BOOLEAN);
+}
+
+/**
+ * Guard: empty or wrong-partner feeds must not poison a populated book.
+ *
+ * @param array<string, mixed> $feed
+ * @return array{ok: bool, error?: string, partner_code?: string, local_sessions?: int, feed_sessions?: int}|null
+ *         null = safe to ingest; array = refuse payload
+ */
+function repsShiftIngestGuard(array $feed, bool $allowEmptySessions = false): ?array
+{
+    $partner = (string) ($feed['partnerCode'] ?? '');
+    $sessions = $feed['sessions'] ?? null;
+    if (!is_array($sessions)) {
+        return [
+            'ok' => false,
+            'error' => 'bad_sessions',
+            'partner_code' => $partner,
+            'operators_upserted' => 0,
+            'sessions_upserted' => 0,
+        ];
+    }
+
+    $feedCount = count($sessions);
+    $localCount = 0;
+    try {
+        $localCount = (int) repsDashDb()->query('SELECT COUNT(*) FROM sessions')->fetchColumn();
+    } catch (Throwable $e) {
+        $localCount = 0;
+    }
+
+    $storedPartner = (string) repsDashAppMetaGet('shift.partner_code', '');
+    if ($partner !== '' && $storedPartner !== '' && strcasecmp($partner, $storedPartner) !== 0) {
+        repsDashAppMetaSet('shift.last_poll_at', gmdate('c'));
+        repsDashAppMetaSet('shift.last_poll_error', 'partner_mismatch');
+        return [
+            'ok' => false,
+            'error' => 'partner_mismatch',
+            'partner_code' => $partner,
+            'stored_partner_code' => $storedPartner,
+            'operators_upserted' => 0,
+            'sessions_upserted' => 0,
+            'local_sessions' => $localCount,
+            'feed_sessions' => $feedCount,
+            'refused' => true,
+        ];
+    }
+
+    if ($feedCount === 0 && $localCount > 0 && !repsShiftAllowEmptySessionsIngest($allowEmptySessions)) {
+        // Upstream often returns HTTP 200 + sessions:[] during outages. Keep local rows.
+        repsDashAppMetaSet('shift.last_poll_at', gmdate('c'));
+        repsDashAppMetaSet('shift.last_poll_error', 'empty_feed_refused');
+        repsDashAppMetaSet('shift.last_empty_feed_at', gmdate('c'));
+        return [
+            'ok' => false,
+            'error' => 'empty_feed_refused',
+            'partner_code' => $partner,
+            'operators_upserted' => 0,
+            'sessions_upserted' => 0,
+            'local_sessions' => $localCount,
+            'feed_sessions' => 0,
+            'refused' => true,
+            'message' => 'Hours-feed returned zero sessions while local book has data; ingest skipped to avoid poisoning.',
+        ];
+    }
+
+    return null;
+}
+
+/**
  * Ingest hours-feed (+ optional team/workers) into SQLite.
  *
  * @param array<string, mixed> $feed hours-feed JSON
  * @param array<string, mixed>|null $team team/members JSON
  * @param array<string, mixed>|null $workers dashboard/workers JSON
- * @return array{ok: bool, operators_upserted: int, sessions_upserted: int, partner_code: string, error?: string}
+ * @param array{allow_empty_sessions?: bool} $opts
+ * @return array{ok: bool, operators_upserted: int, sessions_upserted: int, partner_code: string, error?: string, refused?: bool}
  */
-function repsShiftIngestFeed(array $feed, ?array $team = null, ?array $workers = null): array
+function repsShiftIngestFeed(array $feed, ?array $team = null, ?array $workers = null, array $opts = []): array
 {
+    $allowEmpty = !empty($opts['allow_empty_sessions']);
+    $blocked = repsShiftIngestGuard($feed, $allowEmpty);
+    if ($blocked !== null) {
+        return $blocked;
+    }
+
     $pdo = repsDashDb();
     $partner = (string) ($feed['partnerCode'] ?? '');
     $sessions = $feed['sessions'] ?? [];
@@ -192,6 +281,8 @@ function repsShiftIngestFeed(array $feed, ?array $team = null, ?array $workers =
 
     repsShiftRecomputeOperatorRollups();
     repsDashAppMetaSet('shift.last_sync_at', gmdate('c'));
+    repsDashAppMetaSet('shift.last_poll_at', gmdate('c'));
+    repsDashAppMetaSet('shift.last_poll_error', '');
     repsDashAppMetaSet('shift.partner_code', $partner);
     repsDashSetLiveDataEnabled(true);
 
@@ -200,6 +291,7 @@ function repsShiftIngestFeed(array $feed, ?array $team = null, ?array $workers =
         'operators_upserted' => $opUpserted,
         'sessions_upserted' => $sessUpserted,
         'partner_code' => $partner,
+        'feed_sessions' => count($sessions),
     ];
 }
 
@@ -241,25 +333,38 @@ function repsShiftRecomputeOperatorRollups(): void
 /**
  * Live poll Shift APIs then ingest.
  *
+ * @param array{allow_empty_sessions?: bool} $opts
  * @return array<string, mixed>
  */
-function repsShiftPollLive(): array
+function repsShiftPollLive(array $opts = []): array
 {
     // Live read-only GETs are approved (CARDINAL). Cookie required only for joinshift host.
     if (repsShiftIsLiveJoinshiftBase() && !is_readable(repsShiftCookieJarPath())) {
+        repsDashAppMetaSet('shift.last_poll_at', gmdate('c'));
+        repsDashAppMetaSet('shift.last_poll_error', 'missing_cookie_jar');
         return ['ok' => false, 'error' => 'missing_cookie_jar'];
     }
     $feedRes = repsShiftGetHoursFeed();
     if (!($feedRes['ok'] ?? false)) {
-        return ['ok' => false, 'error' => 'hours_feed:' . ($feedRes['error'] ?? 'fail'), 'detail' => $feedRes];
+        $err = 'hours_feed:' . ($feedRes['error'] ?? 'fail');
+        repsDashAppMetaSet('shift.last_poll_at', gmdate('c'));
+        repsDashAppMetaSet('shift.last_poll_error', $err);
+        return ['ok' => false, 'error' => $err, 'detail' => $feedRes];
     }
     $teamRes = repsShiftGetTeamMembers();
     $workersRes = repsShiftGetWorkers();
     $team = ($teamRes['ok'] ?? false) ? $teamRes['body'] : null;
     $workers = ($workersRes['ok'] ?? false) ? $workersRes['body'] : null;
-    $ingested = repsShiftIngestFeed($feedRes['body'], $team, $workers);
+    // Team/workers optional: never let a failed secondary wipe; empty workers during outage is common.
+    $ingested = repsShiftIngestFeed($feedRes['body'], $team, $workers, $opts);
     $ingested['team_ok'] = $team !== null;
     $ingested['workers_ok'] = $workers !== null;
+    if (is_array($team) && isset($team['members']) && is_array($team['members'])) {
+        $ingested['team_members'] = count($team['members']);
+    }
+    if (is_array($workers) && isset($workers['workers']) && is_array($workers['workers'])) {
+        $ingested['workers_count'] = count($workers['workers']);
+    }
     return $ingested;
 }
 

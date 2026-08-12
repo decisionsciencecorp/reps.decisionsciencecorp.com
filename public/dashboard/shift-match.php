@@ -33,7 +33,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 (string) ($res['partner_code'] ?? '—')
             );
         } else {
-            $flashErr = 'Sync failed: ' . (string) ($res['error'] ?? 'unknown');
+            $err = (string) ($res['error'] ?? 'unknown');
+            if ($err === 'empty_feed_refused') {
+                $flashErr = 'Partner returned zero sessions; local book left untouched ('
+                    . (int) ($res['local_sessions'] ?? 0) . ' sessions kept). Likely a temporary outage — try again later.';
+            } elseif ($err === 'partner_mismatch') {
+                $flashErr = 'Partner code mismatch — ingest refused to protect local data.';
+            } else {
+                $flashErr = 'Sync failed: ' . $err;
+            }
         }
     } elseif ($action === 'match') {
         $opId = (int) ($_POST['operator_id'] ?? 0);

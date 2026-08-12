@@ -58,6 +58,8 @@ Consumer `api.micro-agi.com` (Doc #816) — Tasks card parked on list **Partner 
 
 **Writes** are developed and proven against the **fake Partner stub** (`tools/fake-shift-partner/`, `REPS_SHIFT_API_BASE=fake://shift` or a local `php -S` base). PHPUnit sets `REPS_SHIFT_FORBID_LIVE_WRITES=1` and refuses live write bases.
 
+**Empty hours-feed guard:** if Partner returns `sessions: []` while the local book already has session rows, ingest is **refused** (`empty_feed_refused`, HTTP 409 on sync / `?ingest=1`). Override only with `poll-shift.php --force-empty`, `REPS_SHIFT_ALLOW_EMPTY_INGEST=1`, or `?force_empty=1` on hours-feed ingest. Wrong `partnerCode` vs stored meta is also refused (`partner_mismatch`).
+
 Human Admin/Ops may intentionally invite against live when `REPS_SHIFT_API_BASE` points at the live Partner host — that is real ops, not automated proof.
 
 Fake stub: see `tools/fake-shift-partner/README.md`.

@@ -7,7 +7,8 @@ if (strtoupper($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
 }
 $res = repsShiftPollLive();
 if (!($res['ok'] ?? false)) {
-    repsApiError('sync_failed', (string)($res['error'] ?? 'fail'), 502, ['detail' => $res]);
+    $code = !empty($res['refused']) ? 409 : 502;
+    repsApiError('sync_failed', (string)($res['error'] ?? 'fail'), $code, ['detail' => $res]);
 }
 repsApiJson(['ok' => true, 'sync' => $res]);
 

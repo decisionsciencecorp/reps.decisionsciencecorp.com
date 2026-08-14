@@ -31,23 +31,28 @@ if (!defined('REPS_DASH_LOADED')) {
     </tr>
     <tr>
       <td><code>shift_upstream</code> / upstream errors</td>
-      <td>Partner HTTP failure, cookie, or network</td>
-      <td>Check cookie jar, base URL, Partner status</td>
+      <td>Hours JSON failure, JoinShift cookie, or network</td>
+      <td>Check MicroPS cookie jar (<code>REPS_MICROPS_COOKIE_JAR</code>) for hours; JoinShift jar for team/invite</td>
     </tr>
     <tr>
       <td>Partner web shows no hours / empty feed</td>
       <td>Temporary Partner outage (auth can still work)</td>
-      <td>Do <strong>not</strong> force-ingest. Sync refuses empty feeds when we already have local sessions. Wait; re-poll later.</td>
+      <td>Do <strong>not</strong> force-ingest hours. Sync refuses empty hours when we already have local sessions. Team matching still runs. Wait; re-poll later.</td>
     </tr>
     <tr>
       <td>Sync <code>empty_feed_refused</code> (HTTP 409)</td>
-      <td>Hours-feed returned <code>sessions: []</code> while SQLite still has rows</td>
-      <td>Expected protection. Only override with <code>--force-empty</code> / <code>REPS_SHIFT_ALLOW_EMPTY_INGEST=1</code> if you truly mean it.</td>
+      <td>Hours JSON returned <code>sessions: []</code> while SQLite still has rows</td>
+      <td>Expected protection. Team roster may still have updated. Only override hours with <code>--force-empty</code> / <code>REPS_SHIFT_ALLOW_EMPTY_INGEST=1</code> if you truly mean it.</td>
     </tr>
     <tr>
       <td>Sync <code>missing_cookie_jar</code></td>
-      <td>Host cannot read Partner cookie file</td>
-      <td>Place Netscape jar where <code>REPS_SHIFT_COOKIE_JAR</code> points (readable by the PHP user)</td>
+      <td>Host cannot read JoinShift cookie file (team/invite lane)</td>
+      <td>Place Netscape jar where <code>REPS_SHIFT_COOKIE_JAR</code> points. Hours still poll if the MicroPS jar is readable.</td>
+    </tr>
+    <tr>
+      <td>Sync <code>missing_microps_cookie_jar</code></td>
+      <td>Host cannot read MicroPS Google session jar (hours lane)</td>
+      <td>Place Netscape jar where <code>REPS_MICROPS_COOKIE_JAR</code> points (default <code>~/.ssh/microps-cookies.pass</code>)</td>
     </tr>
     <tr>
       <td>Stripe webhook ignored</td>

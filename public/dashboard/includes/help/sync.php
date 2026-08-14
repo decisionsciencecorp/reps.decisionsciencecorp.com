@@ -11,9 +11,10 @@ if (!defined('REPS_DASH_LOADED')) {
 
 <h3 class="h5 mt-4">Sync (admin / ops)</h3>
 <ul>
-  <li>Controls whether the desk prefers live Partner polling vs fixture fallback.</li>
+  <li>Controls whether the desk prefers live polling vs fixture fallback.</li>
+  <li>Hours poll MicroPS; team roster / invite poll JoinShift.</li>
   <li>Footer shows <em>live</em> data or <em>fixture fallback</em>.</li>
-  <li>Partner code may be stored in app meta (<code>shift.partner_code</code>).</li>
+  <li>Partner code (JoinShift matching identity, e.g. C6N9T7) may be stored in app meta (<code>shift.partner_code</code>). MicroPS GM code is stored separately and is not used as session partner_code.</li>
 </ul>
 
 <h3 class="h5 mt-4">Platform (admin / agent)</h3>

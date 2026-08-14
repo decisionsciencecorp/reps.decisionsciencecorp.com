@@ -3,14 +3,18 @@
 declare(strict_types=1);
 
 /**
- * Poll Shift hours-feed (+ team/workers) into Reps SQLite, or ingest offline JSON.
+ * Poll Partner lanes into Reps SQLite, or ingest offline JSON.
+ *
+ * Hours  → MicroPS (www.microps.ai mobile-dashboard JSON)
+ * Matching → JoinShift team/workers (invite still JoinShift)
  *
  *   php tools/poll-shift.php
  *   php tools/poll-shift.php --feed=/tmp/hours-feed.json --team=/tmp/team.json --workers=/tmp/workers.json
  *   php tools/poll-shift.php --force-empty   # allow sessions:[] when local book already has rows
- *   REPS_SHIFT_COOKIE_JAR=/tmp/joinshift/cookies.txt php tools/poll-shift.php
+ *   REPS_MICROPS_COOKIE_JAR=~/.ssh/microps-cookies.pass php tools/poll-shift.php
  *
- * Empty hours-feed while local sessions exist is refused by default (upstream outage guard).
+ * Empty hours while local sessions exist is refused by default (upstream outage guard).
+ * JoinShift team still ingests on that refuse (operators with zero hours still land).
  */
 
 $root = dirname(__DIR__);

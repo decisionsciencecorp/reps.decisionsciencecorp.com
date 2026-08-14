@@ -6,10 +6,10 @@ if (!defined('REPS_DASH_LOADED')) {
 ?>
 <h2 class="h4 mb-3"><i class="bi bi-link-45deg me-2"></i>Partner sync &amp; match</h2>
 
-<p>Reps pulls hours and workers from the Partner program into the local book, then lets staff link workers to seats for attribution.</p>
+<p>Reps pulls <strong>hours and sessions from MicroPS</strong> and <strong>team membership from JoinShift</strong>, then lets staff link workers to seats for attribution. Invites still go to JoinShift (name + phone). Do not dual-ingest hours.</p>
 
 <h3 class="h5 mt-4">Ingest policy</h3>
-<p>Reps <strong>ingests all Partner data regardless of match</strong>. Matching a worker to a Reps seat is attribution for money/desk views — it does not gate whether hours land in SQLite.</p>
+<p>Reps <strong>ingests all Partner data regardless of match</strong>. Matching a worker to a Reps seat is attribution for money/desk views — it does not gate whether hours land in SQLite. An empty hours payload will not wipe existing sessions, and it will not skip team updates (a worker can exist with zero hours).</p>
 
 <h3 class="h5 mt-4">Settings → Sync</h3>
 <p>Admin/Ops can trigger poll/ingest from Settings when live data is enabled. Failed upstream calls surface as sync errors — check cookie/session health if GETs start failing.</p>

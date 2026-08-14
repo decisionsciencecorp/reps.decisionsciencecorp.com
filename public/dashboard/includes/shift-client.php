@@ -2,14 +2,18 @@
 declare(strict_types=1);
 
 /**
- * Shift for Business (Partner) HTTP client — Doc #818 routes.
+ * JoinShift (Partner) HTTP client — matching / invite lane (Doc #818, Doc #1093).
+ *
+ * Hours / sessions / acceptance come from MicroPS (microps-client.php), not this host.
+ * This client is team roster, SMS invite, and leftover account/auth writes.
  *
  * CARDINAL: app.joinshift.us is PRODUCTION. There is no Shift sandbox.
- * - Live Partner: read-only GETs are approved for sync/verification.
+ * - Live Partner: read-only GETs are approved for matching/verification.
  * - Writes: develop and test only against the fake stub
  *   (tools/fake-shift-partner/, REPS_SHIFT_API_BASE=http://127.0.0.1:…).
  * - Never mutate live Partner as automated verification.
  * - PHPUnit must not point write tests at joinshift.us (see repsShiftAssertSafeBaseForWrites).
+ * - Do not poll /api/dashboard/hours-feed for ingest — that feed is empty; use MicroPS.
  */
 
 if (!defined('REPS_DASH_LOADED')) {
@@ -30,6 +34,38 @@ function repsShiftIsLiveJoinshiftBase(?string $base = null): bool
     $base = $base ?? repsShiftApiBase();
     $host = strtolower((string) (parse_url($base, PHP_URL_HOST) ?: ''));
     return str_contains($host, 'joinshift.us') || str_contains($host, 'micro-agi.com');
+}
+
+function repsShiftIsFakeInline(?string $base = null): bool
+{
+    $base = $base ?? repsShiftApiBase();
+    return getenv('FAKE_SHIFT_INLINE') === '1' || $base === 'fake://shift';
+}
+
+/** Live HTTPS JoinShift (not in-process fake) — needs the Partner cookie jar. */
+function repsShiftUsesLiveHttp(): bool
+{
+    if (repsShiftIsFakeInline()) {
+        return false;
+    }
+    return repsShiftIsLiveJoinshiftBase();
+}
+
+/**
+ * Partner code stamped on ingested sessions and operators (JoinShift matching identity).
+ * Do not use MicroPS GM code M3WRBU here — that trips partner_mismatch vs C6N9T7.
+ */
+function repsShiftMatchingPartnerCode(): string
+{
+    $env = getenv('REPS_SHIFT_PARTNER_CODE');
+    if (is_string($env) && $env !== '') {
+        return $env;
+    }
+    $stored = (string) repsDashAppMetaGet('shift.partner_code', '');
+    if ($stored !== '') {
+        return $stored;
+    }
+    return 'C6N9T7';
 }
 
 /**
@@ -89,7 +125,7 @@ function repsShiftHttpRequest(string $method, string $path, ?array $jsonBody = n
     }
 
     // Prefer in-process fake when base is the special sentinel or FAKE_SHIFT_INLINE=1
-    if (getenv('FAKE_SHIFT_INLINE') === '1' || repsShiftApiBase() === 'fake://shift') {
+    if (repsShiftIsFakeInline()) {
         // public/dashboard/includes → repo root
         $stateFile = dirname(__DIR__, 3) . '/tools/fake-shift-partner/state.php';
         require_once $stateFile;
@@ -183,6 +219,7 @@ function repsShiftHttpPatch(string $path, array $body): array
 
 // --- Named Doc #818 wrappers (reads — live OK) ---
 
+/** JoinShift hours-feed. Do not use for ingest — live payload is empty. See repsMicropsGetMappedHoursFeed(). */
 function repsShiftGetHoursFeed(): array
 {
     return repsShiftHttpGet('/api/dashboard/hours-feed');

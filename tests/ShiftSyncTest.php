@@ -222,4 +222,52 @@ final class ShiftSyncTest extends TestCase
         $this->assertSame('partner_mismatch', $bad['error'] ?? null);
         $this->assertNull(repsOperatorByShiftUserId('evil'));
     }
+
+    public function testEmptyHoursStillIngestsTeam(): void
+    {
+        $seed = [
+            'partnerCode' => 'C6N9T7',
+            'sessions' => [
+                [
+                    'session_id' => 'guard_team_keep',
+                    'user_id' => 'shift-guard-team-keep',
+                    'first_name' => 'Keep',
+                    'last_name' => 'Hours',
+                    'status' => 'completed',
+                    'duration_hours' => 1.0,
+                    'accepted_hours' => 1.0,
+                    'rejection_reason' => '',
+                    'completed_at' => '2026-08-07T14:00:00-05:00',
+                ],
+            ],
+        ];
+        $this->assertTrue(repsShiftIngestFeed($seed)['ok']);
+        $before = (int) repsDashDb()->query('SELECT COUNT(*) FROM sessions')->fetchColumn();
+
+        $empty = [
+            'partnerCode' => 'C6N9T7',
+            'sessions' => [],
+        ];
+        $team = [
+            'members' => [
+                [
+                    'id' => 'mem-jess-zero',
+                    'userId' => 'shift-user-jess-zero',
+                    'name' => 'Jess Zero',
+                    'phone' => '+15557654321',
+                ],
+            ],
+        ];
+        $refused = repsShiftIngestFeed($empty, $team, null);
+        $this->assertFalse($refused['ok']);
+        $this->assertSame('empty_feed_refused', $refused['error'] ?? null);
+        $this->assertTrue($refused['matching_ingested'] ?? false);
+
+        $jess = repsOperatorByShiftUserId('shift-user-jess-zero');
+        $this->assertNotNull($jess);
+        $this->assertSame('Jess Zero', $jess['display_name']);
+        $this->assertSame('+15557654321', $jess['phone']);
+        $after = (int) repsDashDb()->query('SELECT COUNT(*) FROM sessions')->fetchColumn();
+        $this->assertSame($before, $after);
+    }
 }

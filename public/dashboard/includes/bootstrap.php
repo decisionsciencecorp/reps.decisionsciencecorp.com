@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Reps Dashboard bootstrap.
  *
  * Load order:
- *   config → csrf → db → skin → mock → operators → shift-client → shift-sync → repository
+ *   config → csrf → db → skin → mock → operators → shift-client → microps → shift-sync → repository
  *   → scope → economics → auth → api → access → onboarding → education → rollups → layout
  */
 
@@ -26,6 +26,8 @@ require_once __DIR__ . '/skin.php';
 require_once __DIR__ . '/mock-data.php';
 require_once __DIR__ . '/operators.php';
 require_once __DIR__ . '/shift-client.php';
+require_once __DIR__ . '/microps-client.php';
+require_once __DIR__ . '/microps-map.php';
 require_once __DIR__ . '/shift-sync.php';
 require_once __DIR__ . '/repository.php';
 require_once __DIR__ . '/scope.php';

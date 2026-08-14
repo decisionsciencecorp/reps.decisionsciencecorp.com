@@ -1,6 +1,6 @@
 # Fake Shift Partner stub
 
-**CARDINAL:** `app.joinshift.us` is production. Use this stub for **all write-path tests and local invite UI**. Do not invite or mutate live Partner for verification. Live **read-only GETs** are fine when deliberately polling.
+**CARDINAL:** `app.joinshift.us` is production. Use this stub for **all write-path tests and local invite UI**. Do not invite or mutate live Partner for verification. Live **read-only GETs** for **team/matching** are fine when deliberately polling JoinShift. **Hours ingest uses MicroPS**, not this stub’s hours-feed (kept for leftover GET tests).
 
 ## Run
 

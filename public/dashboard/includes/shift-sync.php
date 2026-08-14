@@ -6,12 +6,19 @@ if (!defined('REPS_DASH_LOADED')) {
 }
 
 /**
- * Shift for Business → Reps SQLite sync (Slice C).
- * HTTP: see shift-client.php (CARDINAL: live Partner is prod — writes via fake in tests).
+ * Partner → Reps SQLite sync.
+ *
+ * Lanes (Doc #1093):
+ *   Matching / invite → JoinShift (shift-client.php)
+ *   Hours / sessions  → MicroPS (microps-client.php + microps-map.php)
+ *
+ * CARDINAL: live JoinShift writes stay fake-only in tests. Empty hours must not
+ * wipe the book, and must not skip team ingest (Jess can exist with 0 sessions).
  */
 
 require_once __DIR__ . '/operators.php';
 require_once __DIR__ . '/shift-client.php';
+require_once __DIR__ . '/microps-map.php';
 
 function repsDashLiveDataEnabled(): bool
 {
@@ -117,33 +124,16 @@ function repsShiftIngestGuard(array $feed, bool $allowEmptySessions = false): ?a
 }
 
 /**
- * Ingest hours-feed (+ optional team/workers) into SQLite.
+ * JoinShift team/workers → operators. Runs even when hours ingest is refused.
  *
- * @param array<string, mixed> $feed hours-feed JSON
- * @param array<string, mixed>|null $team team/members JSON
- * @param array<string, mixed>|null $workers dashboard/workers JSON
- * @param array{allow_empty_sessions?: bool} $opts
- * @return array{ok: bool, operators_upserted: int, sessions_upserted: int, partner_code: string, error?: string, refused?: bool}
+ * @param array<string, mixed>|null $team
+ * @param array<string, mixed>|null $workers
  */
-function repsShiftIngestFeed(array $feed, ?array $team = null, ?array $workers = null, array $opts = []): array
+function repsShiftIngestMatching(string $partner, ?array $team, ?array $workers): int
 {
-    $allowEmpty = !empty($opts['allow_empty_sessions']);
-    $blocked = repsShiftIngestGuard($feed, $allowEmpty);
-    if ($blocked !== null) {
-        return $blocked;
-    }
-
     $pdo = repsDashDb();
-    $partner = (string) ($feed['partnerCode'] ?? '');
-    $sessions = $feed['sessions'] ?? [];
-    if (!is_array($sessions)) {
-        return ['ok' => false, 'operators_upserted' => 0, 'sessions_upserted' => 0, 'partner_code' => $partner, 'error' => 'bad_sessions'];
-    }
-
     $opUpserted = 0;
-    $sessUpserted = 0;
 
-    // 1) Team members → operators (best names/phones)
     if (is_array($team) && isset($team['members']) && is_array($team['members'])) {
         foreach ($team['members'] as $m) {
             if (!is_array($m)) {
@@ -172,7 +162,6 @@ function repsShiftIngestFeed(array $feed, ?array $team = null, ?array $workers =
         }
     }
 
-    // 2) Workers list (names)
     if (is_array($workers) && isset($workers['workers']) && is_array($workers['workers'])) {
         foreach ($workers['workers'] as $w) {
             if (!is_array($w)) {
@@ -195,7 +184,46 @@ function repsShiftIngestFeed(array $feed, ?array $team = null, ?array $workers =
         }
     }
 
-    // 3) Sessions from hours-feed
+    return $opUpserted;
+}
+
+/**
+ * Ingest hours-feed (+ optional JoinShift team/workers) into SQLite.
+ *
+ * Matching is applied even when the empty-hours guard later refuses sessions.
+ *
+ * @param array<string, mixed> $feed hours-feed JSON (mapped MicroPS or offline file)
+ * @param array<string, mixed>|null $team team/members JSON
+ * @param array<string, mixed>|null $workers dashboard/workers JSON
+ * @param array{allow_empty_sessions?: bool} $opts
+ * @return array{ok: bool, operators_upserted: int, sessions_upserted: int, partner_code: string, error?: string, refused?: bool}
+ */
+function repsShiftIngestFeed(array $feed, ?array $team = null, ?array $workers = null, array $opts = []): array
+{
+    $allowEmpty = !empty($opts['allow_empty_sessions']);
+    $partner = (string) ($feed['partnerCode'] ?? '');
+    $sessions = $feed['sessions'] ?? [];
+    if (!is_array($sessions)) {
+        return ['ok' => false, 'operators_upserted' => 0, 'sessions_upserted' => 0, 'partner_code' => $partner, 'error' => 'bad_sessions'];
+    }
+
+    $blocked = repsShiftIngestGuard($feed, $allowEmpty);
+    if ($blocked !== null && ($blocked['error'] ?? '') === 'partner_mismatch') {
+        return $blocked;
+    }
+
+    $opUpserted = repsShiftIngestMatching($partner !== '' ? $partner : repsShiftMatchingPartnerCode(), $team, $workers);
+
+    if ($blocked !== null) {
+        $blocked['operators_upserted'] = $opUpserted;
+        $blocked['matching_ingested'] = $opUpserted > 0;
+        return $blocked;
+    }
+
+    $pdo = repsDashDb();
+    $sessUpserted = 0;
+
+    // Sessions from mapped MicroPS (or offline hours-feed JSON)
     $upsertSess = $pdo->prepare(
         'INSERT INTO sessions (
             session_id, operator_id, shop_id, shift_user_id, status, duration_hours,
@@ -331,39 +359,100 @@ function repsShiftRecomputeOperatorRollups(): void
 }
 
 /**
- * Live poll Shift APIs then ingest.
+ * Poll matching (JoinShift) and hours (MicroPS) then ingest.
+ *
+ * Cookie failures are per-lane: one host can succeed without the other.
+ * Empty MicroPS hours still ingest JoinShift team.
  *
  * @param array{allow_empty_sessions?: bool} $opts
  * @return array<string, mixed>
  */
 function repsShiftPollLive(array $opts = []): array
 {
-    // Live read-only GETs are approved (CARDINAL). Cookie required only for joinshift host.
-    if (repsShiftIsLiveJoinshiftBase() && !is_readable(repsShiftCookieJarPath())) {
-        repsDashAppMetaSet('shift.last_poll_at', gmdate('c'));
-        repsDashAppMetaSet('shift.last_poll_error', 'missing_cookie_jar');
-        return ['ok' => false, 'error' => 'missing_cookie_jar'];
+    $matchingErr = null;
+    $hoursErr = null;
+    $team = null;
+    $workers = null;
+    $matchingOk = false;
+    $hoursOk = false;
+
+    if (repsShiftUsesLiveHttp() && !is_readable(repsShiftCookieJarPath())) {
+        $matchingErr = 'missing_cookie_jar';
+    } else {
+        $teamRes = repsShiftGetTeamMembers();
+        $workersRes = repsShiftGetWorkers();
+        if ($teamRes['ok'] ?? false) {
+            $team = $teamRes['body'];
+            $matchingOk = true;
+        } else {
+            $matchingErr = 'team:' . ($teamRes['error'] ?? 'fail');
+        }
+        if ($workersRes['ok'] ?? false) {
+            $workers = $workersRes['body'];
+            $matchingOk = true;
+        } elseif ($matchingErr === null) {
+            $matchingErr = 'workers:' . ($workersRes['error'] ?? 'fail');
+        }
     }
-    $feedRes = repsShiftGetHoursFeed();
-    if (!($feedRes['ok'] ?? false)) {
-        $err = 'hours_feed:' . ($feedRes['error'] ?? 'fail');
+
+    $feed = null;
+    if (repsMicropsUsesLiveHttp() && !is_readable(repsMicropsCookieJarPath())) {
+        $hoursErr = 'missing_microps_cookie_jar';
+    } else {
+        $feedRes = repsMicropsGetMappedHoursFeed();
+        if ($feedRes['ok'] ?? false) {
+            $feed = $feedRes['body'];
+            $hoursOk = true;
+        } else {
+            $hoursErr = 'microps_hours:' . ($feedRes['error'] ?? 'fail');
+        }
+    }
+
+    if (!$hoursOk && !$matchingOk) {
+        $err = $hoursErr ?? $matchingErr ?? 'poll_failed';
         repsDashAppMetaSet('shift.last_poll_at', gmdate('c'));
         repsDashAppMetaSet('shift.last_poll_error', $err);
-        return ['ok' => false, 'error' => $err, 'detail' => $feedRes];
+        return [
+            'ok' => false,
+            'error' => $err,
+            'hours_ok' => false,
+            'matching_ok' => false,
+            'hours_source' => 'microps',
+            'matching_source' => 'joinshift',
+            'hours_error' => $hoursErr,
+            'matching_error' => $matchingErr,
+        ];
     }
-    $teamRes = repsShiftGetTeamMembers();
-    $workersRes = repsShiftGetWorkers();
-    $team = ($teamRes['ok'] ?? false) ? $teamRes['body'] : null;
-    $workers = ($workersRes['ok'] ?? false) ? $workersRes['body'] : null;
-    // Team/workers optional: never let a failed secondary wipe; empty workers during outage is common.
-    $ingested = repsShiftIngestFeed($feedRes['body'], $team, $workers, $opts);
-    $ingested['team_ok'] = $team !== null;
-    $ingested['workers_ok'] = $workers !== null;
+
+    if ($feed === null) {
+        $feed = [
+            'partnerCode' => repsShiftMatchingPartnerCode(),
+            'sessions' => [],
+        ];
+    }
+
+    $ingested = repsShiftIngestFeed($feed, $team, $workers, $opts);
+    $ingested['hours_ok'] = $hoursOk;
+    $ingested['matching_ok'] = $matchingOk;
+    $ingested['hours_source'] = 'microps';
+    $ingested['matching_source'] = 'joinshift';
+    if ($hoursErr !== null) {
+        $ingested['hours_error'] = $hoursErr;
+    }
+    if ($matchingErr !== null) {
+        $ingested['matching_error'] = $matchingErr;
+    }
     if (is_array($team) && isset($team['members']) && is_array($team['members'])) {
+        $ingested['team_ok'] = true;
         $ingested['team_members'] = count($team['members']);
+    } else {
+        $ingested['team_ok'] = false;
     }
     if (is_array($workers) && isset($workers['workers']) && is_array($workers['workers'])) {
+        $ingested['workers_ok'] = true;
         $ingested['workers_count'] = count($workers['workers']);
+    } else {
+        $ingested['workers_ok'] = false;
     }
     return $ingested;
 }

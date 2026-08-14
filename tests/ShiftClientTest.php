@@ -11,7 +11,9 @@ final class ShiftClientTest extends TestCase
     protected function setUp(): void
     {
         $this->assertSame('fake://shift', repsShiftApiBase());
-        $this->assertFalse(repsShiftIsLiveJoinshiftBase());
+        $this->assertFalse(repsShiftUsesLiveHttp());
+        $this->assertSame('fake://microps', repsMicropsApiBase());
+        $this->assertFalse(repsMicropsUsesLiveHttp());
     }
 
     public function testHoursFeedAndInviteAgainstFake(): void
@@ -53,8 +55,55 @@ final class ShiftClientTest extends TestCase
         $r = repsShiftPollLive();
         $this->assertTrue($r['ok'] ?? false);
         $this->assertTrue(repsDashLiveDataEnabled());
+        $this->assertSame('microps', $r['hours_source'] ?? null);
+        $this->assertSame('joinshift', $r['matching_source'] ?? null);
+        $this->assertTrue($r['hours_ok'] ?? false);
+        $this->assertTrue($r['matching_ok'] ?? false);
         $sessions = repsDashDbSessionsAsRows();
         $this->assertNotEmpty($sessions);
+        $ids = array_column($sessions, 'session_id');
+        $this->assertContains('fake_sess_1', $ids);
+        $this->assertContains('fake_sess_2', $ids);
+        $mark = repsOperatorByShiftUserId('shift-user-mark');
+        $this->assertNotNull($mark);
+    }
+
+    public function testPollLiveEmptyHoursStillIngestsTeam(): void
+    {
+        require_once dirname(__DIR__) . '/tools/fake-microps/state.php';
+        require_once dirname(__DIR__) . '/tools/fake-shift-partner/state.php';
+
+        $ok = repsShiftPollLive();
+        $this->assertTrue($ok['ok'] ?? false);
+        $before = (int) repsDashDb()->query('SELECT COUNT(*) FROM sessions')->fetchColumn();
+        $this->assertGreaterThan(0, $before);
+
+        $mp = fakeMicropsLoadState();
+        $mp['sessions'] = [];
+        fakeMicropsSaveState($mp);
+
+        $st = fakeShiftLoadState();
+        $st['members'][] = [
+            'id' => 'mem-jess-poll',
+            'name' => 'Jess Poll',
+            'phone' => '+15550009999',
+            'userId' => 'shift-user-jess-poll',
+        ];
+        fakeShiftSaveState($st);
+
+        try {
+            $r = repsShiftPollLive();
+            $this->assertFalse($r['ok'] ?? true);
+            $this->assertSame('empty_feed_refused', $r['error'] ?? null);
+            $this->assertTrue($r['matching_ok'] ?? false);
+            $jess = repsOperatorByShiftUserId('shift-user-jess-poll');
+            $this->assertNotNull($jess);
+            $this->assertSame('Jess Poll', $jess['display_name']);
+            $after = (int) repsDashDb()->query('SELECT COUNT(*) FROM sessions')->fetchColumn();
+            $this->assertSame($before, $after);
+        } finally {
+            fakeMicropsSaveState(fakeMicropsDefaultState());
+        }
     }
 
     public function testDerivedIssuesAndDay(): void

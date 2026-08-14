@@ -10,7 +10,7 @@ $base = 'https://reps.decisionsciencecorp.com/dashboard/api/v1/shift';
   <span class="badge text-bg-primary">admin · ops · agent</span>
 </div>
 
-<p>These routes proxy the Partner hours/worker program into Reps. Callers must be <strong>admin</strong>, <strong>ops</strong>, or <strong>agent</strong> (session or API key). Others get <code>403 forbidden</code>.</p>
+<p>These routes proxy the Partner program into Reps. <strong>Hours</strong> come from MicroPS; <strong>team invite / matching</strong> stay on JoinShift. Callers must be <strong>admin</strong>, <strong>ops</strong>, or <strong>agent</strong> (session or API key). Others get <code>403 forbidden</code>.</p>
 <p><strong>Base path:</strong> <code><?php echo htmlspecialchars($base); ?>/</code></p>
 
 <div class="accordion" id="rdApiShift">
@@ -26,7 +26,7 @@ $base = 'https://reps.decisionsciencecorp.com/dashboard/api/v1/shift';
           <tbody>
             <tr>
               <td><code>GET hours-feed.php</code></td>
-              <td>Upstream hours. Optional <code>?ingest=1</code> refreshes the local book after fetch.</td>
+              <td>Mapped MicroPS hours (same JSON shape as the old hours-feed). Optional <code>?ingest=1</code> refreshes the local book and JoinShift team roster.</td>
             </tr>
             <tr>
               <td><code>GET workers.php</code></td>
@@ -48,7 +48,7 @@ $base = 'https://reps.decisionsciencecorp.com/dashboard/api/v1/shift';
     </h3>
     <div id="rdShC1" class="accordion-collapse collapse" data-bs-parent="#rdApiShift">
       <div class="accordion-body">
-        <p class="mb-0"><code>POST sync.php</code> — poll Partner and ingest into the Reps book. Prefer this for scheduled jobs.</p>
+        <p class="mb-0"><code>POST sync.php</code> — poll MicroPS hours + JoinShift team, then ingest. Prefer this for scheduled jobs. Empty hours do not skip team updates.</p>
       </div>
     </div>
   </div>

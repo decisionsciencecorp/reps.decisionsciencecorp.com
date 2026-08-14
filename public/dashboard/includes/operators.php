@@ -42,6 +42,9 @@ function repsOperatorEnsureFromShiftSession(array $session): int
     $last = trim((string) ($session['last_name'] ?? ''));
     $name = trim($first . ' ' . $last);
     if ($name === '') {
+        $name = trim((string) ($session['user_full_name'] ?? ''));
+    }
+    if ($name === '') {
         $name = $shiftUserId;
     }
     return repsOperatorEnsure($shiftUserId, $name);

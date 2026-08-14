@@ -35,8 +35,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $err = (string) ($res['error'] ?? 'unknown');
             if ($err === 'empty_feed_refused') {
-                $flashErr = 'Partner returned zero sessions; local book left untouched ('
-                    . (int) ($res['local_sessions'] ?? 0) . ' sessions kept). Likely a temporary outage — try again later.';
+                $kept = (int) ($res['local_sessions'] ?? 0);
+                $flashErr = 'Hours source returned zero sessions; local book left untouched ('
+                    . $kept . ' sessions kept). Team matching still ran if JoinShift was reachable.';
             } elseif ($err === 'partner_mismatch') {
                 $flashErr = 'Partner code mismatch — ingest refused to protect local data.';
             } else {

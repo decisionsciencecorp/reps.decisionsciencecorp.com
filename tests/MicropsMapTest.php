@@ -133,6 +133,26 @@ final class MicropsMapTest extends TestCase
         }
     }
 
+    public function testCookieJarPrefersAppMetaOverFile(): void
+    {
+        $dummy = "# Netscape HTTP Cookie File\n.microps.ai\tTRUE\t/\tTRUE\t0\tsession\tphpunit-db-jar";
+        $store = repsMicropsStoreCookieJarInDb($dummy);
+        $this->assertTrue($store['ok']);
+        $this->assertSame($dummy, repsMicropsCookieJarFromDb());
+        $this->assertSame($dummy, repsMicropsCookieJarText());
+        $this->assertTrue(repsMicropsHasCredentials());
+
+        $prepared = repsMicropsPrepareCookieFile();
+        $this->assertNotNull($prepared);
+        $this->assertTrue($prepared['ephemeral']);
+        $this->assertFileExists($prepared['path']);
+        $onDisk = trim((string) file_get_contents($prepared['path']));
+        $this->assertSame($dummy, $onDisk);
+        repsMicropsReleaseCookieFile($prepared, $dummy);
+        $this->assertFileDoesNotExist($prepared['path']);
+        repsDashDb()->prepare('DELETE FROM app_meta WHERE key = ?')->execute([REPS_MICROPS_COOKIE_META]);
+    }
+
     public function testMappedFeedFromFakeClient(): void
     {
         $res = repsMicropsGetMappedHoursFeed();

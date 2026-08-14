@@ -13,6 +13,7 @@ if (!defined('REPS_DASH_LOADED')) {
 <ul>
   <li>Controls whether the desk prefers live polling vs fixture fallback.</li>
   <li>Hours poll MicroPS; team roster / invite poll JoinShift.</li>
+  <li>MicroPS login cookie lives in the dashboard database (same pattern as Stripe keys), not in server env.</li>
   <li>Footer shows <em>live</em> data or <em>fixture fallback</em>.</li>
   <li>Partner code (JoinShift matching identity, e.g. C6N9T7) may be stored in app meta (<code>shift.partner_code</code>). MicroPS GM code is stored separately and is not used as session partner_code.</li>
 </ul>

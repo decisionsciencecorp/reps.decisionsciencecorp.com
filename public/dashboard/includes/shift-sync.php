@@ -396,8 +396,8 @@ function repsShiftPollLive(array $opts = []): array
     }
 
     $feed = null;
-    if (repsMicropsUsesLiveHttp() && !is_readable(repsMicropsCookieJarPath())) {
-        $hoursErr = 'missing_microps_cookie_jar';
+    if (repsMicropsUsesLiveHttp() && !repsMicropsHasCredentials()) {
+        $hoursErr = 'missing_microps_cookie';
     } else {
         $feedRes = repsMicropsGetMappedHoursFeed();
         if ($feedRes['ok'] ?? false) {

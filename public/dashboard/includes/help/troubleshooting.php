@@ -32,7 +32,7 @@ if (!defined('REPS_DASH_LOADED')) {
     <tr>
       <td><code>shift_upstream</code> / upstream errors</td>
       <td>Hours JSON failure, JoinShift cookie, or network</td>
-      <td>Check MicroPS cookie jar (<code>REPS_MICROPS_COOKIE_JAR</code>) for hours; JoinShift jar for team/invite</td>
+      <td>Check MicroPS credentials in the dashboard database (<code>app_meta</code>) for hours; JoinShift jar for team/invite</td>
     </tr>
     <tr>
       <td>Partner web shows no hours / empty feed</td>
@@ -50,9 +50,9 @@ if (!defined('REPS_DASH_LOADED')) {
       <td>Place Netscape jar where <code>REPS_SHIFT_COOKIE_JAR</code> points. Hours still poll if the MicroPS jar is readable.</td>
     </tr>
     <tr>
-      <td>Sync <code>missing_microps_cookie_jar</code></td>
-      <td>Host cannot read MicroPS Google session jar (hours lane)</td>
-      <td>Place Netscape jar where <code>REPS_MICROPS_COOKIE_JAR</code> points (default <code>~/.ssh/microps-cookies.pass</code>)</td>
+      <td>Sync <code>missing_microps_cookie</code></td>
+      <td>Hours lane has no MicroPS session in app_meta (and no staging jar)</td>
+      <td>Restage the Netscape jar with <code>tools/deposit-microps-cookies.php</code> into the dashboard database. Do not put the cookie in site env.</td>
     </tr>
     <tr>
       <td>Stripe webhook ignored</td>

@@ -11,7 +11,9 @@ declare(strict_types=1);
  *   php tools/poll-shift.php
  *   php tools/poll-shift.php --feed=/tmp/hours-feed.json --team=/tmp/team.json --workers=/tmp/workers.json
  *   php tools/poll-shift.php --force-empty   # allow sessions:[] when local book already has rows
- *   REPS_MICROPS_COOKIE_JAR=~/.ssh/microps-cookies.pass php tools/poll-shift.php
+ *
+ * MicroPS session cookie: SQLite app_meta `microps.cookie_jar` (deposit-microps-cookies.php).
+ * Staging jar REPS_MICROPS_COOKIE_JAR is inject/dev fallback only.
  *
  * Empty hours while local sessions exist is refused by default (upstream outage guard).
  * JoinShift team still ingests on that refuse (operators with zero hours still land).

@@ -39,7 +39,7 @@ Path namespace is `/v1/shift/`; product copy calls this the Partner API.
 | `GET v1/shift/derived/day.php?date=` | Computed |
 | `GET v1/shift/derived/issues.php` | Computed |
 
-Configure hours: `REPS_MICROPS_API_BASE`, cookie jar `REPS_MICROPS_COOKIE_JAR` (default `~/.ssh/microps-cookies.pass`).
+Configure hours: canonical cookie is SQLite `app_meta` `microps.cookie_jar` (deposit via `tools/deposit-microps-cookies.php`). Staging jar `REPS_MICROPS_COOKIE_JAR` / `~/.ssh/microps-cookies.pass` is Otto inject/dev fallback only — not multihost site env.
 Configure matching/invite: `REPS_SHIFT_API_BASE`, cookie jar `REPS_SHIFT_COOKIE_JAR`.
 
 ### C. Parked

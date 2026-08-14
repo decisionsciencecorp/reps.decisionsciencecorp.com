@@ -6,12 +6,15 @@ declare(strict_types=1);
  *
  * JoinShift (app.joinshift.us) remains matching/invite only.
  * Live GETs need a Google Flask session cookie jar (Netscape).
- * Never paste cookie values into git, Tasks, or chat.
+ * Canonical secret: SQLite app_meta `microps.cookie_jar` (manual inject).
+ * Pass file is Otto staging for deposit/dev only — never site env, never git.
  */
 
 if (!defined('REPS_DASH_LOADED')) {
     die('Direct access not permitted');
 }
+
+const REPS_MICROPS_COOKIE_META = 'microps.cookie_jar';
 
 function repsMicropsApiBase(): string
 {
@@ -48,6 +51,103 @@ function repsMicropsCookieJarPath(): string
         }
     }
     return $home . '/.ssh/microps-cookies.pass';
+}
+
+function repsMicropsCookieJarFromDb(): string
+{
+    try {
+        return trim(repsDashAppMetaGet(REPS_MICROPS_COOKIE_META, ''));
+    } catch (Throwable $e) {
+        return '';
+    }
+}
+
+/** Staging file contents (deposit/dev). Empty if unreadable. */
+function repsMicropsCookieJarFromFile(): string
+{
+    $path = repsMicropsCookieJarPath();
+    if (!is_readable($path)) {
+        return '';
+    }
+    $raw = file_get_contents($path);
+    return is_string($raw) ? trim($raw) : '';
+}
+
+/**
+ * Netscape jar text. DB first, pass-file fallback for deposit/dev only.
+ */
+function repsMicropsCookieJarText(): string
+{
+    $fromDb = repsMicropsCookieJarFromDb();
+    if ($fromDb !== '') {
+        return $fromDb;
+    }
+    return repsMicropsCookieJarFromFile();
+}
+
+function repsMicropsHasCredentials(): bool
+{
+    return repsMicropsCookieJarText() !== '';
+}
+
+/**
+ * @return array{ok: bool, bytes: int, source: string}
+ */
+function repsMicropsStoreCookieJarInDb(string $jarText): array
+{
+    $jarText = trim($jarText);
+    if ($jarText === '') {
+        return ['ok' => false, 'bytes' => 0, 'source' => 'empty'];
+    }
+    repsDashAppMetaSet(REPS_MICROPS_COOKIE_META, $jarText);
+    return ['ok' => true, 'bytes' => strlen($jarText), 'source' => 'db'];
+}
+
+/**
+ * Write jar text to a 0600 temp file for curl. Caller must repsMicropsReleaseCookieFile().
+ *
+ * @return array{path: string, ephemeral: bool}|null
+ */
+function repsMicropsPrepareCookieFile(): ?array
+{
+    $text = repsMicropsCookieJarText();
+    if ($text === '') {
+        return null;
+    }
+    $fromDb = repsMicropsCookieJarFromDb();
+    if ($fromDb !== '') {
+        $path = tempnam(sys_get_temp_dir(), 'reps-microps-jar-');
+        if ($path === false) {
+            return null;
+        }
+        file_put_contents($path, $text . "\n");
+        chmod($path, 0600);
+        return ['path' => $path, 'ephemeral' => true];
+    }
+    $path = repsMicropsCookieJarPath();
+    if (!is_readable($path)) {
+        return null;
+    }
+    return ['path' => $path, 'ephemeral' => false];
+}
+
+/** Persist curl Set-Cookie rotations back to app_meta when the jar came from DB. */
+function repsMicropsReleaseCookieFile(?array $prepared, string $originalText): void
+{
+    if ($prepared === null) {
+        return;
+    }
+    $path = (string) ($prepared['path'] ?? '');
+    $ephemeral = !empty($prepared['ephemeral']);
+    if ($path !== '' && is_readable($path) && $ephemeral) {
+        $now = (string) file_get_contents($path);
+        if (trim($now) !== '' && trim($now) !== trim($originalText)) {
+            repsMicropsStoreCookieJarInDb($now);
+        }
+    }
+    if ($ephemeral && $path !== '' && is_file($path)) {
+        @unlink($path);
+    }
 }
 
 function repsMicropsSetHttpMock(?callable $fn): void
@@ -90,7 +190,6 @@ function repsMicropsHttpRequest(string $method, string $path, ?array $jsonBody =
 
     $base = repsMicropsApiBase();
     $url = $base . $path;
-    $cookie = repsMicropsCookieJarPath();
     $headers = [
         'Accept: application/json',
         'User-Agent: Mozilla/5.0 (compatible; RepsMicropsClient/1.0)',
@@ -98,6 +197,9 @@ function repsMicropsHttpRequest(string $method, string $path, ?array $jsonBody =
     if ($jsonBody !== null) {
         $headers[] = 'Content-Type: application/json';
     }
+
+    $originalJar = repsMicropsCookieJarText();
+    $prepared = repsMicropsPrepareCookieFile();
 
     $ch = curl_init($url);
     $opts = [
@@ -107,9 +209,9 @@ function repsMicropsHttpRequest(string $method, string $path, ?array $jsonBody =
         CURLOPT_CUSTOMREQUEST => $method,
         CURLOPT_HTTPHEADER => $headers,
     ];
-    if (is_readable($cookie)) {
-        $opts[CURLOPT_COOKIEFILE] = $cookie;
-        $opts[CURLOPT_COOKIEJAR] = $cookie;
+    if ($prepared !== null) {
+        $opts[CURLOPT_COOKIEFILE] = $prepared['path'];
+        $opts[CURLOPT_COOKIEJAR] = $prepared['path'];
     }
     if ($jsonBody !== null) {
         $opts[CURLOPT_POSTFIELDS] = json_encode($jsonBody, JSON_UNESCAPED_SLASHES);
@@ -120,6 +222,7 @@ function repsMicropsHttpRequest(string $method, string $path, ?array $jsonBody =
     $cerr = curl_error($ch);
     $redirect = (string) curl_getinfo($ch, CURLINFO_REDIRECT_URL);
     curl_close($ch);
+    repsMicropsReleaseCookieFile($prepared, $originalJar);
 
     if ($raw === false) {
         return ['ok' => false, 'status' => $status, 'error' => $cerr !== '' ? $cerr : 'curl_failed'];
@@ -204,7 +307,7 @@ function repsMicropsIsLiveBase(?string $base = null): bool
     return str_contains($host, 'microps.ai');
 }
 
-/** Live HTTPS (not in-process fake) — needs the Google session cookie jar. */
+/** Live HTTPS (not in-process fake) — needs app_meta jar or staging file. */
 function repsMicropsUsesLiveHttp(): bool
 {
     if (repsMicropsIsFakeBase()) {

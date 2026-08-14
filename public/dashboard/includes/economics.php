@@ -6,17 +6,62 @@ if (!defined('REPS_DASH_LOADED')) {
 }
 
 /**
- * Locked pie: $20 / accepted hour → DSC 25% · Affiliate 25% · Capture 50%.
+ * Locked pie of partner payout: DSC 25% · Affiliate 25% · Capture 50%.
  * Capture payee is shop XOR operator (never both).
+ *
+ * Dollar totals follow whatever Shift actually paid (or a stored estimate
+ * when the hours feed only has hours). Never bake a $20 floor into the split.
  */
 
+function repsDashMoneyShareDsc(): float
+{
+    return 0.25;
+}
+
+function repsDashMoneyShareAffiliate(): float
+{
+    return 0.25;
+}
+
+function repsDashMoneyShareCapture(): float
+{
+    return 0.50;
+}
+
+function repsDashMoneyPieCaption(): string
+{
+    $d = (int) round(repsDashMoneyShareDsc() * 100);
+    $a = (int) round(repsDashMoneyShareAffiliate() * 100);
+    $c = (int) round(repsDashMoneyShareCapture() * 100);
+    return $d . '/' . $a . '/' . $c . ' of partner payout';
+}
+
+/**
+ * Estimate only — used when a row has hours but no dollar amount from Shift.
+ * Override with app_meta `money.partner_hourly_cents` (e.g. 3000 if a window is $30).
+ */
 function repsDashMoneyHourlyRate(): float
 {
+    try {
+        $cents = (int) repsDashAppMetaGet('money.partner_hourly_cents', '0');
+        if ($cents > 0) {
+            return $cents / 100.0;
+        }
+    } catch (Throwable $e) {
+        // schema not ready
+    }
+    $env = repsDashEnvOrDefault('REPS_MONEY_PARTNER_HOURLY', '');
+    if ($env !== null && $env !== '' && is_numeric($env)) {
+        $n = (float) $env;
+        if ($n > 0) {
+            return $n;
+        }
+    }
     return 20.0;
 }
 
 /**
- * Split accepted hours into ledger buckets (cents).
+ * Split a known gross (cents) into ledger buckets.
  *
  * @return array{
  *   hours: float,
@@ -25,15 +70,15 @@ function repsDashMoneyHourlyRate(): float
  *   affiliate_cents: int,
  *   capture_cents: int,
  *   capture_payee: 'shop'|'operator',
- *   affiliate_to_dsc: bool
+ *   affiliate_to_dsc: bool,
+ *   hourly_rate: float|null
  * }
  */
-function repsDashSplitAcceptedHours(float $hours, bool $hasShop, bool $hasAffiliate): array
+function repsDashSplitGrossCents(int $grossCents, bool $hasShop, bool $hasAffiliate, float $hours = 0.0, ?float $hourlyRate = null): array
 {
-    $hours = max(0.0, $hours);
-    $grossCents = (int) round($hours * repsDashMoneyHourlyRate() * 100);
-    $dsc = (int) floor($grossCents * 0.25);
-    $aff = (int) floor($grossCents * 0.25);
+    $grossCents = max(0, $grossCents);
+    $dsc = (int) floor($grossCents * repsDashMoneyShareDsc());
+    $aff = (int) floor($grossCents * repsDashMoneyShareAffiliate());
     $capture = $grossCents - $dsc - $aff;
     $affiliateToDsc = !$hasAffiliate;
     if ($affiliateToDsc) {
@@ -49,7 +94,30 @@ function repsDashSplitAcceptedHours(float $hours, bool $hasShop, bool $hasAffili
         'capture_cents' => $capture,
         'capture_payee' => $hasShop ? 'shop' : 'operator',
         'affiliate_to_dsc' => $affiliateToDsc,
+        'hourly_rate' => $hourlyRate,
     ];
+}
+
+/**
+ * Split accepted hours. Optional $hourlyRate / omit to use current partner estimate.
+ *
+ * @return array{
+ *   hours: float,
+ *   gross_cents: int,
+ *   dsc_cents: int,
+ *   affiliate_cents: int,
+ *   capture_cents: int,
+ *   capture_payee: 'shop'|'operator',
+ *   affiliate_to_dsc: bool,
+ *   hourly_rate: float|null
+ * }
+ */
+function repsDashSplitAcceptedHours(float $hours, bool $hasShop, bool $hasAffiliate, ?float $hourlyRate = null): array
+{
+    $hours = max(0.0, $hours);
+    $rate = $hourlyRate ?? repsDashMoneyHourlyRate();
+    $grossCents = (int) round($hours * $rate * 100);
+    return repsDashSplitGrossCents($grossCents, $hasShop, $hasAffiliate, $hours, $rate);
 }
 
 function repsDashShopHasAffiliate(array $shop): bool
@@ -81,7 +149,7 @@ function repsDashShopHasAffiliate(array $shop): bool
  */
 function repsDashMoneyShopEconomics(array $shop, float $rate): array
 {
-    unset($rate); // locked rate via repsDashMoneyHourlyRate()
+    unset($rate); // pie uses current partner estimate unless shop carries gross
     $hours = (float) ($shop['accepted_hours_7d'] ?? 0);
     $hasAff = repsDashShopHasAffiliate($shop);
     $split = repsDashSplitAcceptedHours($hours, true, $hasAff);

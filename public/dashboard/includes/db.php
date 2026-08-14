@@ -286,9 +286,27 @@ function repsDashDbMigrate(PDO $pdo): void
         $pdo->prepare('INSERT INTO schema_migrations (version) VALUES (?)')->execute(['007_api_keys']);
     }
 
+    if (!in_array('008_linked_seats', $applied, true)) {
+        repsDashMigrate008LinkedSeats($pdo);
+        $pdo->prepare('INSERT INTO schema_migrations (version) VALUES (?)')->execute(['008_linked_seats']);
+    }
+
     repsDashDbSeedUsers($pdo);
     repsDashDbSeedApplyLeads($pdo);
     repsDashDbSeedShops($pdo);
+}
+
+/**
+ * Worker seat → affiliate seat (same person gets capture + affiliate buckets).
+ */
+function repsDashMigrate008LinkedSeats(PDO $pdo): void
+{
+    $userCols = $pdo->query('PRAGMA table_info(users)')->fetchAll(PDO::FETCH_ASSOC);
+    $userNames = array_map(static fn($c) => (string) $c['name'], $userCols ?: []);
+    if (!in_array('linked_user_id', $userNames, true)) {
+        $pdo->exec('ALTER TABLE users ADD COLUMN linked_user_id INTEGER');
+    }
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_users_linked ON users(linked_user_id)');
 }
 
 /**
@@ -465,14 +483,14 @@ function repsDashSeedAccountDefs(): array
         ],
         [
             'username' => 'jim',
-            'display_name' => 'Jim (Affiliate)',
+            'display_name' => 'Jim',
             'role' => 'sales',
             'skin_slug' => null,
             'email' => 'jim@example.com',
         ],
         [
             'username' => 'seven',
-            'display_name' => 'Seven Stone',
+            'display_name' => 'Leon Gardner',
             'role' => 'sales',
             'skin_slug' => 'obsidian',
             'email' => 'seven@example.com',
@@ -564,6 +582,9 @@ function repsDashUserRowToSessionShape(?array $row): ?array
     if (isset($row['operator_id']) && $row['operator_id'] !== null && $row['operator_id'] !== '') {
         $out['operator_id'] = (int) $row['operator_id'];
     }
+    if (isset($row['linked_user_id']) && $row['linked_user_id'] !== null && $row['linked_user_id'] !== '') {
+        $out['linked_user_id'] = (int) $row['linked_user_id'];
+    }
     return $out;
 }
 
@@ -645,12 +666,14 @@ function repsDashCreateUser(array $data): array
         ? (int) $data['shop_id'] : null;
     $operatorId = isset($data['operator_id']) && $data['operator_id'] !== '' && $data['operator_id'] !== null
         ? (int) $data['operator_id'] : null;
+    $linkedUserId = isset($data['linked_user_id']) && $data['linked_user_id'] !== '' && $data['linked_user_id'] !== null
+        ? (int) $data['linked_user_id'] : null;
     $skin = isset($data['skin_slug']) && $data['skin_slug'] !== ''
         ? (string) $data['skin_slug'] : null;
 
     $stmt = repsDashDb()->prepare(
-        'INSERT INTO users (username, email, password_hash, display_name, role, skin_slug, shop_id, operator_id, is_active)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)'
+        'INSERT INTO users (username, email, password_hash, display_name, role, skin_slug, shop_id, operator_id, linked_user_id, is_active)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)'
     );
     $stmt->execute([
         $username,
@@ -661,6 +684,7 @@ function repsDashCreateUser(array $data): array
         $skin,
         $shopId,
         $operatorId,
+        $linkedUserId,
     ]);
     return ['ok' => true, 'id' => (int) repsDashDb()->lastInsertId()];
 }
@@ -706,15 +730,18 @@ function repsDashUpdateUser(int $id, array $data): array
     $operatorId = array_key_exists('operator_id', $data)
         ? ($data['operator_id'] !== '' && $data['operator_id'] !== null ? (int) $data['operator_id'] : null)
         : ($existing['operator_id'] ?? null);
+    $linkedUserId = array_key_exists('linked_user_id', $data)
+        ? ($data['linked_user_id'] !== '' && $data['linked_user_id'] !== null ? (int) $data['linked_user_id'] : null)
+        : ($existing['linked_user_id'] ?? null);
     $skin = array_key_exists('skin_slug', $data)
         ? ($data['skin_slug'] !== '' && $data['skin_slug'] !== null ? (string) $data['skin_slug'] : null)
         : ($existing['skin_slug'] ?? null);
 
     $stmt = repsDashDb()->prepare(
         'UPDATE users SET display_name = ?, email = ?, role = ?, skin_slug = ?, shop_id = ?, operator_id = ?,
-         is_active = ?, updated_at = datetime(\'now\') WHERE id = ?'
+         linked_user_id = ?, is_active = ?, updated_at = datetime(\'now\') WHERE id = ?'
     );
-    $stmt->execute([$display, $email, $role, $skin, $shopId, $operatorId, $isActive, $id]);
+    $stmt->execute([$display, $email, $role, $skin, $shopId, $operatorId, $linkedUserId, $isActive, $id]);
     return ['ok' => true];
 }
 
@@ -942,4 +969,113 @@ function repsDashUpdateApplyLead(int $id, array $data): array
     $manualSource = array_key_exists('assigned_sales_rep', $data) ? 'manual' : '';
     $stmt->execute([$status, $rep, $notes, $manualSource, $manualSource !== '' ? 'manual' : '', $id]);
     return ['ok' => true];
+}
+
+/**
+ * Affiliate username + worker username for the same person.
+ *
+ * @return list<array{affiliate: string, worker: string, display_name: string, shop_id: int|null}>
+ */
+function repsDashDualSeatPairs(): array
+{
+    return [
+        [
+            'affiliate' => 'seven',
+            'worker' => 'leon',
+            'display_name' => 'Leon Gardner',
+            'shop_id' => 103,
+        ],
+        [
+            'affiliate' => 'chuck',
+            'worker' => 'chuck-work',
+            'display_name' => 'Chuck',
+            'shop_id' => 102,
+        ],
+        [
+            'affiliate' => 'jim',
+            'worker' => 'jim-work',
+            'display_name' => 'Jim',
+            'shop_id' => null,
+        ],
+    ];
+}
+
+/**
+ * Ensure a worker individual seat linked to an existing sales affiliate.
+ *
+ * @return array{ok: bool, created?: bool, worker_id?: int, affiliate_id?: int, error?: string}
+ */
+function repsDashEnsureLinkedWorkerSeat(string $affiliateUsername, string $workerUsername, string $displayName, string $password = ''): array
+{
+    $aff = repsDashFindUserRawByUsername($affiliateUsername);
+    if ($aff === null) {
+        return ['ok' => false, 'error' => 'affiliate_missing'];
+    }
+    $affId = (int) $aff['id'];
+    $existing = repsDashFindUserRawByUsername($workerUsername);
+    if ($existing !== null) {
+        $wid = (int) $existing['id'];
+        $linked = (int) ($existing['linked_user_id'] ?? 0);
+        if ($linked !== $affId || (string) ($existing['role'] ?? '') !== 'individual') {
+            $upd = repsDashUpdateUser($wid, [
+                'display_name' => $displayName,
+                'role' => 'individual',
+                'linked_user_id' => $affId,
+                'shop_id' => null,
+                'is_active' => 1,
+            ]);
+            if (!($upd['ok'] ?? false)) {
+                return ['ok' => false, 'error' => $upd['error'] ?? 'update_failed'];
+            }
+        }
+        return [
+            'ok' => true,
+            'created' => false,
+            'worker_id' => $wid,
+            'affiliate_id' => $affId,
+        ];
+    }
+
+    $hash = (string) ($aff['password_hash'] ?? '');
+    if ($password !== '') {
+        $created = repsDashCreateUser([
+            'username' => $workerUsername,
+            'display_name' => $displayName,
+            'email' => (string) ($aff['email'] ?? ''),
+            'role' => 'individual',
+            'password' => $password,
+            'linked_user_id' => $affId,
+        ]);
+        if (!($created['ok'] ?? false)) {
+            return ['ok' => false, 'error' => $created['error'] ?? 'create_failed'];
+        }
+        return [
+            'ok' => true,
+            'created' => true,
+            'worker_id' => (int) ($created['id'] ?? 0),
+            'affiliate_id' => $affId,
+        ];
+    }
+
+    if ($hash === '') {
+        return ['ok' => false, 'error' => 'no_password_to_copy'];
+    }
+    $stmt = repsDashDb()->prepare(
+        'INSERT INTO users (username, email, password_hash, display_name, role, shop_id, operator_id, linked_user_id, is_active)
+         VALUES (?, ?, ?, ?, ?, NULL, NULL, ?, 1)'
+    );
+    $stmt->execute([
+        strtolower($workerUsername),
+        (string) ($aff['email'] ?? ''),
+        $hash,
+        $displayName,
+        'individual',
+        $affId,
+    ]);
+    return [
+        'ok' => true,
+        'created' => true,
+        'worker_id' => (int) repsDashDb()->lastInsertId(),
+        'affiliate_id' => $affId,
+    ];
 }

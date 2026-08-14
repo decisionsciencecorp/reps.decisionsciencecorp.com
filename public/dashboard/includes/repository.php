@@ -43,7 +43,9 @@ function repsDashAllShops(): array
 function repsDashDbShopsAsRows(): array
 {
     $pdo = repsDashDb();
-    $rows = $pdo->query('SELECT * FROM shops ORDER BY id')->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    $rows = $pdo->query(
+        "SELECT * FROM shops WHERE status IS NULL OR status != 'retired' ORDER BY id"
+    )->fetchAll(PDO::FETCH_ASSOC) ?: [];
     if ($rows === []) {
         return [];
     }
@@ -106,6 +108,8 @@ function repsDashDbOperatorsAsRows(): array
     $rows = $pdo->query(
         "SELECT * FROM operators
          WHERE shift_user_id NOT LIKE 'reps-user-%'
+           AND shift_user_id NOT LIKE 'sandbox-%'
+           AND COALESCE(status,'') != 'retired'
          ORDER BY display_name COLLATE NOCASE"
     )->fetchAll(PDO::FETCH_ASSOC) ?: [];
     $out = [];

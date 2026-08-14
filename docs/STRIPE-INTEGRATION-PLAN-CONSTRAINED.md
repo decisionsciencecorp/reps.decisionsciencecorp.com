@@ -10,7 +10,7 @@
 | Settlement | Shift → **DSC platform Stripe** balance (top-up / deposit / ops import) |
 | Payees | Connect **Express** recipients (receive-only; no card-accepting v1) |
 | Money-out | **`Transfers`** platform → connected |
-| Economics | $20/hr → DSC 25 / affiliate 25 (none→DSC) / capture 50 shop XOR operator |
+| Economics | 25/25/50 of partner payout → DSC / affiliate (none→DSC) / capture 50 shop XOR operator |
 | Out of scope | Square, PaymentIntents for hours, destination charges, Billing/Issuing/Treasury |
 
 ## Implemented modules (this repo)

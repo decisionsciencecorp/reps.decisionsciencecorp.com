@@ -13,8 +13,23 @@ require_once __DIR__ . '/stripe-client.php';
 require_once __DIR__ . '/stripe-connect.php';
 require_once __DIR__ . '/ledger.php';
 
+function repsDisburseReadyAccount(string $entityType, int $entityId): ?string
+{
+    if ($entityId <= 0) {
+        return null;
+    }
+    $stmt = repsDashDb()->prepare(
+        'SELECT stripe_account_id FROM payout_payees
+         WHERE entity_type = ? AND entity_id = ? AND payouts_enabled = 1 LIMIT 1'
+    );
+    $stmt->execute([$entityType, $entityId]);
+    $acct = $stmt->fetchColumn();
+    return $acct ? (string) $acct : null;
+}
+
 /**
  * Resolve destination Connect account for a ledger line.
+ * Linked worker seats pay capture to the affiliate's user Connect (same person).
  */
 function repsDisburseResolveDestination(array $line): ?string
 {
@@ -23,12 +38,10 @@ function repsDisburseResolveDestination(array $line): ?string
     if ($bucket === 'affiliate') {
         $uid = (int) ($line['affiliate_user_id'] ?? 0);
         if ($uid > 0) {
-            $stmt = $pdo->prepare(
-                "SELECT stripe_account_id FROM payout_payees WHERE entity_type = 'user' AND entity_id = ? AND payouts_enabled = 1 LIMIT 1"
-            );
-            $stmt->execute([$uid]);
-            $acct = $stmt->fetchColumn();
-            return $acct ? (string) $acct : null;
+            $acct = repsDisburseReadyAccount('user', $uid);
+            if ($acct !== null) {
+                return $acct;
+            }
         }
         $uname = trim((string) ($line['affiliate_username'] ?? ''));
         if ($uname !== '') {
@@ -36,12 +49,7 @@ function repsDisburseResolveDestination(array $line): ?string
             $u->execute([$uname]);
             $id = $u->fetchColumn();
             if ($id) {
-                $stmt = $pdo->prepare(
-                    "SELECT stripe_account_id FROM payout_payees WHERE entity_type = 'user' AND entity_id = ? AND payouts_enabled = 1 LIMIT 1"
-                );
-                $stmt->execute([(int) $id]);
-                $acct = $stmt->fetchColumn();
-                return $acct ? (string) $acct : null;
+                return repsDisburseReadyAccount('user', (int) $id);
             }
         }
         return null;
@@ -49,27 +57,35 @@ function repsDisburseResolveDestination(array $line): ?string
     if ($bucket === 'capture') {
         $payee = (string) ($line['capture_payee'] ?? 'shop');
         if ($payee === 'shop') {
-            $shopId = (int) ($line['shop_id'] ?? 0);
-            if ($shopId <= 0) {
-                return null;
-            }
-            $stmt = $pdo->prepare(
-                "SELECT stripe_account_id FROM payout_payees WHERE entity_type = 'shop' AND entity_id = ? AND payouts_enabled = 1 LIMIT 1"
-            );
-            $stmt->execute([$shopId]);
-            $acct = $stmt->fetchColumn();
-            return $acct ? (string) $acct : null;
+            return repsDisburseReadyAccount('shop', (int) ($line['shop_id'] ?? 0));
         }
         $opId = (int) ($line['operator_id'] ?? 0);
-        if ($opId <= 0) {
-            return null;
+        if ($opId > 0) {
+            $op = $pdo->prepare('SELECT matched_user_id FROM operators WHERE id = ? LIMIT 1');
+            $op->execute([$opId]);
+            $matched = (int) ($op->fetchColumn() ?: 0);
+            if ($matched > 0) {
+                $u = $pdo->prepare('SELECT id, linked_user_id FROM users WHERE id = ? LIMIT 1');
+                $u->execute([$matched]);
+                $row = $u->fetch(PDO::FETCH_ASSOC) ?: [];
+                $linked = (int) ($row['linked_user_id'] ?? 0);
+                if ($linked > 0) {
+                    $acct = repsDisburseReadyAccount('user', $linked);
+                    if ($acct !== null) {
+                        return $acct;
+                    }
+                }
+                $acct = repsDisburseReadyAccount('user', $matched);
+                if ($acct !== null) {
+                    return $acct;
+                }
+            }
+            $acct = repsDisburseReadyAccount('operator', $opId);
+            if ($acct !== null) {
+                return $acct;
+            }
         }
-        $stmt = $pdo->prepare(
-            "SELECT stripe_account_id FROM payout_payees WHERE entity_type = 'operator' AND entity_id = ? AND payouts_enabled = 1 LIMIT 1"
-        );
-        $stmt->execute([$opId]);
-        $acct = $stmt->fetchColumn();
-        return $acct ? (string) $acct : null;
+        return null;
     }
     return null;
 }

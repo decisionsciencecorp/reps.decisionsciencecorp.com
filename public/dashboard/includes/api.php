@@ -271,6 +271,11 @@ function repsApiMoneySummary(array $user): array
     return [
         'mode' => $mode,
         'hourly_rate' => repsDashMoneyHourlyRate(),
+        'pie' => [
+            'dsc' => repsDashMoneyShareDsc(),
+            'affiliate' => repsDashMoneyShareAffiliate(),
+            'capture' => repsDashMoneyShareCapture(),
+        ],
         'pulse' => $pulse,
         'ledger' => $ledger,
         'live_data' => repsDashLiveDataEnabled(),

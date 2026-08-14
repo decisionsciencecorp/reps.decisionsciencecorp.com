@@ -38,7 +38,7 @@ Login platform for DSC Reps ops + affiliate seats. PRD: Tasks Doc **#990**.
 - Partner API v1: `/dashboard/api/v1/shift/*` — hours from MicroPS (`tools/fake-microps/`), matching/invite on JoinShift (`tools/fake-shift-partner/`). **CARDINAL:** both live hosts are prod (reads OK; JoinShift writes tested on fake only). Tasks Docs **#1038**, **#1093**.
 - Slice E: `reps_sdk/` + `smcp_plugin/reps/` (API key client + SMCP stub). Agent key: `~/.ssh/reps-dsc-agent.pass`.
 - Parked: consumer MicroAGI API.
-- Payouts phase: Stripe Connect Transfers, ledger 25/25/50, Money UI ledger totals — see `docs/STRIPE-INTEGRATION-PLAN-CONSTRAINED.md`, Tasks Docs **#1032** / **#1033**. Keys in `~/.ssh/reps-stripe.pass` (never commit).
+- Payouts phase: Stripe Connect Transfers, ledger **25/25/50 of partner payout** (not a baked $20), Money UI ledger totals — see `docs/STRIPE-INTEGRATION-PLAN-CONSTRAINED.md`, Tasks Docs **#1032** / **#1033**. Keys in `~/.ssh/reps-stripe.pass` (never commit).
 
 ### Auth (Slice B)
 
@@ -46,7 +46,7 @@ Login platform for DSC Reps ops + affiliate seats. PRD: Tasks Doc **#990**.
 |------|--------|
 | DB | `db/dashboard.sqlite` (sibling of `public/` / multihost `html/`) |
 | Override | `REPS_DASH_DB_PATH` |
-| Dev Mode | **on by default** (demo); set `REPS_DASH_DEV_MODE=0` to lock down |
+| Dev Mode | Env default on for demo; **prod** sets SQLite `dash.dev_mode=0` (overrides env) |
 | Seed password | `reps-demo` (listed on login while Dev Mode is on) |
 | Login | username + password at `/dashboard/login.php` |
 
@@ -59,7 +59,7 @@ Login platform for DSC Reps ops + affiliate seats. PRD: Tasks Doc **#990**.
 | `repository.php` | Data access seam (live SQLite or fixtures) |
 | `api.php` | Slice D JSON auth + helpers |
 | `scope.php` | Seat ACL (`*ForUser`, `CanView*`); sales book = shops ∪ sourced individuals |
-| `economics.php` | Hourly rate + shop splits |
+| `economics.php` | Percentage pie (25/25/50 of partner payout); hourly $ is estimate only |
 | `rollups.php` | Worker/day stats + URL helpers |
 | `partials.php` | Shared session/operator table HTML |
 | `access.php` | Nav / home / Money mode contract |

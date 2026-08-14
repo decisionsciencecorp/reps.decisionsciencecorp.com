@@ -23,9 +23,11 @@ function repsDashRenderConnectPayoutPanel(array $user): void
     $ready = $payee && (int) ($payee['payouts_enabled'] ?? 0) === 1;
     $pending = $payee && !$ready && trim((string) ($payee['stripe_account_id'] ?? '')) !== '';
     $stripeOk = repsStripeConfigured();
-    $who = $target['audience'] === 'shop'
-        ? 'your shop’s capture payouts'
-        : 'your solo capture payouts';
+    $who = match ((string) ($target['audience'] ?? '')) {
+        'shop' => 'your shop’s capture payouts',
+        'affiliate' => 'your affiliate share (and capture, if you also work)',
+        default => 'your solo capture payouts',
+    };
     ?>
 <div class="surface p-3 mb-4 border-primary border-opacity-25">
   <h2 class="h5 mb-2">Payout bank account</h2>
@@ -105,7 +107,7 @@ function repsDashRenderMoneyAdmin(array $user, array $shops, ?string $repFilter 
     ksort($byRepAll);
     usort($rows, static fn($a, $b) => $b['e']['gross'] <=> $a['e']['gross']);
 
-    $subtitle = 'DSC portfolio — $20/hr · 25/25/50 ledger → Stripe Connect';
+    $subtitle = 'DSC portfolio — ' . repsDashMoneyPieCaption() . ' → Stripe Connect';
     if ($repFilter !== null) {
         $subtitle .= ' · filtered to @' . $repFilter;
     }
@@ -118,9 +120,9 @@ function repsDashRenderMoneyAdmin(array $user, array $shops, ?string $repFilter 
     repsDashRenderPageHeader('Money', $subtitle);
     ?>
 <div class="alert alert-dark border-0 mb-3">
-  <strong>Admin peer.</strong> Locked pie: DSC 25% · Affiliate 25% (none→DSC) · Capture 50% (shop XOR operator).
-  $<?php echo number_format($rate, 0); ?>/accepted hour · Transfers from platform Stripe.
-  Tap a rep to filter the shop ledger.
+  <strong>Admin peer.</strong> Locked pie: DSC 25% · Affiliate 25% (none→DSC) · Capture 50% (shop XOR operator)
+  of whatever Shift pays that hour — not a fixed dollar rate.
+  Estimate shown at $<?php echo number_format($rate, 0); ?>/hr when the feed only has hours. Tap a rep to filter the shop ledger.
 </div>
 <div class="row g-3 mb-4">
   <div class="col-6 col-lg-3">
@@ -487,12 +489,13 @@ function repsDashRenderMoneySales(array $user, array $shops): void
     ));
 
     repsDashRenderHeader('Money', 'money');
-    repsDashRenderPageHeader('Money', 'Your book — shops, sourced individuals · $20/hr 25/25/50');
+    repsDashRenderPageHeader('Money', 'Your book — shops, sourced individuals · ' . repsDashMoneyPieCaption());
     ?>
 <div class="alert alert-secondary border-0 mb-3">
   <strong>Sales peer.</strong> Pipeline economics for <em>your</em> book: shops you own <em>and</em> individuals you sourced.
-  Affiliate share is 25% of accepted hours; capture stays with shop or solo operator.
+  Affiliate share is 25% of partner payout on accepted hours; capture stays with shop or solo operator.
 </div>
+<?php repsDashRenderConnectPayoutPanel($user); ?>
 
 <div class="row g-3 mb-4">
   <div class="col-6 col-md-3">
@@ -647,7 +650,7 @@ function repsDashRenderMoneyOwner(array $user, array $shops): void
     }
 
     repsDashRenderHeader('My pay', 'money');
-    repsDashRenderPageHeader('My pay', $shop['name'] . ' — capture share (50% of $20/hr)');
+    repsDashRenderPageHeader('My pay', $shop['name'] . ' — capture share (50% of partner payout)');
     ?>
 <div class="alert alert-success border-0 mb-3">
   <strong>Business owner peer.</strong> This is <em>your</em> shop’s paycheck view — hours your team produced and what the shop keeps.
@@ -767,11 +770,11 @@ function repsDashRenderMoneySolo(array $user): void
     $e = repsDashMoneyIndividualEconomics($self, $rate);
 
     repsDashRenderHeader('My pay', 'money');
-    repsDashRenderPageHeader('My pay', 'Solo capture — 50% of $20/hr to you');
+    repsDashRenderPageHeader('My pay', 'Solo capture — 50% of partner payout to you');
     ?>
 <div class="alert alert-success border-0 mb-3">
-  <strong>Solo operator.</strong> When your sessions are accepted, the capture share ($10/hr) is owed to you — not a shop.
-  Link a bank account below so Reps can pay you through Stripe.
+  <strong>Solo operator.</strong> When your sessions are accepted, the capture share (50% of what Shift paid) is owed to you — not a shop.
+  If you also have an affiliate seat, that 25% lands on the same payout account. Link a bank below.
 </div>
 <?php repsDashRenderConnectPayoutPanel($user); ?>
 

@@ -502,12 +502,26 @@ function repsOperatorMatchUser(int $operatorId, int $userId, int $actorUserId, s
         ? (int) $user['shop_id']
         : null;
 
+    $linkedId = (int) ($user['linked_user_id'] ?? 0);
+    $affUsername = null;
+    if ($linkedId > 0) {
+        $aff = $pdo->prepare('SELECT username, role FROM users WHERE id = ? LIMIT 1');
+        $aff->execute([$linkedId]);
+        $affRow = $aff->fetch(PDO::FETCH_ASSOC);
+        if ($affRow && (string) ($affRow['role'] ?? '') === 'sales') {
+            $affUsername = (string) $affRow['username'];
+        }
+        // Linked worker is a solo capture seat — do not attach their hours to a shop payee.
+        $shopId = null;
+    }
+
     $pdo->prepare(
         'UPDATE operators SET matched_user_id = ?, matched_at = datetime(\'now\'), matched_by_user_id = ?,
          shop_id = COALESCE(?, shop_id),
+         assigned_sales_rep = COALESCE(?, assigned_sales_rep),
          updated_at = datetime(\'now\')
          WHERE id = ?'
-    )->execute([$userId, $actorUserId, $shopId, $operatorId]);
+    )->execute([$userId, $actorUserId, $shopId, $affUsername, $operatorId]);
 
     $pdo->prepare(
         'UPDATE users SET operator_id = ?, updated_at = datetime(\'now\') WHERE id = ?'

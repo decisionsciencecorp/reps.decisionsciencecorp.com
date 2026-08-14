@@ -97,7 +97,8 @@ repsDashRenderPageHeader(
   <h2 class="h5 mb-2">Why footage got rejected</h2>
   <p class="small text-muted mb-3">
     <?php echo (int) $stats['rejected']; ?> rejected sessions ·
-    <strong>−$<?php echo number_format((float) $stats['lost_payouts'], 0); ?></strong> lost payouts (mock $<?php echo (int) $rate; ?>/hr)
+    <strong>−$<?php echo number_format((float) $stats['lost_payouts'], 0); ?></strong> estimated lost payouts
+    (<?php echo (int) round(repsDashMoneyShareCapture() * 100); ?>% capture share of partner payout)
   </p>
   <div class="row g-2">
     <?php foreach ($stats['reasons'] as $r): ?>

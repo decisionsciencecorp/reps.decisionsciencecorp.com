@@ -13,15 +13,16 @@ require_once __DIR__ . '/stripe-client.php';
 require_once __DIR__ . '/operators.php';
 
 /**
- * Who this dashboard user is paid as (capture shop XOR solo operator).
- * Affilate sales seats use entity_type=user when we expose Connect there later.
+ * Who this dashboard user is paid as.
+ * Linked worker+affiliate seats share entity_type=user on the affiliate so one
+ * Connect KYC covers both the 25% book cut and the 50% capture cut.
  *
  * @return array{
  *   entity_type: 'shop'|'operator'|'user',
  *   entity_id: int,
  *   email: string,
  *   display_name: string,
- *   audience: 'shop'|'solo'
+ *   audience: 'shop'|'solo'|'affiliate'
  * }|null
  */
 function repsStripePayeeTargetForUser(array $user): ?array
@@ -47,18 +48,56 @@ function repsStripePayeeTargetForUser(array $user): ?array
         ];
     }
 
+    if ($role === 'sales') {
+        $uid = (int) ($user['id'] ?? 0);
+        if ($uid <= 0) {
+            return null;
+        }
+        return [
+            'entity_type' => 'user',
+            'entity_id' => $uid,
+            'email' => $email,
+            'display_name' => $name,
+            'audience' => 'affiliate',
+        ];
+    }
+
     if ($role === 'individual') {
         $uid = (int) ($user['id'] ?? 0);
         if ($uid <= 0) {
             return null;
         }
+        $linked = (int) ($user['linked_user_id'] ?? 0);
+        if ($linked > 0) {
+            $aff = repsDashFindUserById($linked);
+            $affEmail = $aff ? trim((string) ($aff['email'] ?? '')) : '';
+            $affName = $aff ? trim((string) ($aff['display_name'] ?? $name)) : $name;
+            return [
+                'entity_type' => 'user',
+                'entity_id' => $linked,
+                'email' => $affEmail !== '' ? $affEmail : $email,
+                'display_name' => $affName !== '' ? $affName : $name,
+                'audience' => 'solo',
+            ];
+        }
+        $cur = (int) ($user['operator_id'] ?? 0);
+        if ($cur > 0) {
+            $op = repsOperatorById($cur);
+            if ($op) {
+                return [
+                    'entity_type' => 'operator',
+                    'entity_id' => $cur,
+                    'email' => $email,
+                    'display_name' => $name,
+                    'audience' => 'solo',
+                ];
+            }
+        }
         $opId = repsOperatorEnsure('reps-user-' . $uid, $name, $email);
         if ($opId <= 0) {
             return null;
         }
-        // Keep users.operator_id aligned with local operators row when unset/stale mock id.
         $pdo = repsDashDb();
-        $cur = (int) ($user['operator_id'] ?? 0);
         if ($cur !== $opId) {
             $pdo->prepare(
                 'UPDATE users SET operator_id = ?, updated_at = datetime(\'now\') WHERE id = ?'

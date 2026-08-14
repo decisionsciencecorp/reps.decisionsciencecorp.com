@@ -46,11 +46,22 @@ function repsLedgerPostAcceptedHour(array $input): array
     }
 
     $hours = (float) ($input['hours'] ?? 0);
-    $split = repsDashSplitAcceptedHours(
-        $hours,
-        (bool) ($input['has_shop'] ?? false),
-        (bool) ($input['has_affiliate'] ?? false)
-    );
+    if (isset($input['gross_cents'])) {
+        $split = repsDashSplitGrossCents(
+            (int) $input['gross_cents'],
+            (bool) ($input['has_shop'] ?? false),
+            (bool) ($input['has_affiliate'] ?? false),
+            $hours
+        );
+    } else {
+        $rate = isset($input['hourly_rate']) ? (float) $input['hourly_rate'] : null;
+        $split = repsDashSplitAcceptedHours(
+            $hours,
+            (bool) ($input['has_shop'] ?? false),
+            (bool) ($input['has_affiliate'] ?? false),
+            $rate
+        );
+    }
     $shopId = isset($input['shop_id']) ? (int) $input['shop_id'] : null;
     $opId = isset($input['operator_id']) ? (int) $input['operator_id'] : null;
     $affUser = isset($input['affiliate_user_id']) ? (int) $input['affiliate_user_id'] : null;

@@ -95,7 +95,7 @@ assertTrue(repsDashCanViewOperator($by['maria'], 1), 'owner can view Alex in sho
 assertTrue(!repsDashCanViewOperator($by['maria'], 5), 'owner cannot view Seven (other shop)');
 assertTrue(repsDashCanViewOperator($by['jim'], 1), 'jim can view Alex (book)');
 assertTrue(!repsDashCanViewOperator($by['jim'], 5), 'jim cannot view Seven');
-assertTrue(repsDashCanViewOperator($by['seven'], 5), 'seven can view Seven Stone');
+assertTrue(repsDashCanViewOperator($by['seven'], 5), 'seven can view Leon at Seven Mobile');
 assertTrue(!repsDashCanViewOperator($by['seven'], 1), 'seven cannot view Alex');
 assertTrue(!repsDashCanViewOperator($by['chuck'], 1), 'chuck pitched shop has no Alex');
 

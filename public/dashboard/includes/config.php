@@ -43,7 +43,8 @@ if (!defined('REPS_DASH_PASSWORD_MIN')) {
 
 /**
  * Dev Mode (role switcher / seat picker / demo creds on login).
- * Default ON while the product is still in demo; set REPS_DASH_DEV_MODE=0 to lock down.
+ * Default ON in env while the product is still in demo.
+ * Production: set app_meta `dash.dev_mode` = 0 (overrides env).
  */
 if (!defined('REPS_DASH_DEV_MODE')) {
     $dev = repsDashEnvOrDefault('REPS_DASH_DEV_MODE', '1');

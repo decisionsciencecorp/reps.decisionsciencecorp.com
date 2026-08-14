@@ -56,7 +56,7 @@ $demoAccounts = repsDashDemoAccounts();
     <div class="page-header">
       <div class="page-header__title">
         <h1>Dashboard sign-in</h1>
-        <div class="subtitle">Demo mode — use a seat below. Real password login still works.</div>
+        <div class="subtitle"><?php echo $devMode ? 'Demo mode — use a seat below. Real password login still works.' : 'Sign in with your Reps username and password.'; ?></div>
       </div>
     </div>
 

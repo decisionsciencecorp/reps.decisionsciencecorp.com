@@ -24,9 +24,17 @@ function repsDashRoleLabel(string $role): string
     };
 }
 
-/** Whether Dev Mode chrome (role picker) is shown. Env-gated (default off). */
+/** Whether Dev Mode chrome (role picker) is shown. app_meta dash.dev_mode overrides env. */
 function repsDashIsDevMode(): bool
 {
+    try {
+        $meta = repsDashAppMetaGet('dash.dev_mode', '');
+        if ($meta !== '') {
+            return filter_var($meta, FILTER_VALIDATE_BOOLEAN);
+        }
+    } catch (Throwable $e) {
+        // fall through
+    }
     return defined('REPS_DASH_DEV_MODE') && (bool) REPS_DASH_DEV_MODE;
 }
 

@@ -37,6 +37,35 @@ final class PayoutsTest extends TestCase
         );
     }
 
+    public function testSplitFollowsPartnerRateNotHardTwenty(): void
+    {
+        $s = repsDashSplitAcceptedHours(1.0, true, true, 30.0);
+        $this->assertSame(3000, $s['gross_cents']);
+        $this->assertSame(750, $s['dsc_cents']);
+        $this->assertSame(750, $s['affiliate_cents']);
+        $this->assertSame(1500, $s['capture_cents']);
+        $this->assertSame(3000, $s['dsc_cents'] + $s['affiliate_cents'] + $s['capture_cents']);
+    }
+
+    public function testSplitGrossCentsIgnoresHourlyAssumption(): void
+    {
+        $s = repsDashSplitGrossCents(12345, false, true, 1.0);
+        $this->assertSame(12345, $s['gross_cents']);
+        $this->assertSame(3086, $s['dsc_cents']); // floor(12345 * 0.25)
+        $this->assertSame(3086, $s['affiliate_cents']);
+        $this->assertSame(6173, $s['capture_cents']);
+        $this->assertSame(12345, $s['dsc_cents'] + $s['affiliate_cents'] + $s['capture_cents']);
+    }
+
+    public function testDevModeMetaOverridesEnv(): void
+    {
+        $this->assertFalse(repsDashIsDevMode());
+        repsDashAppMetaSet('dash.dev_mode', '1');
+        $this->assertTrue(repsDashIsDevMode());
+        repsDashAppMetaSet('dash.dev_mode', '0');
+        $this->assertFalse(repsDashIsDevMode());
+    }
+
     public function testShopEconomicsUsesLockedPie(): void
     {
         $shop = [
@@ -742,6 +771,54 @@ final class PayoutsTest extends TestCase
 
         $emp = ['id' => 9, 'role' => 'employee', 'shop_id' => 104];
         $this->assertNull(repsStripePayeeTargetForUser($emp));
+    }
+
+    public function testLinkedWorkerAndAffiliateShareUserPayee(): void
+    {
+        $seat = repsDashEnsureLinkedWorkerSeat('seven', 'leon', 'Leon Gardner', 'reps-demo-xx');
+        $this->assertTrue($seat['ok']);
+        $worker = repsDashFindUserById((int) $seat['worker_id']);
+        $this->assertNotNull($worker);
+        $this->assertSame('individual', $worker['role']);
+        $this->assertSame((int) $seat['affiliate_id'], (int) $worker['linked_user_id']);
+
+        $tAff = repsStripePayeeTargetForUser(repsDashFindUserById((int) $seat['affiliate_id']));
+        $tWork = repsStripePayeeTargetForUser($worker);
+        $this->assertSame('user', $tAff['entity_type']);
+        $this->assertSame('user', $tWork['entity_type']);
+        $this->assertSame($tAff['entity_id'], $tWork['entity_id']);
+        $this->assertSame((int) $seat['affiliate_id'], $tWork['entity_id']);
+    }
+
+    public function testDisburseCaptureFollowsLinkedAffiliateConnect(): void
+    {
+        $seat = repsDashEnsureLinkedWorkerSeat('chuck', 'chuck-work', 'Chuck', 'reps-demo-xx');
+        $this->assertTrue($seat['ok']);
+        $workerId = (int) $seat['worker_id'];
+        $affId = (int) $seat['affiliate_id'];
+        $opId = repsOperatorEnsure('shift-chuck-dual', 'Chuck', 'chuck@example.com');
+        $admin = repsDashFindUserByUsername('mark');
+        $match = repsOperatorMatchUser($opId, $workerId, (int) $admin['id'], 'phpunit');
+        $this->assertTrue($match['ok']);
+
+        repsDashDb()->prepare(
+            "INSERT OR REPLACE INTO payout_payees
+             (entity_type, entity_id, display_name, email, stripe_account_id, onboarding_status, payouts_enabled)
+             VALUES ('user', ?, 'Chuck', 'chuck@example.com', 'acct_linked_chuck', 'ready', 1)"
+        )->execute([$affId]);
+
+        $dest = repsDisburseResolveDestination([
+            'bucket' => 'capture',
+            'capture_payee' => 'operator',
+            'operator_id' => $opId,
+        ]);
+        $this->assertSame('acct_linked_chuck', $dest);
+
+        $destAff = repsDisburseResolveDestination([
+            'bucket' => 'affiliate',
+            'affiliate_user_id' => $affId,
+        ]);
+        $this->assertSame('acct_linked_chuck', $destAff);
     }
 
     public function testSandboxTopUpRefusesNonTestKey(): void

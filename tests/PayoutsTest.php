@@ -66,6 +66,19 @@ final class PayoutsTest extends TestCase
         $this->assertFalse(repsDashIsDevMode());
     }
 
+    public function testSkipDemoSeedDoesNotRecreateDeletedFixture(): void
+    {
+        $pdo = repsDashDb();
+        $this->assertNotNull(repsDashFindUserByUsername('ops'));
+        repsDashAppMetaSet('dash.skip_demo_seed', '1');
+        $pdo->prepare('DELETE FROM users WHERE username = ? COLLATE NOCASE')->execute(['ops']);
+        repsDashDbSeedUsers($pdo);
+        $this->assertNull(repsDashFindUserByUsername('ops'));
+        repsDashAppMetaSet('dash.skip_demo_seed', '0');
+        repsDashDbSeedUsers($pdo);
+        $this->assertNotNull(repsDashFindUserByUsername('ops'));
+    }
+
     public function testShopEconomicsUsesLockedPie(): void
     {
         $shop = [

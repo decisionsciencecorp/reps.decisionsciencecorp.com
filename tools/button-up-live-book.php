@@ -80,7 +80,7 @@ if ($jim) {
     repsDashUpdateUser((int) $jim['id'], ['display_name' => 'Jim']);
 }
 
-$admin = repsDashFindUserByUsername('mark');
+$admin = repsDashFindUserByUsername('rizzn') ?? repsDashFindUserByUsername('mark');
 $actorId = $admin ? (int) $admin['id'] : 1;
 
 foreach (repsDashDualSeatPairs() as $pair) {

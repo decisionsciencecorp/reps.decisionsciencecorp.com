@@ -432,9 +432,25 @@ function repsDashMigrate006ShiftSync(PDO $pdo): void
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_op_match_op ON operator_match_events(operator_id)');
 }
 
+function repsDashDemoSeedLocked(?PDO $pdo = null): bool
+{
+    try {
+        $pdo = $pdo ?? repsDashDb();
+        $stmt = $pdo->prepare('SELECT value FROM app_meta WHERE key = ? LIMIT 1');
+        $stmt->execute(['dash.skip_demo_seed']);
+        $v = $stmt->fetchColumn();
+        return $v !== false && (string) $v === '1';
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
 /** Seed CRM shops from Slice A fixtures (idempotent by id). */
 function repsDashDbSeedShops(PDO $pdo): void
 {
+    if (repsDashDemoSeedLocked($pdo)) {
+        return;
+    }
     if (!function_exists('repsDashMockShops')) {
         return;
     }
@@ -539,6 +555,9 @@ function repsDashSeedAccountDefs(): array
 
 function repsDashDbSeedUsers(PDO $pdo): void
 {
+    if (repsDashDemoSeedLocked($pdo)) {
+        return;
+    }
     $hash = password_hash(REPS_DASH_SEED_PASSWORD, PASSWORD_DEFAULT);
     $stmt = $pdo->prepare(
         'INSERT INTO users (username, email, password_hash, display_name, role, skin_slug, shop_id, operator_id)

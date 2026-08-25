@@ -871,6 +871,9 @@ function repsDashSeedApplyLeadDefs(): array
 
 function repsDashDbSeedApplyLeads(PDO $pdo): void
 {
+    if (repsDashDemoSeedLocked($pdo)) {
+        return;
+    }
     $count = (int) $pdo->query('SELECT COUNT(*) FROM apply_leads')->fetchColumn();
     if ($count > 0) {
         return;

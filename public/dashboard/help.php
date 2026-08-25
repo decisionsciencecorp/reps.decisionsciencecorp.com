@@ -18,8 +18,13 @@ function repsDashHelpPageMeta(): array
         ],
         'desks' => [
             'label' => 'Desks & screens',
-            'deck' => 'Home, Shops, Leads, Operators, Sessions, Education',
+            'deck' => 'Home, Shops, Leads, Money, affiliate page, Education',
             'icon' => 'bi-layout-text-sidebar-reverse',
+        ],
+        'affiliate-page' => [
+            'label' => 'Affiliate landing page',
+            'deck' => 'Your public link, apply URL, affiliate code, and how to configure them',
+            'icon' => 'bi-link-45deg',
         ],
         'roles' => [
             'label' => 'Roles & access',

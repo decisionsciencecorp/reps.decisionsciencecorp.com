@@ -9,7 +9,7 @@ $shops = repsDashShopsForUser($user);
 $sessions = repsDashSessionsForUser($user);
 $blocks = repsDashHomeBlocksForRole($role);
 $wizard = repsDashIsWizardHome($user);
-$steps = $wizard ? repsDashWizardStepsForRole($role) : [];
+$steps = $wizard ? repsDashWizardStepsForRole($role, $user) : [];
 
 $subtitle = match ($role) {
     'employee', 'individual' => 'Your hours and recent capture',
@@ -46,7 +46,14 @@ repsDashRenderPageHeader('Home', $subtitle);
     <div class="rd-wizard__step surface p-4<?php echo $i === 0 ? '' : ' d-none'; ?>" data-step="<?php echo (int) $i; ?>"<?php echo $i === 0 ? '' : ' hidden'; ?>>
       <div class="text-muted small mb-1">Step <?php echo $i + 1; ?></div>
       <h2 class="h4 mb-3"><?php echo htmlspecialchars($step['title']); ?></h2>
-      <p class="mb-3"><?php echo htmlspecialchars($step['body']); ?></p>
+      <?php if (!empty($step['body_html'])): ?>
+        <div class="mb-3 rd-wizard__body"><?php echo $step['body_html']; ?></div>
+      <?php elseif (!empty($step['body'])): ?>
+        <p class="mb-3"><?php echo htmlspecialchars($step['body']); ?></p>
+      <?php endif; ?>
+      <?php if (($step['panel'] ?? '') === 'affiliate_page'): ?>
+        <?php repsDashRenderAffiliatePagePanel($user); ?>
+      <?php endif; ?>
       <?php if (!empty($step['href']) && !empty($step['cta'])): ?>
         <a class="btn btn-outline-primary btn-sm mb-3" href="<?php echo htmlspecialchars($step['href']); ?>">
           <?php echo htmlspecialchars($step['cta']); ?>

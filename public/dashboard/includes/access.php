@@ -52,10 +52,10 @@ function repsDashHelpPagesForRole(string $role): array
 {
     $common = ['overview', 'desks', 'roles'];
     return match ($role) {
-        'admin' => array_merge($common, ['users', 'shift', 'money', 'api', 'api-shift', 'sync', 'troubleshooting']),
-        'ops' => array_merge($common, ['users', 'shift', 'money', 'api', 'api-shift', 'sync', 'troubleshooting']),
+        'admin' => array_merge($common, ['affiliate-page', 'users', 'shift', 'money', 'api', 'api-shift', 'sync', 'troubleshooting']),
+        'ops' => array_merge($common, ['affiliate-page', 'users', 'shift', 'money', 'api', 'api-shift', 'sync', 'troubleshooting']),
         'agent' => ['overview', 'roles', 'api', 'api-shift', 'troubleshooting'],
-        'sales' => array_merge($common, ['money', 'api-session']),
+        'sales' => array_merge($common, ['affiliate-page', 'money', 'api-session']),
         'business_owner' => array_merge($common, ['money', 'api-session']),
         'individual' => array_merge($common, ['money', 'api-session']),
         'employee' => array_merge($common, ['api-session']),

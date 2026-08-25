@@ -25,7 +25,10 @@ if (!defined('REPS_DASH_LOADED')) {
 <h3 class="h5 mt-4">Quick links</h3>
 <ul>
   <li><a href="/dashboard/">Home</a> — role pulse / wizard for learners</li>
-  <li><a href="/dashboard/settings.php">Settings</a> — skin; sync controls for admin/ops</li>
+  <?php if (repsDashCanSeeHelpPage('affiliate-page')): ?>
+    <li><a href="/dashboard/help.php?page=affiliate-page">Affiliate landing page</a> — your public recruit link, apply URL, and code</li>
+  <?php endif; ?>
+  <li><a href="/dashboard/settings.php">Settings</a> — theme; sync controls for admin/ops; affiliate links for sales</li>
   <li><a href="/dashboard/help.php?page=roles">Roles &amp; access</a> — what each badge means</li>
   <?php if (repsDashCanSeeHelpPage('api')): ?>
     <li><a href="/dashboard/help.php?page=api">HTTP API (book)</a> — programmatic access</li>

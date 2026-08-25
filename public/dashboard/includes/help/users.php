@@ -14,6 +14,7 @@ if (!defined('REPS_DASH_LOADED')) {
   <li>Set <strong>Shop ID</strong> / <strong>Operator ID</strong> when the seat should be scoped (owner, employee, individual).</li>
   <li>For automation, create an <strong>agent</strong> seat and issue an API key from the expanded row (shown once).</li>
   <li>Link workers under <a href="/dashboard/shift-match.php">Users → Worker match</a> (admin + ops).</li>
+  <li>For <strong>sales</strong> seats: run <code>php tools/sync_affiliate_page_stubs.php</code> after create so <code>/a/{username}/</code> is live. See <a href="/dashboard/help.php?page=affiliate-page">Affiliate landing page</a>.</li>
 </ol>
 
 <h3 class="h5 mt-4">Who can provision</h3>

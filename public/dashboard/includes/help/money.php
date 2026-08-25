@@ -10,7 +10,7 @@ if (!defined('REPS_DASH_LOADED')) {
 <ul>
   <li><strong>Admin</strong> — DSC portfolio command / ledger totals</li>
   <li><strong>Ops</strong> — hours health and reject drag</li>
-  <li><strong>Sales</strong> — affiliate book (25% of partner payout) + Connect bank (same account as a linked worker seat)</li>
+  <li><strong>Sales</strong> — affiliate book (25% of partner payout) + Connect bank + <a href="/dashboard/help.php?page=affiliate-page">landing page links</a> at the top of the screen</li>
   <li><strong>Business owner</strong> — shop keep (50% of partner payout) + Connect bank setup</li>
   <li><strong>Individual</strong> — solo capture (50% of partner payout) + Connect bank</li>
   <li><strong>Employee</strong> — no Money nav (shop keeps capture $)</li>

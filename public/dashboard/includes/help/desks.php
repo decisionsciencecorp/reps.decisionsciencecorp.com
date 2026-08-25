@@ -14,7 +14,7 @@ if (!defined('REPS_DASH_LOADED')) {
   <tbody>
     <tr>
       <td><strong>Home</strong></td>
-      <td>Pulse cards, attention queues, signed-in strip. Learners get an onboarding wizard first.</td>
+      <td>Pulse cards, attention queues, signed-in strip. Learners get an onboarding wizard first (sales: includes landing-page steps).</td>
       <td>Everyone</td>
     </tr>
     <tr>
@@ -39,7 +39,7 @@ if (!defined('REPS_DASH_LOADED')) {
     </tr>
     <tr>
       <td><strong>Money / My pay</strong></td>
-      <td>Role-specific economics (portfolio, reject drag, affiliate book, Connect bank).</td>
+      <td>Role-specific economics (portfolio, reject drag, affiliate book, Connect bank). Sales also see their landing-page links at the top.</td>
       <td>All except employee &amp; agent</td>
     </tr>
     <tr>
@@ -59,10 +59,12 @@ if (!defined('REPS_DASH_LOADED')) {
     </tr>
     <tr>
       <td><strong>Settings</strong></td>
-      <td>Skin for all; sync / platform panels for staff &amp; agent.</td>
+      <td>Theme for all; sync / platform panels for staff &amp; agent; <strong>affiliate landing page</strong> panel for sales.</td>
       <td>Everyone</td>
     </tr>
   </tbody>
 </table>
+
+<p class="mb-3">Sales affiliates: full landing-page documentation lives under <a href="/dashboard/help.php?page=affiliate-page">Help → Affiliate landing page</a> (also covered in the Home wizard).</p>
 
 <p class="mb-0">Detail pages (<code>shop.php</code>, <code>operator.php</code>, <code>session.php</code>, <code>lead.php</code>, <code>day.php</code>) inherit the same scope rules as their parent desk — you cannot open another shop’s private row by guessing an ID.</p>

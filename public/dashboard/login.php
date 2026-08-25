@@ -130,11 +130,6 @@ $demoAccounts = repsDashDemoAccounts();
     </div>
     <?php endif; ?>
 
-    <p class="small text-muted">Skin preview:
-      <?php foreach (repsDashSkinAvailableSlugs() as $slug): ?>
-        <a href="?preview_skin=<?php echo urlencode($slug); ?>"><?php echo htmlspecialchars($slug); ?></a>
-      <?php endforeach; ?>
-    </p>
   </main>
 </body>
 </html>

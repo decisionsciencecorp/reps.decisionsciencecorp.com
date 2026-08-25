@@ -100,7 +100,8 @@ function repsDashSettingsPanelsForRole(string $role): array
     return match ($role) {
         'admin' => ['skin', 'sync', 'platform'],
         'ops' => ['skin', 'sync'],
-        'sales', 'business_owner' => ['skin'],
+        'sales' => ['skin', 'affiliate_page'],
+        'business_owner' => ['skin'],
         'employee', 'individual' => ['skin'],
         'agent' => ['platform'],
         default => ['skin'],

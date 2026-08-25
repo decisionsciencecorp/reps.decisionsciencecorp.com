@@ -283,7 +283,7 @@ repsDashRenderPageHeader(
                       <div class="small mt-3 p-2 border rounded bg-white">
                         <div class="fw-semibold mb-1">Affiliate page</div>
                         <div><a href="<?php echo htmlspecialchars(reps_affiliate_canonical_url($affSlug)); ?>" target="_blank" rel="noopener"><?php echo htmlspecialchars(reps_affiliate_canonical_url($affSlug)); ?></a></div>
-                        <div class="text-muted mt-1">After adding a sales seat, run <code>php tools/sync_affiliate_page_stubs.php</code>.</div>
+                        <div class="text-muted mt-1">Share this link with prospects. Page headline uses the seat’s display name.</div>
                       </div>
                     <?php endif; ?>
                   </div>

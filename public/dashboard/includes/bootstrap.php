@@ -46,6 +46,7 @@ require_once __DIR__ . '/onboarding.php';
 require_once __DIR__ . '/education-content.php';
 require_once __DIR__ . '/rollups.php';
 require_once __DIR__ . '/partials.php';
+require_once __DIR__ . '/affiliate-panel.php';
 require_once __DIR__ . '/layout.php';
 
 // Ensure schema/seed exist early (CLI + web).

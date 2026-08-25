@@ -11,7 +11,6 @@ $blocks = repsDashHomeBlocksForRole($role);
 $wizard = repsDashIsWizardHome($user);
 $steps = $wizard ? repsDashWizardStepsForRole($role) : [];
 
-$live = !empty($pulse['live_data']);
 $subtitle = match ($role) {
     'employee', 'individual' => 'Your hours and recent capture',
     'business_owner' => 'Your shop at a glance',
@@ -110,6 +109,10 @@ repsDashRenderPageHeader('Home', $subtitle);
 </script>
 
 <?php else: ?>
+
+<?php if ($role === 'sales'): ?>
+  <?php repsDashRenderAffiliatePagePanel($user); ?>
+<?php endif; ?>
 
 <?php if (!empty($pulse['demo_banner'])): ?>
 <div class="alert alert-warning border-0 mb-3">

@@ -520,7 +520,7 @@ function repsDashEducationCatalog(): array
             'id' => 'reps-sales',
             'section' => 'Your Reps seat',
             'title' => 'Sales desk in Reps',
-            'teaser' => 'Use Shops for your pipeline and Money for earnings and who produced them.',
+            'teaser' => 'Use Shops for your pipeline, Money for earnings, and Settings for your public landing page link.',
             'tags' => ['reps', 'sales'],
             'roles' => $sales,
             'source' => 'Reps Education',
@@ -528,7 +528,7 @@ function repsDashEducationCatalog(): array
                 repsDashEduVideo('task-0.mp4', 'task-poster.jpg', 'Your job is producing shops — not QA’ing every clip.'),
             ],
             'article' => [
-                ['type' => 'p', 'text' => 'Open a producer from Money to see their hours by day. Use Education Center when a shop’s acceptance dips.'],
+                ['type' => 'p', 'text' => 'Open a producer from Money to see their hours by day. Your landing page link is on Home, Money, and Settings — share it when recruiting operators or shops.'],
             ],
         ],
         [

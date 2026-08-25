@@ -25,6 +25,7 @@ repsDashRenderPageHeader('Settings', match ($role) {
     'admin' => 'Display, sync status, and platform links',
     'ops' => 'Display and hours sync status',
     'agent' => 'Platform links for this service account',
+    'sales' => 'Theme and your affiliate landing page',
     default => 'Your display preferences',
 });
 ?>
@@ -51,6 +52,10 @@ repsDashRenderPageHeader('Settings', match ($role) {
   <?php endif; ?>
 
   <div class="col-lg-6">
+    <?php if (in_array('affiliate_page', $panels, true)): ?>
+    <?php repsDashRenderAffiliatePagePanel($user); ?>
+    <?php endif; ?>
+
     <?php if (in_array('sync', $panels, true)): ?>
     <div class="surface p-3 mb-3">
       <h2 class="h5 mb-2">Hours sync</h2>

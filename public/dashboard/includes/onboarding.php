@@ -57,6 +57,13 @@ function repsDashWizardStepsForRole(string $role): array
                 'body' => 'You’re on the affiliate / sales seat. This short tour shows where your book lives and how money works — then you can jump into your normal home screen.',
             ],
             [
+                'id' => 'affiliate_page',
+                'title' => 'Your landing page',
+                'body' => 'You have a public intro page and a direct apply link. Share either one — applications are credited to you automatically. Find copy buttons on Home, Money, and Settings after this tour.',
+                'cta' => 'Open Settings',
+                'href' => '/dashboard/settings.php',
+            ],
+            [
                 'id' => 'shops',
                 'title' => 'Your pipeline is Shops',
                 'body' => 'Assigned shops plus the unassigned pool live under Shops. That’s where you pitch, track status, and pick up new leads.',

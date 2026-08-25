@@ -490,6 +490,7 @@ function repsDashRenderMoneySales(array $user, array $shops): void
     repsDashRenderHeader('Money', 'money');
     repsDashRenderPageHeader('Money', 'Your book — shops and sourced operators · ' . repsDashMoneyPieCaption());
     ?>
+<?php repsDashRenderAffiliatePagePanel($user); ?>
 <div class="alert alert-light border mb-3">
   Earnings estimates for shops you own and operators you sourced.
   Your affiliate share is 25% of partner payout on accepted hours; capture stays with the shop or solo operator.

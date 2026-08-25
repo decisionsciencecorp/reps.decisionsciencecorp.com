@@ -61,20 +61,10 @@ if ($markOp) {
 }
 
 $pdo->prepare(
-    "UPDATE shops SET contact_name = 'Leon Gardner', notes = ?, updated_at = datetime('now') WHERE id = 103"
-)->execute(['Leon Gardner — Seven Mobile Detail. Affiliate seat @seven, worker seat @leon.']);
-$pdo->prepare(
     "UPDATE shops SET notes = ?, updated_at = datetime('now') WHERE id = 102"
-)->execute(['Chuck’s Detail Garage. Affiliate seat @chuck, worker seat @chuck-work.']);
-$pdo->prepare(
-    "UPDATE shops SET notes = ?, updated_at = datetime('now') WHERE id = 101"
-)->execute(['Internal DSC kitchen lane.']);
-$out['shop_touches'] = [101, 102, 103];
+)->execute(['Chuck Cutler — affiliate @chuck, worker @chuck-work.']);
+$out['shop_touches'] = [102];
 
-$seven = repsDashFindUserByUsername('seven');
-if ($seven) {
-    repsDashUpdateUser((int) $seven['id'], ['display_name' => 'Leon Gardner']);
-}
 $jim = repsDashFindUserByUsername('jim');
 if ($jim) {
     repsDashUpdateUser((int) $jim['id'], ['display_name' => 'Jim']);

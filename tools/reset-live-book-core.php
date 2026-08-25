@@ -69,12 +69,12 @@ foreach (array_keys($workerUsernames) as $w) {
 }
 $keep = array_values(array_unique($keep));
 
-// Prefer keeping `leon` if Leon Gardner is a live operator (even if match was to deleted seven)
+// Prefer keeping seven-work if Leon Gardner is a live operator
 foreach ($ops as $op) {
     $name = strtolower(trim((string) ($op['display_name'] ?? '')));
     if ($name === 'leon gardner' || $name === 'leon') {
-        if (!in_array('leon', $keep, true)) {
-            $keep[] = 'leon';
+        if (!in_array('seven-work', $keep, true)) {
+            $keep[] = 'seven-work';
         }
     }
 }
@@ -106,13 +106,13 @@ foreach ($pdo->query('SELECT id, username FROM users') as $row) {
     $out['deleted_users'][] = $uname;
 }
 
-// Ensure leon (if kept) is an individual worker, not hanging off a deleted affiliate
-$leon = repsDashFindUserRawByUsername('leon');
-if ($leon !== null) {
+// Ensure seven-work (if kept) is an individual worker seat for Leon
+$worker = repsDashFindUserRawByUsername('seven-work');
+if ($worker !== null) {
     $pdo->prepare(
-        "UPDATE users SET role = 'individual', linked_user_id = NULL, email = '',
-         updated_at = datetime('now') WHERE id = ?"
-    )->execute([(int) $leon['id']]);
+        "UPDATE users SET role = 'individual', linked_user_id = NULL,
+         display_name = 'Leon Gardner', updated_at = datetime('now') WHERE id = ?"
+    )->execute([(int) $worker['id']]);
     $leonOp = $pdo->query(
         "SELECT id FROM operators WHERE lower(display_name) LIKE '%leon%' LIMIT 1"
     )->fetch(PDO::FETCH_ASSOC);
@@ -121,7 +121,7 @@ if ($leon !== null) {
             'UPDATE operators SET matched_user_id = ?, matched_at = datetime(\'now\'),
              assigned_sales_rep = NULL, shop_id = NULL, updated_at = datetime(\'now\')
              WHERE id = ?'
-        )->execute([(int) $leon['id'], (int) $leonOp['id']]);
+        )->execute([(int) $worker['id'], (int) $leonOp['id']]);
     }
 }
 

@@ -376,7 +376,7 @@ function repsShiftPollLive(array $opts = []): array
     $matchingOk = false;
     $hoursOk = false;
 
-    if (repsShiftUsesLiveHttp() && !is_readable(repsShiftCookieJarPath())) {
+    if (repsShiftUsesLiveHttp() && !repsShiftHasCredentials()) {
         $matchingErr = 'missing_cookie_jar';
     } else {
         $teamRes = repsShiftGetTeamMembers();

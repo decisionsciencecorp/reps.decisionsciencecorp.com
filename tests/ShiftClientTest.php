@@ -125,4 +125,24 @@ final class ShiftClientTest extends TestCase
         $this->assertTrue($r['ok']);
         $this->assertSame(0.25, $r['body']['split'] ?? null);
     }
+
+    public function testJoinshiftCookieJarPrefersAppMetaOverFile(): void
+    {
+        $dummy = "# Netscape HTTP Cookie File\napp.joinshift.us\tFALSE\t/\tTRUE\t0\tsb-test-auth-token\tphpunit-db-jar";
+        $store = repsShiftStoreCookieJarInDb($dummy);
+        $this->assertTrue($store['ok']);
+        $this->assertSame($dummy, repsShiftCookieJarFromDb());
+        $this->assertSame($dummy, repsShiftCookieJarText());
+        $this->assertTrue(repsShiftHasCredentials());
+
+        $prepared = repsShiftPrepareCookieFile();
+        $this->assertNotNull($prepared);
+        $this->assertTrue($prepared['ephemeral']);
+        $this->assertFileExists($prepared['path']);
+        $onDisk = trim((string) file_get_contents($prepared['path']));
+        $this->assertSame($dummy, $onDisk);
+        repsShiftReleaseCookieFile($prepared, $dummy);
+        $this->assertFileDoesNotExist($prepared['path']);
+        repsDashDb()->prepare('DELETE FROM app_meta WHERE key = ?')->execute([REPS_JOINSHIFT_COOKIE_META]);
+    }
 }

@@ -14,6 +14,9 @@ declare(strict_types=1);
  * - Never mutate live Partner as automated verification.
  * - PHPUnit must not point write tests at joinshift.us (see repsShiftAssertSafeBaseForWrites).
  * - Do not poll /api/dashboard/hours-feed for ingest — that feed is empty; use MicroPS.
+ *
+ * Canonical secret: SQLite app_meta `joinshift.cookie_jar` (manual inject).
+ * Pass file is Otto staging for deposit/dev only — never site env, never git.
  */
 
 if (!defined('REPS_DASH_LOADED')) {
@@ -90,11 +93,120 @@ function repsShiftAssertSafeBaseForWrites(): void
 
 function repsShiftCookieJarPath(): string
 {
-    $cookie = (string) (getenv('REPS_SHIFT_COOKIE_JAR') ?: (getenv('HOME') ?: '/root') . '/.ssh/joinshift-cookies.txt');
-    if (!is_readable($cookie)) {
-        $cookie = '/tmp/joinshift/cookies.txt';
+    $explicit = getenv('REPS_SHIFT_COOKIE_JAR');
+    if (is_string($explicit) && $explicit !== '') {
+        return $explicit;
     }
-    return $cookie;
+    $home = (string) (getenv('HOME') ?: '/root');
+    foreach ([
+        $home . '/.ssh/joinshift-cookies.txt',
+        $home . '/.ssh/joinshift-cookies.pass',
+        '/tmp/joinshift/cookies.txt',
+    ] as $p) {
+        if (is_readable($p)) {
+            return $p;
+        }
+    }
+    return $home . '/.ssh/joinshift-cookies.txt';
+}
+
+const REPS_JOINSHIFT_COOKIE_META = 'joinshift.cookie_jar';
+
+function repsShiftCookieJarFromDb(): string
+{
+    try {
+        return trim(repsDashAppMetaGet(REPS_JOINSHIFT_COOKIE_META, ''));
+    } catch (Throwable $e) {
+        return '';
+    }
+}
+
+/** Staging file contents (deposit/dev). Empty if unreadable. */
+function repsShiftCookieJarFromFile(): string
+{
+    $path = repsShiftCookieJarPath();
+    if (!is_readable($path)) {
+        return '';
+    }
+    $raw = file_get_contents($path);
+    return is_string($raw) ? trim($raw) : '';
+}
+
+/**
+ * Netscape jar text. DB first, pass-file fallback for deposit/dev only.
+ */
+function repsShiftCookieJarText(): string
+{
+    $fromDb = repsShiftCookieJarFromDb();
+    if ($fromDb !== '') {
+        return $fromDb;
+    }
+    return repsShiftCookieJarFromFile();
+}
+
+function repsShiftHasCredentials(): bool
+{
+    return repsShiftCookieJarText() !== '';
+}
+
+/**
+ * @return array{ok: bool, bytes: int, source: string}
+ */
+function repsShiftStoreCookieJarInDb(string $jarText): array
+{
+    $jarText = trim($jarText);
+    if ($jarText === '') {
+        return ['ok' => false, 'bytes' => 0, 'source' => 'empty'];
+    }
+    repsDashAppMetaSet(REPS_JOINSHIFT_COOKIE_META, $jarText);
+    return ['ok' => true, 'bytes' => strlen($jarText), 'source' => 'db'];
+}
+
+/**
+ * Write jar text to a 0600 temp file for curl. Caller must repsShiftReleaseCookieFile().
+ *
+ * @return array{path: string, ephemeral: bool}|null
+ */
+function repsShiftPrepareCookieFile(): ?array
+{
+    $text = repsShiftCookieJarText();
+    if ($text === '') {
+        return null;
+    }
+    $fromDb = repsShiftCookieJarFromDb();
+    if ($fromDb !== '') {
+        $path = tempnam(sys_get_temp_dir(), 'reps-joinshift-jar-');
+        if ($path === false) {
+            return null;
+        }
+        file_put_contents($path, $text . "\n");
+        chmod($path, 0600);
+        return ['path' => $path, 'ephemeral' => true];
+    }
+    $path = repsShiftCookieJarPath();
+    if (!is_readable($path)) {
+        return null;
+    }
+    return ['path' => $path, 'ephemeral' => false];
+}
+
+/** Persist curl Set-Cookie rotations back to app_meta when the jar came from DB. */
+function repsShiftReleaseCookieFile(?array $prepared, string $originalText): void
+{
+    if ($prepared === null) {
+        return;
+    }
+    $path = (string) ($prepared['path'] ?? '');
+    $ephemeral = !empty($prepared['ephemeral']);
+    if ($path !== '' && is_readable($path) && $ephemeral) {
+        $now = (string) file_get_contents($path);
+        if (trim($now) !== '' && trim($now) !== trim($originalText)) {
+            repsShiftStoreCookieJarInDb($now);
+        }
+    }
+    if ($ephemeral && $path !== '' && is_file($path)) {
+        @unlink($path);
+    }
 }
 
 /**
@@ -142,13 +254,18 @@ function repsShiftHttpRequest(string $method, string $path, ?array $jsonBody = n
 
     $base = repsShiftApiBase();
     $url = $base . $path;
-    $cookie = repsShiftCookieJarPath();
     $headers = [
         'Accept: application/json',
         'User-Agent: Mozilla/5.0 (compatible; RepsShiftClient/1.0)',
     ];
     if ($jsonBody !== null) {
         $headers[] = 'Content-Type: application/json';
+    }
+
+    $originalJar = repsShiftCookieJarText();
+    $prepared = null;
+    if (repsShiftIsLiveJoinshiftBase($base)) {
+        $prepared = repsShiftPrepareCookieFile();
     }
 
     $ch = curl_init($url);
@@ -159,10 +276,9 @@ function repsShiftHttpRequest(string $method, string $path, ?array $jsonBody = n
         CURLOPT_CUSTOMREQUEST => $method,
         CURLOPT_HTTPHEADER => $headers,
     ];
-    // Cookie jar only for live-ish hosts; fake local servers don't need it
-    if (is_readable($cookie) && repsShiftIsLiveJoinshiftBase($base)) {
-        $opts[CURLOPT_COOKIEFILE] = $cookie;
-        $opts[CURLOPT_COOKIEJAR] = $cookie;
+    if ($prepared !== null) {
+        $opts[CURLOPT_COOKIEFILE] = $prepared['path'];
+        $opts[CURLOPT_COOKIEJAR] = $prepared['path'];
     }
     if ($jsonBody !== null) {
         $opts[CURLOPT_POSTFIELDS] = json_encode($jsonBody, JSON_UNESCAPED_SLASHES);
@@ -177,6 +293,7 @@ function repsShiftHttpRequest(string $method, string $path, ?array $jsonBody = n
     $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $cerr = curl_error($ch);
     curl_close($ch);
+    repsShiftReleaseCookieFile($prepared, $originalJar);
 
     if ($raw === false) {
         return ['ok' => false, 'status' => $status, 'error' => $cerr !== '' ? $cerr : 'curl_failed'];

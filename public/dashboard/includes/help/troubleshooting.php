@@ -46,8 +46,8 @@ if (!defined('REPS_DASH_LOADED')) {
     </tr>
     <tr>
       <td>Sync <code>missing_cookie_jar</code></td>
-      <td>Host cannot read JoinShift cookie file (team/invite lane)</td>
-      <td>Place Netscape jar where <code>REPS_SHIFT_COOKIE_JAR</code> points. Hours still poll if the MicroPS jar is readable.</td>
+      <td>Team/invite lane has no JoinShift session in app_meta (and no staging jar)</td>
+      <td>Restage the Netscape jar with <code>tools/deposit-joinshift-cookies.php</code> into the dashboard database. Hours still poll if MicroPS credentials are present.</td>
     </tr>
     <tr>
       <td>Sync <code>missing_microps_cookie</code></td>

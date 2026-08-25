@@ -40,7 +40,7 @@ Path namespace is `/v1/shift/`; product copy calls this the Partner API.
 | `GET v1/shift/derived/issues.php` | Computed |
 
 Configure hours: canonical cookie is SQLite `app_meta` `microps.cookie_jar` (deposit via `tools/deposit-microps-cookies.php`). Staging jar `REPS_MICROPS_COOKIE_JAR` / `~/.ssh/microps-cookies.pass` is Otto inject/dev fallback only — not multihost site env.
-Configure matching/invite: `REPS_SHIFT_API_BASE`, cookie jar `REPS_SHIFT_COOKIE_JAR`.
+Configure matching/invite: canonical cookie is SQLite `app_meta` `joinshift.cookie_jar` (deposit via `tools/deposit-joinshift-cookies.php`). Staging jar `REPS_SHIFT_COOKIE_JAR` / `~/.ssh/joinshift-cookies.txt` is Otto inject/dev fallback only — not multihost site env.
 
 ### C. Parked
 

@@ -120,10 +120,7 @@ function repsDashDbOperatorsAsRows(): array
 function repsDashAllSessions(): array
 {
     if (repsDashLiveDataEnabled()) {
-        $sessions = repsDashDbSessionsAsRows();
-        if ($sessions !== []) {
-            return $sessions;
-        }
+        return repsDashDbSessionsAsRows();
     }
     return repsDashMockSessions();
 }

@@ -88,7 +88,7 @@ foreach (repsDashDualSeatPairs() as $pair) {
     $needles = [];
     $dn = strtolower($pair['display_name']);
     $needles[] = $dn;
-    if ($pair['worker'] === 'leon') {
+    if ($pair['worker'] === 'seven-work' || $pair['worker'] === 'leon') {
         $needles[] = 'leon gardner';
         $needles[] = 'leon';
     } elseif ($pair['worker'] === 'chuck-work') {

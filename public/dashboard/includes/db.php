@@ -1000,23 +1000,12 @@ function repsDashUpdateApplyLead(int $id, array $data): array
  */
 function repsDashDualSeatPairs(): array
 {
+    // Live core: Chuck only until Mark rebuilds other affiliates.
     return [
-        [
-            'affiliate' => 'seven',
-            'worker' => 'leon',
-            'display_name' => 'Leon Gardner',
-            'shop_id' => 103,
-        ],
         [
             'affiliate' => 'chuck',
             'worker' => 'chuck-work',
-            'display_name' => 'Chuck',
-            'shop_id' => 102,
-        ],
-        [
-            'affiliate' => 'jim',
-            'worker' => 'jim-work',
-            'display_name' => 'Jim',
+            'display_name' => 'Chuck Cutler',
             'shop_id' => null,
         ],
     ];

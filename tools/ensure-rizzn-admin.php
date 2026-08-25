@@ -26,8 +26,8 @@ if (strlen($pass) < REPS_DASH_PASSWORD_MIN) {
     exit(2);
 }
 
-$fake = ['ops', 'agent', 'maria', 'alex', 'pat', 'mark'];
-$keep = ['rizzn', 'jim', 'seven', 'chuck', 'leon', 'chuck-work', 'jim-work'];
+$fake = ['ops', 'agent', 'maria', 'alex', 'pat', 'mark', 'jim', 'seven', 'jim-work'];
+$keep = ['rizzn', 'chuck', 'chuck-work', 'leon'];
 $out = ['ok' => true, 'rizzn_id' => null, 'renamed_mark' => false, 'deleted' => [], 'password_set' => false];
 
 $pdo = repsDashDb();

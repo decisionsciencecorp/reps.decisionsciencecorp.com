@@ -41,16 +41,20 @@ repsDashRenderHeader((string) $session['session_id'], $activeNav);
   </a>
 </p>
 <?php
-repsDashRenderPageHeader(
-    (string) $session['session_id'],
-    'Hours-feed session · Shift field shape (Doc #818)'
-        . (repsDashLiveDataEnabled() ? ' · live' : ' · fixture fallback')
-);
+$sessSub = trim((string) ($session['day'] ?? ''));
+if ($sessSub === '') {
+    $sessSub = 'Capture session';
+} else {
+    $sessSub = 'Capture session · ' . $sessSub;
+}
+repsDashRenderPageHeader((string) $session['session_id'], $sessSub);
 ?>
 
 <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
   <?php repsDashStatusPill((string) $session['status']); ?>
-  <span class="small text-muted">Partner <code><?php echo htmlspecialchars((string) ($session['partner_code'] ?? 'C6N9T7')); ?></code></span>
+  <?php if (repsDashCanSeePartnerCode($user) && trim((string) ($session['partner_code'] ?? '')) !== ''): ?>
+    <span class="small text-muted">Partner <code><?php echo htmlspecialchars((string) $session['partner_code']); ?></code></span>
+  <?php endif; ?>
 </div>
 
 <div class="row g-3 mb-4">
@@ -131,7 +135,7 @@ repsDashRenderPageHeader(
         <?php endif; ?>
       <?php endif; ?>
       <p class="small text-muted mt-3 mb-0">
-        Session video is not in Shift’s hours-feed API. When media exists, this page is the slot for it.
+        Session video isn’t available in Reps yet. When it is, it will appear here.
       </p>
     </div>
   </div>

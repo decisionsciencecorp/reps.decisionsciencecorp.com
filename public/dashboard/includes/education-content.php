@@ -94,14 +94,14 @@ function repsDashEducationCatalog(): array
             'teaser' => 'Each business gets its own Shift partner code. Download paperwork codes are not the same thing.',
             'tags' => ['setup', 'partner', 'sales'],
             'roles' => array_values(array_unique(array_merge($sales, $owners))),
-            'source' => 'Shift dashboard + DSC research Doc #818',
+            'source' => 'Shift dashboard',
             'media' => [
                 repsDashEduVideo('task-0.mp4', 'task-poster.jpg', 'Hours only land when workers are tied to the right partner book.'),
             ],
             'article' => [
-                ['type' => 'p', 'text' => 'Two different strings show up in the wild. Mixing them is the #1 onboarding foot-gun.'],
+                ['type' => 'p', 'text' => 'Two different codes show up in the wild. Mixing them breaks onboarding.'],
                 ['type' => 'ul', 'items' => [
-                    'Partner code (example on DSC’s live book: C6N9T7) — shown on Shift Team / Settings / hours-feed. Ties workers and sessions to that Partner account.',
+                    'Partner code — shown under Settings when you’re on admin/ops. Ties workers and sessions to your Partner account.',
                     'Install / download paperwork code — only used to get the app from a specific download path. Not the book identifier.',
                 ]],
                 ['type' => 'callout', 'text' => 'Sales: every shop you onboard needs its own partner code from Shift. Don’t reuse one shop’s code across a whole city.'],
@@ -289,7 +289,7 @@ function repsDashEducationCatalog(): array
             'teaser' => 'Combined score (hands + camera + on-task) fell below the minimum — most common live reject.',
             'tags' => ['reject', 'health'],
             'roles' => $allLearners,
-            'source' => 'Shift app · reject help + live hours-feed',
+            'source' => 'Shift app · reject help',
             'media' => [
                 repsDashEduVideo('hands-0.mp4', 'hands-poster.jpg', 'Hands'),
                 repsDashEduVideo('camera-0.mp4', 'camera-poster.jpg', 'Camera'),
@@ -427,7 +427,7 @@ function repsDashEducationCatalog(): array
             'teaser' => 'QUARANTINED_FRAUD — hours don’t count until review. Don’t coach workarounds.',
             'tags' => ['reject', 'fraud'],
             'roles' => $allLearners,
-            'source' => 'Shift hours-feed (live codes)',
+            'source' => 'Shift reject codes',
             'media' => [
                 repsDashEduVideo('task-0.mp4', 'task-poster.jpg', 'Legitimate continuous work only.'),
             ],
@@ -520,15 +520,15 @@ function repsDashEducationCatalog(): array
             'id' => 'reps-sales',
             'section' => 'Your Reps seat',
             'title' => 'Sales desk in Reps',
-            'teaser' => 'Shops = pipeline; Money = book $ + producers. No session inbox.',
+            'teaser' => 'Use Shops for your pipeline and Money for earnings and who produced them.',
             'tags' => ['reps', 'sales'],
             'roles' => $sales,
-            'source' => 'Reps Slice A',
+            'source' => 'Reps Education',
             'media' => [
                 repsDashEduVideo('task-0.mp4', 'task-poster.jpg', 'Your job is producing shops — not QA’ing every clip.'),
             ],
             'article' => [
-                ['type' => 'p', 'text' => 'Open a producer from Money for worker drill-down. Use Education Center when a shop’s acceptance dips.'],
+                ['type' => 'p', 'text' => 'Open a producer from Money to see their hours by day. Use Education Center when a shop’s acceptance dips.'],
             ],
         ],
         [
@@ -538,12 +538,12 @@ function repsDashEducationCatalog(): array
             'teaser' => 'Team, sessions, My pay — scoped to your shop only.',
             'tags' => ['reps', 'owner'],
             'roles' => ['business_owner'],
-            'source' => 'Reps Slice A',
+            'source' => 'Reps Education',
             'media' => [
                 repsDashEduVideo('hands-1.mp4', 'hands-poster.jpg', 'Coach your crew from reject reasons.'),
             ],
             'article' => [
-                ['type' => 'p', 'text' => 'Invite workers by phone in Shift Team. Tap a name for acceptance, rejects, and day drill-down.'],
+                ['type' => 'p', 'text' => 'Invite workers by phone in Shift Team. Tap a name for acceptance, rejects, and day-by-day hours.'],
             ],
         ],
         [
@@ -553,7 +553,7 @@ function repsDashEducationCatalog(): array
             'teaser' => 'Home and Sessions show only your work — match reject codes to the articles here.',
             'tags' => ['reps', 'worker'],
             'roles' => ['employee', 'individual'],
-            'source' => 'Reps Slice A',
+            'source' => 'Reps Education',
             'media' => [
                 repsDashEduVideo('hands-0.mp4', 'hands-poster.jpg', 'Your acceptance is mostly framing + task quality.'),
             ],

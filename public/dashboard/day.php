@@ -70,7 +70,7 @@ repsDashRenderHeader($title, $active);
   </a>
 </p>
 <?php
-repsDashRenderPageHeader($title, 'A single day’s activity (mock · Shift day drill-down)');
+repsDashRenderPageHeader($title, 'Sessions for this day');
 ?>
 
 <div class="row g-3 mb-4">
@@ -107,7 +107,7 @@ repsDashRenderPageHeader($title, 'A single day’s activity (mock · Shift day d
   repsDashRenderSessionTable($sessions, [
       'variant' => 'day',
       'show_operator' => $operatorId <= 0,
-      'empty' => 'No sessions this day in mock scope.',
+      'empty' => 'No sessions on this day.',
   ]);
   ?>
 </div>

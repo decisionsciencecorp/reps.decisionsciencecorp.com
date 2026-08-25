@@ -25,20 +25,19 @@ $showShop = !$selfOnly || $role === 'employee';
 $showOperator = !$selfOnly && $filterOp <= 0;
 
 $subtitle = $selfOnly
-    ? 'Your capture / hours rows (mock · Shift hours-feed shape)'
-    : ('Hours-feed rows in your scope (mock)'
-        . (repsDashCanSeePartnerCode($user) ? ' · Partner C6N9T7' : ''));
+    ? 'Your accepted and rejected capture sessions'
+    : 'Capture sessions in your scope';
 if ($filterLabel !== null) {
-    $subtitle = 'Filtered to ' . $filterLabel . ' · ' . $subtitle;
+    $subtitle = 'Filtered to ' . $filterLabel;
 }
 
 repsDashRenderHeader('Sessions', 'sessions');
-repsDashRenderPageHeader($selfOnly ? 'My sessions' : 'Sessions / hours', $subtitle);
+repsDashRenderPageHeader($selfOnly ? 'My sessions' : 'Sessions', $subtitle);
 ?>
 
 <?php if ($filterOp > 0): ?>
   <p class="mb-3">
-    <a class="small" href="<?php echo htmlspecialchars(repsDashOperatorHref($filterOp)); ?>">← Worker detail</a>
+    <a class="small" href="<?php echo htmlspecialchars(repsDashOperatorHref($filterOp)); ?>">← Worker</a>
     · <a class="small" href="/dashboard/sessions.php">Clear filter</a>
   </p>
 <?php endif; ?>

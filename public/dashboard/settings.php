@@ -22,9 +22,9 @@ $pulse = repsDashPulseForUser($user);
 
 repsDashRenderHeader('Settings', 'settings');
 repsDashRenderPageHeader('Settings', match ($role) {
-    'admin' => 'Skin lab + sync + platform stubs',
-    'ops' => 'Skin + Shift sync status',
-    'agent' => 'Platform / API stubs for the service principal',
+    'admin' => 'Display, sync status, and platform links',
+    'ops' => 'Display and hours sync status',
+    'agent' => 'Platform links for this service account',
     default => 'Your display preferences',
 });
 ?>
@@ -33,8 +33,8 @@ repsDashRenderPageHeader('Settings', match ($role) {
   <?php if (in_array('skin', $panels, true)): ?>
   <div class="col-lg-6">
     <div class="surface p-3">
-      <h2 class="h5 mb-3">UI skin</h2>
-      <p class="text-muted small">Same four skins as Docket / Tasks / CRM. Saved on your user record.</p>
+      <h2 class="h5 mb-3">Look &amp; feel</h2>
+      <p class="text-muted small">Choose a theme for this desk. Saved on your account.</p>
       <form method="post" class="d-grid gap-2">
         <?php echo repsDashCsrfField(); ?>
         <?php foreach (repsDashSkinAvailableSlugs() as $slug): ?>
@@ -44,7 +44,7 @@ repsDashRenderPageHeader('Settings', match ($role) {
             <a class="small ms-auto" href="?preview_skin=<?php echo urlencode($slug); ?>">preview</a>
           </label>
         <?php endforeach; ?>
-        <button type="submit" class="btn btn-primary mt-2">Save skin</button>
+        <button type="submit" class="btn btn-primary mt-2">Save theme</button>
       </form>
     </div>
   </div>
@@ -53,24 +53,22 @@ repsDashRenderPageHeader('Settings', match ($role) {
   <div class="col-lg-6">
     <?php if (in_array('sync', $panels, true)): ?>
     <div class="surface p-3 mb-3">
-      <h2 class="h5 mb-2">Shift sync</h2>
+      <h2 class="h5 mb-2">Hours sync</h2>
       <dl class="row mb-0 small">
         <dt class="col-5">Partner code</dt><dd class="col-7"><code><?php echo htmlspecialchars($pulse['partner_code']); ?></code></dd>
         <dt class="col-5">Last sync</dt><dd class="col-7"><?php echo htmlspecialchars($pulse['last_sync']); ?></dd>
-        <dt class="col-5">Live data</dt><dd class="col-7"><?php echo !empty($pulse['live_data']) ? 'yes' : 'no (fixtures)'; ?></dd>
-        <dt class="col-5">Worker</dt><dd class="col-7"><code>tools/poll-shift.php</code> · Shift match UI</dd>
-        <dt class="col-5">Re-auth</dt><dd class="col-7 text-muted">Cookie jar / OTP runbook</dd>
+        <dt class="col-5">Using live hours</dt><dd class="col-7"><?php echo !empty($pulse['live_data']) ? 'Yes' : 'No — demo data only'; ?></dd>
+        <dt class="col-5">Pull hours</dt><dd class="col-7"><a href="/dashboard/shift-match.php">Worker match</a></dd>
       </dl>
     </div>
     <?php endif; ?>
 
     <?php if (in_array('platform', $panels, true)): ?>
     <div class="surface p-3">
-      <h2 class="h5 mb-2">Platform</h2>
+      <h2 class="h5 mb-2">Integrations</h2>
       <ul class="small mb-0">
-        <li><code>/dashboard/api/</code> — Slice D JSON (see <a href="/dashboard/api/">README</a>)</li>
-        <li><code>reps_sdk/</code> — Python client over <code>/dashboard/api/</code></li>
-        <li><code>smcp_plugin/reps/</code> — SMCP CLI stub (<code>--describe</code>)</li>
+        <li><a href="/dashboard/api/">JSON API</a> for sync workers and tools</li>
+        <li>Python client: <code>reps_sdk/</code></li>
       </ul>
     </div>
     <?php endif; ?>
@@ -80,7 +78,7 @@ repsDashRenderPageHeader('Settings', match ($role) {
       <h2 class="h5 mb-2">Account</h2>
       <p class="small text-muted mb-0">
         <?php echo htmlspecialchars(repsDashScopeBlurb($role)); ?>
-        Shop roster invites and password reset land in Slice B.
+        Ask an admin if you need a password reset or a teammate invited.
       </p>
     </div>
     <?php endif; ?>

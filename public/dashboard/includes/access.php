@@ -289,7 +289,7 @@ function repsDashViewsRolesMatrix(): array
                 'admin' => 'Roster + Worker match',
                 'ops' => 'Worker match (no provisioning)',
                 'sales' => '—',
-                'business_owner' => '— (team invite = Slice B)',
+                'business_owner' => '— (team invite coming)',
                 'employee' => '—',
                 'individual' => '—',
                 'agent' => '—',
@@ -368,7 +368,7 @@ function repsDashViewsRolesMatrix(): array
         [
             'view' => 'api',
             'label' => 'HTTP API',
-            'purpose' => '/dashboard/api/* (Slice D+)',
+            'purpose' => 'JSON API for integrations',
             'cells' => $cells([
                 'admin' => 'Session + key',
                 'ops' => 'Session',

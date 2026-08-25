@@ -12,17 +12,19 @@ $wizard = repsDashIsWizardHome($user);
 $steps = $wizard ? repsDashWizardStepsForRole($role) : [];
 
 $live = !empty($pulse['live_data']);
-$dataTag = $live ? 'live Shift data' : 'fixture fallback';
 $subtitle = match ($role) {
-    'employee', 'individual' => 'Your personal pulse · ' . $dataTag,
-    'business_owner' => 'Your shop pulse · ' . $dataTag,
-    'agent' => 'Service principal · use /dashboard/api/ with an API key',
-    default => 'Pulse for your seat · ' . $dataTag
+    'employee', 'individual' => 'Your hours and recent capture',
+    'business_owner' => 'Your shop at a glance',
+    'agent' => 'API service account — use an API key with /dashboard/api/',
+    'sales' => 'Your book and open leads',
+    'ops' => 'Production health across the book',
+    'admin' => 'Portfolio overview'
         . (repsDashCanSeePartnerCode($user) ? ' · Partner ' . $pulse['partner_code'] : ''),
+    default => 'Overview for your seat',
 };
 
 if ($wizard) {
-    $subtitle = 'First-run tour for your seat · finish anytime to open normal Home';
+    $subtitle = 'Quick tour — finish anytime to open your home screen';
 }
 
 repsDashRenderHeader('Home', 'home');
@@ -32,9 +34,8 @@ repsDashRenderPageHeader('Home', $subtitle);
 <?php if ($wizard): ?>
 <div class="rd-wizard" id="rdWizard" data-step-count="<?php echo count($steps); ?>">
   <div class="alert alert-primary border-0 mb-3">
-    <strong>Wizard mode.</strong>
-    New learner seats (sales, owner, employee, individual) start here.
-    Admin and ops skip straight to the normal desk.
+    <strong>Welcome.</strong>
+    A short walkthrough of this desk — skip anytime if you already know your way around.
   </div>
 
   <div class="rd-wizard__progress mb-3" role="progressbar" aria-valuemin="1" aria-valuemax="<?php echo count($steps); ?>" aria-valuenow="1">
@@ -112,36 +113,16 @@ repsDashRenderPageHeader('Home', $subtitle);
 
 <?php if (!empty($pulse['demo_banner'])): ?>
 <div class="alert alert-warning border-0 mb-3">
-  <strong>Fixture fallback.</strong> No live Shift sessions in this database yet — numbers come from seed fixtures.
-  Run Shift sync (Admin → Shift match → Pull, or <code>tools/poll-shift.php</code>) to load the book.
-  <?php if (repsDashCanSeePartnerCode($user)): ?>
-    Last sync: <?php echo htmlspecialchars($pulse['last_sync']); ?>.
-  <?php endif; ?>
-  <?php if (repsDashUsesLearnerChrome($role)): ?>
-    <span class="d-block d-md-inline ms-md-1">
-      Prefer the tour?
-      <form method="post" action="/dashboard/onboarding.php" class="d-inline">
-        <?php echo repsDashCsrfField(); ?>
-        <input type="hidden" name="action" value="restart">
-        <button type="submit" class="btn btn-link btn-sm p-0 align-baseline">Replay Home wizard</button>
-      </form>
-    </span>
+  <strong>Hours aren’t syncing yet.</strong>
+  Figures on this screen may be incomplete until the next successful sync.
+  <?php if (in_array($role, ['admin', 'ops'], true)): ?>
+    Last attempt: <?php echo htmlspecialchars($pulse['last_sync']); ?>.
+    Use <a href="/dashboard/shift-match.php">Worker match</a> to pull hours.
   <?php endif; ?>
 </div>
-<?php elseif (repsDashCanSeePartnerCode($user)): ?>
-<div class="alert alert-success border-0 mb-3">
-  <strong>Live Shift data.</strong>
-  Last sync: <?php echo htmlspecialchars($pulse['last_sync']); ?>.
-  JSON API: <a href="/dashboard/api/">/dashboard/api/</a>.
-  <?php if (repsDashUsesLearnerChrome($role)): ?>
-    <span class="d-block d-md-inline ms-md-1">
-      <form method="post" action="/dashboard/onboarding.php" class="d-inline">
-        <?php echo repsDashCsrfField(); ?>
-        <input type="hidden" name="action" value="restart">
-        <button type="submit" class="btn btn-link btn-sm p-0 align-baseline">Replay Home wizard</button>
-      </form>
-    </span>
-  <?php endif; ?>
+<?php elseif (in_array($role, ['admin', 'ops'], true) && repsDashCanSeePartnerCode($user)): ?>
+<div class="alert alert-light border mb-3 py-2 small">
+  Last hours sync: <?php echo htmlspecialchars($pulse['last_sync']); ?>.
 </div>
 <?php endif; ?>
 
@@ -199,9 +180,9 @@ repsDashRenderPageHeader('Home', $subtitle);
 
 <?php if (in_array('agent_stub', $blocks, true)): ?>
 <div class="surface p-4 mb-4">
-  <h2 class="h5 mb-2">Agent / API principal</h2>
-  <p class="mb-2">This seat is <strong>not</strong> a human ops login. Sync workers and SMCP tools authenticate with an API key against <code>/dashboard/api/</code> (Slice D–E).</p>
-  <p class="mb-0 text-muted small">No shops, operators, sessions, or money screens. Use Dev Mode only to confirm agents stay off the human desk.</p>
+  <h2 class="h5 mb-2">API service account</h2>
+  <p class="mb-2">This account is for integrations only. Authenticate with an API key against <code>/dashboard/api/</code>.</p>
+  <p class="mb-0 text-muted small">It has no shops, operators, sessions, or money screens.</p>
 </div>
 <?php endif; ?>
 
@@ -244,7 +225,7 @@ repsDashRenderPageHeader('Home', $subtitle);
       repsDashRenderSessionTable($sessions, [
           'variant' => 'recent',
           'limit' => 8,
-          'empty' => 'No sessions yet (mock).',
+          'empty' => 'No sessions yet.',
       ]);
       ?>
       <a class="btn btn-sm btn-outline-primary mt-3" href="/dashboard/sessions.php">All my sessions</a>
@@ -315,7 +296,7 @@ repsDashRenderPageHeader('Home', $subtitle);
     <?php if (in_array('team_pulse', $blocks, true)): ?>
     <div class="surface p-3 mb-3">
       <h2 class="h5 mb-2">Team</h2>
-      <p class="mb-2"><?php echo (int) $pulse['operators_active']; ?> active operators on your shop (mock).</p>
+      <p class="mb-2"><?php echo (int) $pulse['operators_active']; ?> active operators on your shop.</p>
       <a class="btn btn-sm btn-outline-primary" href="/dashboard/operators.php">Open team roster</a>
     </div>
     <?php endif; ?>
@@ -326,9 +307,7 @@ repsDashRenderPageHeader('Home', $subtitle);
       <p class="mb-1"><strong><?php echo htmlspecialchars($user['display_name']); ?></strong></p>
       <p class="mb-0 text-muted small">
         Role <strong><?php echo htmlspecialchars(repsDashRoleLabel($role)); ?></strong>
-        (<code><?php echo htmlspecialchars($role); ?></code>) —
-        <?php echo htmlspecialchars(repsDashScopeBlurb($role)); ?>
-        Use Dev Mode to switch seats; see <a href="/dashboard/access.php">Views × roles</a>.
+        — <?php echo htmlspecialchars(repsDashScopeBlurb($role)); ?>
       </p>
     </div>
     <?php endif; ?>

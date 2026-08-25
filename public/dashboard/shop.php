@@ -53,7 +53,7 @@ repsDashRenderHeader((string) $shop['name'], 'shops');
 <?php
 repsDashRenderPageHeader(
     (string) $shop['name'],
-    'Shop detail · contact, notes, and team (mock hours until Slice C)'
+    'Contact, notes, and team'
 );
 ?>
 
@@ -93,7 +93,7 @@ repsDashRenderPageHeader(
   </div>
   <div class="col-6 col-md-3">
     <div class="surface p-3 h-100">
-      <div class="text-muted small">Shop split (mock)</div>
+      <div class="text-muted small">Shop capture share</div>
       <div class="fs-3 fw-semibold"><?php echo htmlspecialchars((string) round((float) $shop['agreed_shop_split'] * 100)); ?>%</div>
     </div>
   </div>
@@ -127,7 +127,7 @@ repsDashRenderPageHeader(
           <label class="form-label visually-hidden" for="shop-notes">Pipeline notes</label>
           <textarea class="form-control mb-2" id="shop-notes" name="notes" rows="5" maxlength="4000"><?php echo htmlspecialchars((string) $shop['notes']); ?></textarea>
           <button type="submit" class="btn btn-primary btn-sm">Save notes</button>
-          <span class="small text-muted ms-2">Saved on this dashboard (survives reload). Shift sync comes in Slice C.</span>
+          <span class="small text-muted ms-2">Saved for everyone who can open this shop.</span>
         </form>
       <?php else: ?>
         <p class="mb-0 small"><?php echo htmlspecialchars((string) $shop['notes']); ?></p>

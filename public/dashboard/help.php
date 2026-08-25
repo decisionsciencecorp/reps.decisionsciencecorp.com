@@ -118,7 +118,12 @@ repsDashRenderPageHeader(
 </div>
 
 <p class="text-muted small mt-3 mb-0">
-  Also see <a href="/dashboard/access.php">Views × roles</a> (Dev Mode) and the machine-readable <a href="/dashboard/api/">API index</a>.
+  <?php if (repsDashIsDevMode()): ?>
+    Dev Mode: <a href="/dashboard/access.php">Views × roles</a>.
+  <?php endif; ?>
+  <?php if (in_array((string) $user['role'], ['admin', 'ops', 'agent'], true)): ?>
+    <a href="/dashboard/api/">API index</a>
+  <?php endif; ?>
 </p>
 
 <?php repsDashRenderFooter(); ?>

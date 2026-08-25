@@ -129,7 +129,7 @@ $shiftBase = repsShiftApiBase();
 ?>
 <div class="surface p-3 mb-4 d-flex flex-wrap gap-3 align-items-center justify-content-between">
   <div class="small">
-    <div>Live data: <strong><?php echo $live ? 'on' : 'off (mock)'; ?></strong></div>
+    <div>Live hours: <strong><?php echo $live ? 'on' : 'off (demo data)'; ?></strong></div>
     <div>Partner code: <code><?php echo htmlspecialchars($partner !== '' ? $partner : '—'); ?></code></div>
     <div>Last sync: <?php echo htmlspecialchars($lastSync !== '' ? $lastSync : 'never'); ?></div>
     <div>API base: <code><?php echo htmlspecialchars($shiftBase); ?></code></div>

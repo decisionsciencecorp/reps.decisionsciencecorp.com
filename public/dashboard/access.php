@@ -17,15 +17,15 @@ $current = (string) $user['role'];
 repsDashRenderHeader('Views × roles', 'access');
 repsDashRenderPageHeader(
     'Views × roles',
-    'What each seat can open and what data it sees — PRD Doc #990 §5.5. Live mock enforces this matrix.'
+    'What each seat can open and what data it sees'
 );
 ?>
 
 <div class="alert alert-info border-0 mb-3">
-  You are auditing as <strong><?php echo htmlspecialchars(repsDashRoleLabel($current)); ?></strong>
+  You are viewing as <strong><?php echo htmlspecialchars(repsDashRoleLabel($current)); ?></strong>
   (<code><?php echo htmlspecialchars($current); ?></code>).
   <?php echo htmlspecialchars(repsDashScopeBlurb($current)); ?>
-  Switch seats from the Dev Mode bar; this table is the contract.
+  Switch seats from the Dev Mode bar to walk the matrix.
 </div>
 
 <div class="surface p-0 mb-4">
@@ -64,26 +64,17 @@ repsDashRenderPageHeader(
 </div>
 
 <div class="surface p-3 mb-4">
-  <h2 class="h5 mb-2">Session video / media</h2>
+  <h2 class="h5 mb-2">Notes</h2>
   <p class="mb-2 small text-muted">
-    <strong>*</strong> We are not running our own capture app on this surface yet.
-    Individual session rows (and any clip playback) only exist if <strong>Shift for Business</strong>
-    (or a future DSC app) exposes them over API — no video player in Reps until then.
+    Session video isn’t in Reps yet. When Partner exposes clips, they’ll appear on the session page.
   </p>
   <p class="mb-2 small text-muted">
-    <strong>Money is four peers, not one table:</strong>
-    Admin = DSC portfolio · Ops = hours/reject drag · Sales = book earnings + producers ·
-    Owner = “My pay” (shop keep + who produced). Sales has no Operators nav — producers live in Money.
-  </p>
-  <p class="mb-2 small text-muted">
-    <strong>Drill-down (Shift-shaped):</strong>
-    Money / Team names → Worker detail → By day → Day sessions.
-    Live Shift walk 2026-08-05: Overview → Team → <code>/dashboard/worker/{userId}</code> → day → session rows (hours-feed).
+    Money differs by seat: Admin = portfolio · Ops = hours/reject health · Sales = book earnings ·
+    Owner / solo = My pay. Sales finds producers under Money, not a separate Operators tab.
   </p>
   <p class="mb-0 small text-muted">
-    <strong>Learner chrome:</strong>
-    Sales, business owner, employee, and individual get a first-run Home wizard plus an Education Center tab.
-    Admin and ops (and agent) do not — they land on the normal desk.
+    Drill-down: Money or Team → worker → by day → sessions.
+    Sales, owners, employees, and individuals also get a short Home tour and Education Center.
   </p>
 </div>
 

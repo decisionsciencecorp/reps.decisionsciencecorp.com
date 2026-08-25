@@ -107,7 +107,7 @@ function repsDashRenderMoneyAdmin(array $user, array $shops, ?string $repFilter 
     ksort($byRepAll);
     usort($rows, static fn($a, $b) => $b['e']['gross'] <=> $a['e']['gross']);
 
-    $subtitle = 'DSC portfolio — ' . repsDashMoneyPieCaption() . ' → Stripe Connect';
+    $subtitle = 'Portfolio earnings · ' . repsDashMoneyPieCaption();
     if ($repFilter !== null) {
         $subtitle .= ' · filtered to @' . $repFilter;
     }
@@ -119,10 +119,9 @@ function repsDashRenderMoneyAdmin(array $user, array $shops, ?string $repFilter 
     repsDashRenderHeader('Money', 'money');
     repsDashRenderPageHeader('Money', $subtitle);
     ?>
-<div class="alert alert-dark border-0 mb-3">
-  <strong>Admin peer.</strong> Locked pie: DSC 25% · Affiliate 25% (none→DSC) · Capture 50% (shop XOR operator)
-  of whatever Shift pays that hour — not a fixed dollar rate.
-  Estimate shown at $<?php echo number_format($rate, 0); ?>/hr when the feed only has hours. Tap a rep to filter the shop ledger.
+<div class="alert alert-light border mb-3">
+  Split on accepted hours: DSC 25% · Affiliate 25% (unassigned affiliate share stays with DSC) · Capture 50% (shop or solo operator).
+  Estimates use $<?php echo number_format($rate, 0); ?>/hr when only hours are available. Click a rep to filter the shop list.
 </div>
 <div class="row g-3 mb-4">
   <div class="col-6 col-lg-3">
@@ -317,7 +316,7 @@ function repsDashRenderMoneyOps(array $user, array $shops): void
         $totHours += $e['hours'];
         $totGross += $e['gross'];
         $rr = (float) $shop['reject_rate'];
-        // Rough mock: reject drag ≈ rejected fraction of gross
+        // Est. reject impact ≈ rejected fraction of gross at the hourly rate
         $drag = $e['gross'] * $rr;
         $rejectDrag += $drag;
         $active = in_array($shop['status'], ['active', 'signed'], true);
@@ -333,11 +332,11 @@ function repsDashRenderMoneyOps(array $user, array $shops): void
     }
 
     repsDashRenderHeader('Money', 'money');
-    repsDashRenderPageHeader('Money', 'Ops pulse — hours health and dollar drag (mock)');
+    repsDashRenderPageHeader('Money', 'Hours health and estimated reject impact');
     ?>
-<div class="alert alert-secondary border-0 mb-3">
-  <strong>Ops peer.</strong> Watch production and reject drag across the book — not the admin portfolio ledger, not affiliate commission math.
-  Mock $<?php echo number_format($rate, 0); ?>/hr.
+<div class="alert alert-light border mb-3">
+  Watch production and reject impact across shops — not the full portfolio ledger or affiliate commission detail.
+  Estimates use $<?php echo number_format($rate, 0); ?>/hr.
 </div>
 
 <div class="row g-3 mb-4">
@@ -370,7 +369,7 @@ function repsDashRenderMoneyOps(array $user, array $shops): void
 <div class="surface p-3 mb-3">
   <h2 class="h5 mb-3">Needs attention</h2>
   <?php if ($hotReject === []): ?>
-    <p class="small text-muted mb-0">Nothing flagged on mock thresholds.</p>
+    <p class="small text-muted mb-0">Nothing flagged right now.</p>
   <?php else: ?>
     <div class="table-responsive">
       <table class="table table-sm align-middle mb-0">
@@ -424,7 +423,7 @@ function repsDashRenderMoneyOps(array $user, array $shops): void
         </tr>
       <?php endforeach; ?>
       <?php if ($healthy === []): ?>
-        <tr><td colspan="4" class="text-muted">No quieter shops in mock set.</td></tr>
+        <tr><td colspan="4" class="text-muted">No other shops in scope.</td></tr>
       <?php endif; ?>
       </tbody>
     </table>
@@ -489,11 +488,11 @@ function repsDashRenderMoneySales(array $user, array $shops): void
     ));
 
     repsDashRenderHeader('Money', 'money');
-    repsDashRenderPageHeader('Money', 'Your book — shops, sourced individuals · ' . repsDashMoneyPieCaption());
+    repsDashRenderPageHeader('Money', 'Your book — shops and sourced operators · ' . repsDashMoneyPieCaption());
     ?>
-<div class="alert alert-secondary border-0 mb-3">
-  <strong>Sales peer.</strong> Pipeline economics for <em>your</em> book: shops you own <em>and</em> individuals you sourced.
-  Affiliate share is 25% of partner payout on accepted hours; capture stays with shop or solo operator.
+<div class="alert alert-light border mb-3">
+  Earnings estimates for shops you own and operators you sourced.
+  Your affiliate share is 25% of partner payout on accepted hours; capture stays with the shop or solo operator.
 </div>
 <?php repsDashRenderConnectPayoutPanel($user); ?>
 
@@ -650,11 +649,11 @@ function repsDashRenderMoneyOwner(array $user, array $shops): void
     }
 
     repsDashRenderHeader('My pay', 'money');
-    repsDashRenderPageHeader('My pay', $shop['name'] . ' — capture share (50% of partner payout)');
+    repsDashRenderPageHeader('My pay', $shop['name'] . ' — your shop’s capture share');
     ?>
-<div class="alert alert-success border-0 mb-3">
-  <strong>Business owner peer.</strong> This is <em>your</em> shop’s paycheck view — hours your team produced and what the shop keeps.
-  You do not see DSC’s books, other shops, or affiliate commission math.
+<div class="alert alert-light border mb-3">
+  Hours your team produced and what this shop keeps (50% of partner payout on accepted hours).
+  You won’t see other shops or DSC’s internal ledger here.
 </div>
 <?php repsDashRenderConnectPayoutPanel($user); ?>
 
@@ -770,11 +769,11 @@ function repsDashRenderMoneySolo(array $user): void
     $e = repsDashMoneyIndividualEconomics($self, $rate);
 
     repsDashRenderHeader('My pay', 'money');
-    repsDashRenderPageHeader('My pay', 'Solo capture — 50% of partner payout to you');
+    repsDashRenderPageHeader('My pay', 'Your capture earnings');
     ?>
-<div class="alert alert-success border-0 mb-3">
-  <strong>Solo operator.</strong> When your sessions are accepted, the capture share (50% of what Shift paid) is owed to you — not a shop.
-  If you also have an affiliate seat, that 25% lands on the same payout account. Link a bank below.
+<div class="alert alert-light border mb-3">
+  When your sessions are accepted, your capture share (50% of partner payout) is owed to you.
+  If you also have an affiliate seat, that share lands on the same payout account — link a bank below.
 </div>
 <?php repsDashRenderConnectPayoutPanel($user); ?>
 

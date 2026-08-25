@@ -54,7 +54,7 @@ function repsDashWizardStepsForRole(string $role): array
             [
                 'id' => 'welcome',
                 'title' => 'Welcome to Reps',
-                'body' => 'You’re on the affiliate / sales seat. This short tour shows where your book lives and how money works — then you can jump into the normal home pulse.',
+                'body' => 'You’re on the affiliate / sales seat. This short tour shows where your book lives and how money works — then you can jump into your normal home screen.',
             ],
             [
                 'id' => 'shops',
@@ -80,7 +80,7 @@ function repsDashWizardStepsForRole(string $role): array
             [
                 'id' => 'done',
                 'title' => 'You’re ready',
-                'body' => 'Finish the tour to open your normal Home pulse. You can restart the tour anytime from Settings or Dev Mode.',
+                'body' => 'Finish the tour to open your normal home screen. You can restart the tour anytime from Settings.',
             ],
         ],
         'business_owner' => [
@@ -120,7 +120,7 @@ function repsDashWizardStepsForRole(string $role): array
             [
                 'id' => 'done',
                 'title' => 'Tour complete',
-                'body' => 'Finish to land on your normal Home pulse for the shop.',
+                'body' => 'Finish to land on your normal home screen for the shop.',
             ],
         ],
         'individual' => [
@@ -153,7 +153,7 @@ function repsDashWizardStepsForRole(string $role): array
             [
                 'id' => 'done',
                 'title' => 'You’re set',
-                'body' => 'Finish the tour for your normal Home pulse (your hours and recent sessions).',
+                'body' => 'Finish the tour for your normal home screen (your hours and recent sessions).',
             ],
         ],
         'employee' => [
@@ -179,7 +179,7 @@ function repsDashWizardStepsForRole(string $role): array
             [
                 'id' => 'done',
                 'title' => 'You’re set',
-                'body' => 'Finish the tour for your normal Home pulse (your hours and recent sessions).',
+                'body' => 'Finish the tour for your normal home screen (your hours and recent sessions).',
             ],
         ],
         default => [

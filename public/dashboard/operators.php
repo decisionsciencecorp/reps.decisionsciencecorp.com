@@ -11,8 +11,8 @@ repsDashRenderHeader($isOwner ? 'Team' : 'Operators', 'operators');
 repsDashRenderPageHeader(
     $isOwner ? 'Team' : 'Operators',
     $isOwner
-        ? 'Manage who’s on your shop and open a worker for acceptance / day drill-down (Shift-shaped mock)'
-        : 'Workers in your scope — open a name for Worker detail (mock)'
+        ? 'People on your shop — open a name for hours and day detail'
+        : 'Workers in your scope — open a name for hours and day detail'
 );
 ?>
 

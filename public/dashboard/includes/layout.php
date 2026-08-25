@@ -206,11 +206,11 @@ function repsDashRenderFooter(): void
         }
         $partnerCode = ' · Partner code ' . $code;
     }
-    $dataLabel = repsDashLiveDataEnabled() ? 'live Partner data' : 'fixture fallback';
+    $dataLabel = repsDashLiveDataEnabled() ? 'hours from Partner sync' : 'demo data (sync off)';
     ?>
   </main>
   <footer class="container-fluid px-3 px-lg-4 pb-4">
-    <p class="text-muted small mb-0">Reps Dashboard · <?php echo htmlspecialchars($dataLabel); ?><?php echo htmlspecialchars($partnerCode); ?> · <a href="/">Marketing site</a> · <a href="/dashboard/help.php">Help</a> · <a href="/dashboard/api/">API</a></p>
+    <p class="text-muted small mb-0">Reps · <?php echo htmlspecialchars($dataLabel); ?><?php echo htmlspecialchars($partnerCode); ?> · <a href="/">Home site</a> · <a href="/dashboard/help.php">Help</a></p>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

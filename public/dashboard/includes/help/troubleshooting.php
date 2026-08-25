@@ -16,8 +16,8 @@ if (!defined('REPS_DASH_LOADED')) {
     </tr>
     <tr>
       <td>Empty shops / sessions</td>
-      <td>Scope IDs unset, or fixture mode with empty book</td>
-      <td>Confirm shop_id / operator_id; admin sync if live</td>
+      <td>Seat not linked to a shop/operator, or sync hasn’t run</td>
+      <td>Confirm shop / operator link; admin pulls hours from Worker match</td>
     </tr>
     <tr>
       <td>API <code>401 unauthorized</code></td>
@@ -60,9 +60,9 @@ if (!defined('REPS_DASH_LOADED')) {
       <td>Verify host Stripe webhook secret; check logs</td>
     </tr>
     <tr>
-      <td>Footer says fixture fallback</td>
-      <td>Live data disabled</td>
-      <td>Settings → Sync (admin/ops) / env</td>
+      <td>Footer says demo data</td>
+      <td>Live hours sync is off</td>
+      <td>Settings → Hours sync (admin/ops)</td>
     </tr>
   </tbody>
 </table>

@@ -170,7 +170,7 @@ function repsDashPulseForUser(array $user): array
     $live = repsDashLiveDataEnabled();
     $lastSync = repsDashAppMetaGet('shift.last_sync_at', '');
     if ($lastSync === '') {
-        $lastSync = $live ? 'live data · sync time unknown' : 'fixtures (mock)';
+        $lastSync = $live ? 'Sync time unavailable' : 'Demo data (Partner sync off)';
     }
     $partner = repsDashAppMetaGet('shift.partner_code', '');
     if ($partner === '') {

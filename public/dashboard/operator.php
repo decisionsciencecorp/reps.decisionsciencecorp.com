@@ -46,7 +46,7 @@ repsDashRenderHeader($op['name'], $activeNav);
 <?php
 repsDashRenderPageHeader(
     $op['name'],
-    'Worker detail · Shift-shaped rollup (mock) · ' . ($op['shop'] !== '— (individual)' ? $op['shop'] : 'Individual')
+    ($op['shop'] !== '— (individual)' ? $op['shop'] : 'Independent operator') . ' · hours and day detail'
 );
 ?>
 
@@ -144,7 +144,7 @@ repsDashRenderPageHeader(
       </thead>
       <tbody>
       <?php if ($stats['by_day'] === []): ?>
-        <tr><td colspan="6" class="text-muted p-3">No activity in mock set.</td></tr>
+        <tr><td colspan="6" class="text-muted p-3">No sessions yet for this worker.</td></tr>
       <?php endif; ?>
       <?php foreach ($stats['by_day'] as $d): ?>
         <tr>

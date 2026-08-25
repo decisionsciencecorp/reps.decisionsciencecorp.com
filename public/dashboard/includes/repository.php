@@ -6,7 +6,9 @@ if (!defined('REPS_DASH_LOADED')) {
 }
 
 /**
- * Data access seam — Slice A mock fixtures; Slice C live SQLite when sync has run.
+ * Data access seam — live SQLite when shift.live_data is on (or sessions exist).
+ * Mock fixtures are Slice A / local demo only — never used as a silent fill-in
+ * when the live book is intentionally empty.
  */
 
 require_once __DIR__ . '/shift-sync.php';
@@ -15,10 +17,7 @@ require_once __DIR__ . '/shift-sync.php';
 function repsDashAllShops(): array
 {
     if (repsDashLiveDataEnabled()) {
-        $shops = repsDashDbShopsAsRows();
-        if ($shops !== []) {
-            return $shops;
-        }
+        return repsDashDbShopsAsRows();
     }
     $shops = repsDashMockShops();
     try {
@@ -89,10 +88,7 @@ function repsDashDbShopsAsRows(): array
 function repsDashAllOperators(): array
 {
     if (repsDashLiveDataEnabled()) {
-        $ops = repsDashDbOperatorsAsRows();
-        if ($ops !== []) {
-            return $ops;
-        }
+        return repsDashDbOperatorsAsRows();
     }
     return repsDashMockOperators();
 }

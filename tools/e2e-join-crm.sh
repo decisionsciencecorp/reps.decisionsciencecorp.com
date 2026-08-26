@@ -7,7 +7,6 @@ PORT="${REPS_E2E_PORT:-8765}"
 DB="${TMPDIR:-/tmp}/reps-e2e-$$.sqlite"
 rm -f "$DB"
 export REPS_DASH_DB_PATH="$DB"
-export REPS_DASH_DEV_MODE=0
 export REPS_LEADS_WEBHOOK_URL=
 export REPS_LEADS_WEBHOOK_SECRET=
 

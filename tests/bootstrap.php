@@ -8,7 +8,6 @@ define('REPS_PHPUNIT', true);
 $tmp = sys_get_temp_dir() . '/reps-phpunit-' . getmypid() . '.sqlite';
 @unlink($tmp);
 putenv('REPS_DASH_DB_PATH=' . $tmp);
-putenv('REPS_DASH_DEV_MODE=0');
 putenv('REPS_LEADS_WEBHOOK_URL=');
 putenv('REPS_LEADS_WEBHOOK_SECRET=');
 

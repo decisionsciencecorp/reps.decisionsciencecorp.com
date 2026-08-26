@@ -65,33 +65,29 @@ def _csrf_from_html(html: str) -> str:
 
 
 def mint_agent_key(base: str) -> tuple[str, int]:
-    """Admin demo login → create API key for agent seat. Returns (key, agent_user_id)."""
+    """Admin password login → create API key for agent seat. Returns (key, agent_user_id)."""
     s = requests.Session()
     login_url = f"{base}/dashboard/login.php"
     r = s.get(login_url, timeout=30)
     r.raise_for_status()
     csrf = _csrf_from_html(r.text)
-    # Dev Mode one-click seat (mark = admin)
+    admin_user = os.environ.get("REPS_DASH_ADMIN_USERNAME", "rizzn")
+    admin_pass = os.environ.get("REPS_DASH_ADMIN_PASSWORD", "")
+    if not admin_pass:
+        pf = _load_pass_file()
+        admin_pass = pf.get("REPS_DASH_ADMIN_PASSWORD", "") or os.environ.get(
+            "REPS_DASH_SEED_PASSWORD", "reps-demo"
+        )
     r = s.post(
         login_url,
-        data={"csrf_token": csrf, "dev_username": "mark"},
+        data={
+            "csrf_token": csrf,
+            "username": admin_user,
+            "password": admin_pass,
+        },
         timeout=30,
         allow_redirects=True,
     )
-    if "Sign out" not in r.text and "dashboard" not in r.url:
-        # Fallback: password login
-        r = s.get(login_url, timeout=30)
-        csrf = _csrf_from_html(r.text)
-        r = s.post(
-            login_url,
-            data={
-                "csrf_token": csrf,
-                "username": "mark",
-                "password": os.environ.get("REPS_DASH_SEED_PASSWORD", "reps-demo"),
-            },
-            timeout=30,
-            allow_redirects=True,
-        )
     me = s.get(f"{base}/dashboard/api/me.php", timeout=30)
     me.raise_for_status()
     me_j = me.json()
@@ -103,7 +99,7 @@ def mint_agent_key(base: str) -> tuple[str, int]:
     # Hit users.php is HTML. Prefer: login as agent after mint? We need agent id from DB.
     # Workaround: create key for a known username by posting create with user_id from
     # GET that doesn't exist — instead parse users.php for @agent row id… messy.
-    # Better: use switch-role isn't API. Seed agent is typically username agent.
+    # Seed agent is typically username agent.
     # Session as mark can create key; get agent id from list-api-keys after creating for guessed ids.
     # Simplest reliable path: POST create-api-key with user_id discovered from
     # a small PHP-less approach — scrape users.php ledger for @agent.

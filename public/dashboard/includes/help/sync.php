@@ -9,6 +9,9 @@ if (!defined('REPS_DASH_LOADED')) {
 <h3 class="h5">Theme</h3>
 <p>Every seat can pick a look (hey / ledger / brutalist / obsidian). Preference is stored on your account.</p>
 
+<h3 class="h5 mt-4">Affiliate landing page (sales)</h3>
+<p>Sales seats see their public recruit link, direct apply URL, and affiliate code on Settings (and on Home / Money). Full documentation: <a href="/dashboard/help.php?page=affiliate-page">Help → Affiliate landing page</a>.</p>
+
 <h3 class="h5 mt-4">Hours sync (admin / ops)</h3>
 <ul>
   <li>When live hours are on, the desk shows Partner sync data — not demo numbers.</li>

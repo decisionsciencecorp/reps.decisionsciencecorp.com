@@ -27,7 +27,7 @@ if (!defined('REPS_DASH_LOADED')) {
 </ul>
 
 <h3 class="h5 mt-4">Views × roles matrix</h3>
-<p>When Dev Mode is on, open <a href="/dashboard/access.php">Views × roles</a> for the full grid used in planning. The matrix in that page mirrors product policy (including Help and Users dropdown).</p>
+<p class="small text-muted">Nav keys, home blocks, and Money modes are defined in product policy (<code>includes/access.php</code>) and enforced in PHP for UI and API.</p>
 
 <div class="alert alert-secondary mb-0">
   <strong>Agent:</strong> Prefer API keys on the <em>agent</em> seat. Browser desk is minimal (Home stub + Help + Settings). API elevation treats agent keys as ops-equivalent for book reads.

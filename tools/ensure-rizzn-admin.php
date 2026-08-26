@@ -32,7 +32,6 @@ $out = ['ok' => true, 'rizzn_id' => null, 'renamed_mark' => false, 'deleted' => 
 
 $pdo = repsDashDb();
 repsDashAppMetaSet('dash.skip_demo_seed', '1');
-repsDashAppMetaSet('dash.dev_mode', '0');
 
 $rizzn = repsDashFindUserRawByUsername('rizzn');
 $mark = repsDashFindUserRawByUsername('mark');

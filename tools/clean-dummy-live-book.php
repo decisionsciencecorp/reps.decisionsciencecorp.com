@@ -12,7 +12,7 @@ declare(strict_types=1);
  *
  *   php tools/clean-dummy-live-book.php
  *
- * Idempotent. Sets live_data on, demo seed locked, Dev Mode off.
+ * Idempotent. Sets live_data on, demo seed locked.
  */
 
 $root = dirname(__DIR__);
@@ -30,11 +30,9 @@ $out = [
 ];
 
 repsDashAppMetaSet('dash.skip_demo_seed', '1');
-repsDashAppMetaSet('dash.dev_mode', '0');
 repsDashSetLiveDataEnabled(true);
 $out['flags'] = [
     'skip_demo_seed' => repsDashAppMetaGet('dash.skip_demo_seed', ''),
-    'dev_mode' => repsDashIsDevMode() ? 'on' : 'off',
     'live_data' => repsDashLiveDataEnabled() ? '1' : '0',
 ];
 

@@ -31,7 +31,7 @@ bash tools/e2e-join-crm.sh
 Login platform for DSC Reps ops + affiliate seats. PRD: Tasks Doc **#990**.
 
 - Slice A: visual shell + skins + mock data.
-- Slice B: real session auth, SQLite users, admin provisioning, CSRF, Dev Mode env-gated.
+- Slice B: real session auth, SQLite users, admin provisioning, CSRF.
 - Join funnel + sales Leads CRM: migration `004_join_funnel`, public `/join*`, partial CRM.
 - Slice C: MicroPS hours + JoinShift team poll + Admin/Ops worker matcher (`shift-match.php`). Docs **#1093**.
 - Slice D: JSON API under `/dashboard/api/` (session + API key) — see `public/dashboard/api/README.md`.
@@ -46,9 +46,8 @@ Login platform for DSC Reps ops + affiliate seats. PRD: Tasks Doc **#990**.
 |------|--------|
 | DB | `db/dashboard.sqlite` (sibling of `public/` / multihost `html/`) |
 | Override | `REPS_DASH_DB_PATH` |
-| Dev Mode | Env default on for demo; **prod** sets SQLite `dash.dev_mode=0` (overrides env) |
-| Seed password | `reps-demo` (listed on login while Dev Mode is on) |
 | Login | username + password at `/dashboard/login.php` |
+| Dev branch | Optional seat picker / demo login on Git branch **`dev-mode`** (not deployed to multihost) |
 
 ### Code layout (`public/dashboard/includes/`)
 

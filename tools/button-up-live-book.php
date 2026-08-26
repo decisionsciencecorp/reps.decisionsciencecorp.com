@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Live-book hygiene: Dev Mode off, retire fixture shops/seats, dual affiliate+worker
+ * Live-book hygiene: retire fixture shops/seats, dual affiliate+worker
  * seats for Leon/Chuck/Jim, match Partner workers to those worker seats.
  *
  *   php tools/button-up-live-book.php
@@ -17,7 +17,6 @@ require_once $root . '/public/dashboard/includes/bootstrap.php';
 $pdo = repsDashDb();
 $out = [
     'ok' => true,
-    'dev_mode' => null,
     'retired_shops' => [],
     'deactivated_users' => [],
     'dual_seats' => [],
@@ -25,8 +24,7 @@ $out = [
     'shop_touches' => [],
 ];
 
-repsDashAppMetaSet('dash.dev_mode', '0');
-$out['dev_mode'] = repsDashIsDevMode() ? 'on' : 'off';
+repsDashAppMetaSet('dash.skip_demo_seed', '1');
 
 foreach ([104, 105, 106] as $sid) {
     $pdo->prepare(

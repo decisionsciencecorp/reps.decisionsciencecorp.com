@@ -33,49 +33,6 @@ function repsDashRenderPageHeader(string $title, string $subtitle = '', string $
     <?php
 }
 
-function repsDashRenderDevModeBar(?array $user): void
-{
-    if (!repsDashIsDevMode() || !$user) {
-        return;
-    }
-    $accounts = repsDashDevSwitchableSeats();
-    $return = $_SERVER['REQUEST_URI'] ?? '/dashboard/';
-    ?>
-  <div class="rd-dev-bar" role="region" aria-label="Dev Mode role picker">
-    <form method="post" action="/dashboard/switch-role.php" class="rd-dev-bar__form">
-      <?php echo repsDashCsrfField(); ?>
-      <input type="hidden" name="return" value="<?php echo htmlspecialchars($return); ?>">
-      <span class="rd-dev-bar__label"><i class="bi bi-tools me-1"></i>Dev Mode</span>
-      <label class="rd-dev-bar__select-wrap">
-        <span class="visually-hidden">Switch demo role</span>
-        <select name="username" class="form-select form-select-sm rd-dev-bar__select" onchange="this.form.submit()" aria-label="Switch demo seat">
-          <?php foreach ($accounts as $acct): ?>
-            <option value="<?php echo htmlspecialchars($acct['username']); ?>"<?php echo $acct['username'] === $user['username'] ? ' selected' : ''; ?>>
-              <?php echo htmlspecialchars(repsDashRoleLabel((string) $acct['role']) . ' — ' . $acct['display_name'] . ' (@' . $acct['username'] . ')'); ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-      </label>
-      <a class="rd-dev-bar__link" href="/dashboard/access.php">Views × roles</a>
-      <span class="rd-dev-bar__hint d-none d-lg-inline">Env-gated seat switcher (REPS_DASH_DEV_MODE=1).</span>
-    </form>
-    <?php if (repsDashUsesLearnerChrome((string) $user['role'])): ?>
-    <form method="post" action="/dashboard/onboarding.php" class="rd-dev-bar__onboarding m-0">
-      <?php echo repsDashCsrfField(); ?>
-      <input type="hidden" name="return" value="<?php echo htmlspecialchars($return); ?>">
-      <?php if (repsDashIsWizardHome($user)): ?>
-        <input type="hidden" name="action" value="finish">
-        <button type="submit" class="rd-dev-bar__link border-0 bg-transparent p-0">Exit wizard → normal Home</button>
-      <?php else: ?>
-        <input type="hidden" name="action" value="restart">
-        <button type="submit" class="rd-dev-bar__link border-0 bg-transparent p-0">Restart Home wizard</button>
-      <?php endif; ?>
-    </form>
-    <?php endif; ?>
-  </div>
-    <?php
-}
-
 function repsDashRenderHeader(string $title = '', string $active = 'home'): void
 {
     $user = repsDashCurrentUser();
@@ -122,7 +79,7 @@ function repsDashRenderHeader(string $title = '', string $active = 'home'): void
     if ($user && isset($nav['leads'])) {
         $leadsBadge = repsDashLeadsBadgeCount($user);
     }
-    $bodyClass = 'bg-light' . (repsDashIsDevMode() && $user ? ' rd-has-dev-bar' : '');
+    $bodyClass = 'bg-light';
     ?>
 <!DOCTYPE html>
 <html lang="en" data-skin-comp="<?php echo htmlspecialchars($skin); ?>">
@@ -136,7 +93,6 @@ function repsDashRenderHeader(string $title = '', string $active = 'home'): void
   <link href="<?php echo htmlspecialchars(repsDashSkinStylesheetHref($skin)); ?>" rel="stylesheet">
 </head>
 <body class="<?php echo htmlspecialchars($bodyClass); ?>">
-  <?php repsDashRenderDevModeBar(is_array($user) ? $user : null); ?>
   <nav class="navbar navbar-expand-lg <?php echo htmlspecialchars($navThemeClass); ?> admin-nav<?php echo $navLight ? '' : ' bg-dark'; ?>">
     <div class="container-fluid px-3 px-lg-4">
       <a class="navbar-brand fw-semibold d-inline-flex align-items-center gap-2" href="/dashboard/">

@@ -6,10 +6,10 @@ if (!defined('REPS_DASH_LOADED')) {
 }
 
 /**
- * Session auth (Slice B). Demo seat defs remain as seed fixtures in db.php.
+ * Session auth — password login only on main; Dev Mode lives on branch dev-mode.
  */
 
-/** Human labels for role badges / picker. */
+/** Human labels for role badges. */
 function repsDashRoleLabel(string $role): string
 {
     return match ($role) {
@@ -22,40 +22,6 @@ function repsDashRoleLabel(string $role): string
         'agent' => 'Agent',
         default => $role,
     };
-}
-
-/** Whether Dev Mode chrome (role picker) is shown. app_meta dash.dev_mode overrides env. */
-function repsDashIsDevMode(): bool
-{
-    try {
-        $meta = repsDashAppMetaGet('dash.dev_mode', '');
-        if ($meta !== '') {
-            return filter_var($meta, FILTER_VALIDATE_BOOLEAN);
-        }
-    } catch (Throwable $e) {
-        // fall through
-    }
-    return defined('REPS_DASH_DEV_MODE') && (bool) REPS_DASH_DEV_MODE;
-}
-
-/**
- * Slice A fixture usernames — never offered in Dev Mode once demo seed is locked.
- *
- * @return list<string>
- */
-function repsDashFixtureUsernames(): array
-{
-    return [
-        'mark',
-        'ops',
-        'agent',
-        'maria',
-        'alex',
-        'pat',
-        'jim',
-        'jim-work',
-        'seven-work',
-    ];
 }
 
 /**
@@ -78,53 +44,6 @@ function repsDashMatchableWorkerSeats(): array
     )));
 }
 
-/**
- * Dev Mode seat picker + quick login — active DB seats only on a live book.
- * Local demo may fall back to seed defs when the DB is empty and seed is not locked.
- *
- * @return list<array<string, mixed>>
- */
-function repsDashDevSwitchableSeats(): array
-{
-    $fromDb = [];
-    $dbOk = false;
-    try {
-        $fromDb = repsDashListUsers(true);
-        $dbOk = true;
-    } catch (Throwable $e) {
-        $fromDb = [];
-    }
-
-    if ($dbOk) {
-        if (repsDashDemoSeedLocked()) {
-            $deny = array_flip(array_map('strtolower', repsDashFixtureUsernames()));
-            $fromDb = array_values(array_filter(
-                $fromDb,
-                static fn(array $acct): bool => !isset($deny[strtolower((string) ($acct['username'] ?? ''))])
-            ));
-        }
-        return $fromDb;
-    }
-
-    if (repsDashDemoSeedLocked()) {
-        return [];
-    }
-
-    $out = [];
-    $i = 1;
-    foreach (repsDashSeedAccountDefs() as $row) {
-        $row['id'] = $i++;
-        $out[] = $row;
-    }
-    return $out;
-}
-
-/** @return list<array<string, mixed>> */
-function repsDashDemoAccounts(): array
-{
-    return repsDashDevSwitchableSeats();
-}
-
 function repsDashFindAccount(string $username): ?array
 {
     try {
@@ -142,7 +61,6 @@ function repsDashCurrentUser(): ?array
 {
     $userId = $_SESSION['reps_dash_user_id'] ?? null;
     if (!is_int($userId) && !(is_string($userId) && ctype_digit($userId))) {
-        // Legacy Slice A session: username only
         $username = $_SESSION['reps_dash_user'] ?? null;
         if (is_string($username) && $username !== '') {
             $user = repsDashFindAccount($username);
@@ -172,7 +90,7 @@ function repsDashApplySessionSkin(array $user): array
 function repsDashEstablishSession(array $user): void
 {
     $_SESSION['reps_dash_user_id'] = (int) $user['id'];
-    $_SESSION['reps_dash_user'] = (string) $user['username']; // legacy compat
+    $_SESSION['reps_dash_user'] = (string) $user['username'];
     if (!empty($user['skin_slug'])) {
         $_SESSION['reps_dash_skin'] = $user['skin_slug'];
     } else {
@@ -200,22 +118,6 @@ function repsDashLogin(string $username, string $password): bool
         return false;
     }
     $user = repsDashUserRowToSessionShape($raw);
-    if ($user === null) {
-        return false;
-    }
-    repsDashEstablishSession($user);
-    return true;
-}
-
-/**
- * Dev Mode / legacy: switch seat without password (only when Dev Mode on).
- */
-function repsDashLoginDemo(string $username): bool
-{
-    if (!repsDashIsDevMode()) {
-        return false;
-    }
-    $user = repsDashFindAccount($username);
     if ($user === null) {
         return false;
     }

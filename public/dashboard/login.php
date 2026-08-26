@@ -13,28 +13,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     repsDashRequireCsrf();
     $username = trim((string) ($_POST['username'] ?? ''));
     $password = (string) ($_POST['password'] ?? '');
-    $devPick = trim((string) ($_POST['dev_username'] ?? ''));
 
-    if ($devPick !== '' && repsDashIsDevMode()) {
-        if (repsDashLoginDemo($devPick)) {
-            header('Location: /dashboard/');
-            exit;
-        }
-        $error = 'Unknown Dev Mode seat.';
-    } elseif ($username !== '' && $password !== '' && repsDashLogin($username, $password)) {
+    if ($username !== '' && $password !== '' && repsDashLogin($username, $password)) {
         header('Location: /dashboard/');
         exit;
-    } else {
-        $error = 'Invalid username or password.';
     }
+    $error = 'Invalid username or password.';
 }
 
 $skin = repsDashSkinEffectiveSlug(null);
 $navLight = in_array($skin, ['hey', 'ledger'], true);
-$devMode = repsDashIsDevMode();
-$demoPassword = REPS_DASH_SEED_PASSWORD;
-$demoAccounts = repsDashDevSwitchableSeats();
-$liveBook = repsDashDemoSeedLocked();
 ?>
 <!DOCTYPE html>
 <html lang="en" data-skin-comp="<?php echo htmlspecialchars($skin); ?>">
@@ -57,48 +45,12 @@ $liveBook = repsDashDemoSeedLocked();
     <div class="page-header">
       <div class="page-header__title">
         <h1>Dashboard sign-in</h1>
-        <div class="subtitle"><?php echo $devMode ? 'Demo mode — use a seat below. Real password login still works.' : 'Sign in with your Reps username and password.'; ?></div>
+        <div class="subtitle">Sign in with your Reps username and password.</div>
       </div>
     </div>
 
     <?php if ($error !== ''): ?>
       <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
-    <?php endif; ?>
-
-    <?php if ($devMode && $demoAccounts !== []): ?>
-    <div class="surface p-3 mb-3">
-      <?php if ($liveBook): ?>
-        <p class="mb-2 fw-semibold">Active seats (Dev Mode)</p>
-        <p class="small text-muted mb-3">Quick switch below, or sign in with each seat’s real password.</p>
-      <?php else: ?>
-        <p class="mb-2 fw-semibold">Demo usernames &amp; passwords</p>
-        <p class="small text-muted mb-3">Shared password for every seed seat: <code><?php echo htmlspecialchars($demoPassword); ?></code></p>
-      <?php endif; ?>
-      <div class="table-responsive">
-        <table class="table table-sm align-middle mb-0">
-          <thead>
-            <tr>
-              <th>Username</th>
-              <?php if (!$liveBook): ?><th>Password</th><?php endif; ?>
-              <th>Role</th>
-              <th>Name</th>
-            </tr>
-          </thead>
-          <tbody>
-          <?php foreach ($demoAccounts as $acct): ?>
-            <tr>
-              <td><code><?php echo htmlspecialchars($acct['username']); ?></code></td>
-              <?php if (!$liveBook): ?>
-                <td><code><?php echo htmlspecialchars($demoPassword); ?></code></td>
-              <?php endif; ?>
-              <td><span class="badge text-bg-secondary"><?php echo htmlspecialchars(repsDashRoleLabel((string) $acct['role'])); ?></span></td>
-              <td><?php echo htmlspecialchars($acct['display_name']); ?></td>
-            </tr>
-          <?php endforeach; ?>
-          </tbody>
-        </table>
-      </div>
-    </div>
     <?php endif; ?>
 
     <div class="surface p-3 mb-3">
@@ -115,28 +67,6 @@ $liveBook = repsDashDemoSeedLocked();
         <button type="submit" class="btn btn-primary">Sign in</button>
       </form>
     </div>
-
-    <?php if ($devMode && $demoAccounts !== []): ?>
-    <div class="surface p-3 mb-3 border border-warning">
-      <p class="mb-2 fw-semibold"><i class="bi bi-tools me-1"></i>Quick seat (no password)</p>
-      <p class="small text-muted mb-3">Dev Mode one-click switch<?php echo $liveBook ? ' between live seats' : ''; ?>. Turn off with app meta <code>dash.dev_mode=0</code> or <code>REPS_DASH_DEV_MODE=0</code>.</p>
-      <div class="d-grid gap-2">
-        <?php foreach ($demoAccounts as $acct): ?>
-          <form method="post" class="m-0">
-            <?php echo repsDashCsrfField(); ?>
-            <input type="hidden" name="dev_username" value="<?php echo htmlspecialchars($acct['username']); ?>">
-            <button type="submit" class="btn btn-outline-warning w-100 text-start d-flex justify-content-between align-items-center">
-              <span>
-                <strong><?php echo htmlspecialchars($acct['display_name']); ?></strong>
-                <span class="text-muted small ms-2">@<?php echo htmlspecialchars($acct['username']); ?></span>
-              </span>
-              <span class="badge text-bg-secondary"><?php echo htmlspecialchars(repsDashRoleLabel((string) $acct['role'])); ?></span>
-            </button>
-          </form>
-        <?php endforeach; ?>
-      </div>
-    </div>
-    <?php endif; ?>
 
   </main>
 </body>

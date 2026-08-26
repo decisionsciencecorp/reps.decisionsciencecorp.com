@@ -14,7 +14,6 @@ $root = dirname(__DIR__);
 $tmpDb = sys_get_temp_dir() . '/reps-dash-scope-smoke-' . getmypid() . '.sqlite';
 @unlink($tmpDb);
 putenv('REPS_DASH_DB_PATH=' . $tmpDb);
-putenv('REPS_DASH_DEV_MODE=0');
 require_once $root . '/public/dashboard/includes/bootstrap.php';
 register_shutdown_function(static function () use ($tmpDb): void {
     @unlink($tmpDb);
@@ -40,7 +39,7 @@ function assertEq(mixed $got, mixed $want, string $msg): void
 function accountsByUsername(): array
 {
     $out = [];
-    foreach (repsDashDemoAccounts() as $a) {
+    foreach (repsDashListUsers(true) as $a) {
         $out[(string) $a['username']] = $a;
     }
     return $out;
@@ -145,7 +144,7 @@ assertTrue(repsDashFindOperator(9) !== null, 'find Pat via repository');
 assertTrue(repsDashFindShop(104) !== null, 'find Fleet Wash via repository');
 
 if ($failures === []) {
-    echo "OK — scope matrix smoke (" . count(repsDashDemoAccounts()) . " seats)\n";
+    echo "OK — scope matrix smoke (" . count(repsDashListUsers(true)) . " seats)\n";
     exit(0);
 }
 

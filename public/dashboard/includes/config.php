@@ -6,7 +6,7 @@ if (!defined('REPS_DASH_LOADED')) {
 }
 
 /**
- * Dashboard config — DB path, session, Dev Mode gate.
+ * Dashboard config — DB path, session.
  *
  * Multihost: public/ lands in html/; SQLite lives at ../db/dashboard.sqlite
  * (same sibling pattern as Docket/CRM). Override with REPS_DASH_DB_PATH.
@@ -41,17 +41,7 @@ if (!defined('REPS_DASH_PASSWORD_MIN')) {
     define('REPS_DASH_PASSWORD_MIN', 8);
 }
 
-/**
- * Dev Mode (role switcher / seat picker / demo creds on login).
- * Default ON in env while the product is still in demo.
- * Production: set app_meta `dash.dev_mode` = 0 (overrides env).
- */
-if (!defined('REPS_DASH_DEV_MODE')) {
-    $dev = repsDashEnvOrDefault('REPS_DASH_DEV_MODE', '1');
-    define('REPS_DASH_DEV_MODE', filter_var((string) $dev, FILTER_VALIDATE_BOOLEAN));
-}
-
-/** Shared seed password for Slice B demo seats (change via Users). */
+/** Shared seed password for local/test fixture seats (PHPUnit bootstrap). */
 if (!defined('REPS_DASH_SEED_PASSWORD')) {
     define('REPS_DASH_SEED_PASSWORD', (string) (repsDashEnvOrDefault('REPS_DASH_SEED_PASSWORD', 'reps-demo') ?? 'reps-demo'));
 }

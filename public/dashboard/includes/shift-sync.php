@@ -116,7 +116,7 @@ function repsShiftIngestGuard(array $feed, bool $allowEmptySessions = false): ?a
             'local_sessions' => $localCount,
             'feed_sessions' => 0,
             'refused' => true,
-            'message' => 'Hours-feed returned zero sessions while local book has data; ingest skipped to avoid poisoning.',
+            'message' => 'Hours-feed returned zero sessions while local data exists; ingest skipped to avoid overwriting.',
         ];
     }
 

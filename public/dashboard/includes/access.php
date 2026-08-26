@@ -143,10 +143,10 @@ function repsDashScopeBlurb(string $role): string
     return match ($role) {
         'admin' => 'Full desk: all shops, hours, economics, and user provisioning.',
         'ops' => 'Same operational desk as admin, without user provisioning or platform keys. Users menu → Worker match only.',
-        'sales' => 'Pipeline (Shops) plus Money for your book — shops and individuals you sourced. No session inbox.',
+        'sales' => 'Pipeline (Shops) plus Money for your territory — shops and individuals you sourced. No session inbox.',
         'business_owner' => 'Your shop only: roster, hours, and your shop’s pay display.',
         'employee' => 'Your own sessions and hours — not the shop ledger or other workers.',
-        'individual' => 'Your own capture/work only — no shop book.',
+        'individual' => 'Your own capture/work only — no shop roster.',
         'agent' => 'API/service principal — no human ops screens (use /dashboard/api/).',
         default => 'Limited scope.',
     };
@@ -177,7 +177,7 @@ function repsDashViewsRolesMatrix(): array
             'cells' => $cells([
                 'admin' => 'Normal desk (no wizard)',
                 'ops' => 'Normal desk (no wizard)',
-                'sales' => 'Wizard → book pulse + leads',
+                'sales' => 'Wizard → territory pulse + leads',
                 'business_owner' => 'Wizard → shop pulse + team',
                 'employee' => 'Wizard → my hours',
                 'individual' => 'Wizard → my hours',
@@ -271,11 +271,11 @@ function repsDashViewsRolesMatrix(): array
         [
             'view' => 'money',
             'label' => 'Money',
-            'purpose' => 'Economics (+ sales: who produces in the book)',
+            'purpose' => 'Economics (+ sales: who produces in your territory)',
             'cells' => $cells([
                 'admin' => 'DSC portfolio command',
                 'ops' => 'Hours health + reject drag',
-                'sales' => 'Affiliate book $ + shop & individual producers',
+                'sales' => 'Affiliate earnings + shop & individual producers',
                 'business_owner' => 'My pay (shop keep + Connect bank)',
                 'employee' => '—',
                 'individual' => 'My pay (solo capture + Connect bank)',
@@ -321,7 +321,7 @@ function repsDashViewsRolesMatrix(): array
                 'business_owner' => 'Desk + session API note',
                 'employee' => 'Desk + session API note',
                 'individual' => 'Desk + session API note',
-                'agent' => 'API book + Partner proxy',
+                'agent' => 'API data + Partner proxy',
             ]),
         ],
         [

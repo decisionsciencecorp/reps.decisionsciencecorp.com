@@ -7,7 +7,7 @@ repsDashRequireNavKey('shops', $user);
 $shops = repsDashShopsForUser($user);
 
 $subtitle = match ((string) $user['role']) {
-    'admin', 'ops' => 'All shops in the Reps book — open a shop for notes and team',
+    'admin', 'ops' => 'All shops — open a shop for notes and team',
     'business_owner' => 'Your shop — open it to update notes',
     default => 'Your assigned shops plus the unassigned pool — open a shop for notes and team',
 };

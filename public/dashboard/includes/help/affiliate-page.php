@@ -98,4 +98,4 @@ $isSales = is_array($user) && ($user['role'] ?? '') === 'sales';
   </details>
 </div>
 
-<p class="mb-0 mt-4 small text-muted">See also <a href="/dashboard/help.php?page=money">Money &amp; Stripe</a> for how affiliate earnings show in your book, and <a href="/dashboard/help.php?page=desks">Desks &amp; screens</a> for where Leads and Shops fit in your workflow.</p>
+<p class="mb-0 mt-4 small text-muted">See also <a href="/dashboard/help.php?page=money">Money &amp; Stripe</a> for how affiliate earnings appear on Money, and <a href="/dashboard/help.php?page=desks">Desks &amp; screens</a> for where Leads and Shops fit in your workflow.</p>

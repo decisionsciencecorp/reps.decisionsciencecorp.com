@@ -30,5 +30,5 @@ if (!defined('REPS_DASH_LOADED')) {
 <p class="small text-muted">Nav keys, home blocks, and Money modes are defined in product policy (<code>includes/access.php</code>) and enforced in PHP for UI and API.</p>
 
 <div class="alert alert-secondary mb-0">
-  <strong>Agent:</strong> Prefer API keys on the <em>agent</em> seat. Browser desk is minimal (Home stub + Help + Settings). API elevation treats agent keys as ops-equivalent for book reads.
+  <strong>Agent:</strong> Prefer API keys on the <em>agent</em> seat. Browser desk is minimal (Home stub + Help + Settings). API elevation treats agent keys as ops-equivalent for reads.
 </div>

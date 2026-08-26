@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $err = (string) ($res['error'] ?? 'unknown');
             if ($err === 'empty_feed_refused') {
                 $kept = (int) ($res['local_sessions'] ?? 0);
-                $flashErr = 'Hours source returned zero sessions; local book left untouched ('
+                $flashErr = 'Hours source returned zero sessions; existing data left untouched ('
                     . $kept . ' sessions kept). Team matching still ran if JoinShift was reachable.';
             } elseif ($err === 'partner_mismatch') {
                 $flashErr = 'Partner code mismatch — ingest refused to protect local data.';
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($res['ok'] ?? false) {
                     $sync = repsShiftPollLive();
                     $flash = 'Invite sent.'
-                        . (($sync['ok'] ?? false) ? ' Local book refreshed.' : ' (re-sync skipped or failed — pull manually)');
+                        . (($sync['ok'] ?? false) ? ' Session data refreshed.' : ' (re-sync skipped or failed — pull manually)');
                 } else {
                     $flashErr = 'Invite failed: ' . (string) ($res['error'] ?? 'unknown');
                 }

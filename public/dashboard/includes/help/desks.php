@@ -39,7 +39,7 @@ if (!defined('REPS_DASH_LOADED')) {
     </tr>
     <tr>
       <td><strong>Money / My pay</strong></td>
-      <td>Role-specific economics (portfolio, reject drag, affiliate book, Connect bank). Sales also see their landing-page links at the top.</td>
+      <td>Role-specific economics (portfolio, reject drag, affiliate earnings, Connect bank). Sales also see their landing-page links at the top.</td>
       <td>All except employee &amp; agent</td>
     </tr>
     <tr>

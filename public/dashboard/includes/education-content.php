@@ -96,13 +96,13 @@ function repsDashEducationCatalog(): array
             'roles' => array_values(array_unique(array_merge($sales, $owners))),
             'source' => 'Shift dashboard',
             'media' => [
-                repsDashEduVideo('task-0.mp4', 'task-poster.jpg', 'Hours only land when workers are tied to the right partner book.'),
+                repsDashEduVideo('task-0.mp4', 'task-poster.jpg', 'Hours only land when workers are tied to the right partner account.'),
             ],
             'article' => [
                 ['type' => 'p', 'text' => 'Two different codes show up in the wild. Mixing them breaks onboarding.'],
                 ['type' => 'ul', 'items' => [
                     'Partner code — shown under Settings when you’re on admin/ops. Ties workers and sessions to your Partner account.',
-                    'Install / download paperwork code — only used to get the app from a specific download path. Not the book identifier.',
+                    'Install / download paperwork code — only used to get the app from a specific download path. Not the partner identifier.',
                 ]],
                 ['type' => 'callout', 'text' => 'Sales: every shop you onboard needs its own partner code from Shift. Don’t reuse one shop’s code across a whole city.'],
             ],
@@ -297,7 +297,7 @@ function repsDashEducationCatalog(): array
             ],
             'article' => [
                 ['type' => 'p', 'text' => 'Code you’ll see: REJECTED_HEALTH_TOO_LOW. Improving any of hand visibility, camera quality, or on-task time raises the score.'],
-                ['type' => 'callout', 'text' => 'This is the most common reject on DSC’s live Partner book — coach it first.'],
+                ['type' => 'callout', 'text' => 'This is the most common reject on DSC’s live Partner program — coach it first.'],
             ],
         ],
         [
@@ -432,7 +432,7 @@ function repsDashEducationCatalog(): array
                 repsDashEduVideo('task-0.mp4', 'task-poster.jpg', 'Legitimate continuous work only.'),
             ],
             'article' => [
-                ['type' => 'p', 'text' => 'Seen live on DSC’s Partner book. Escalate; don’t invent fixes. Treat as serious.'],
+                ['type' => 'p', 'text' => 'Seen live in production captures. Escalate; don’t invent fixes. Treat as serious.'],
             ],
         ],
         [
@@ -459,7 +459,7 @@ function repsDashEducationCatalog(): array
             'roles' => $owners,
             'source' => 'Shift app · FAQ',
             'media' => [
-                repsDashEduVideo('task-0.mp4', 'task-poster.jpg', 'Accepted team hours drive the book.'),
+                repsDashEduVideo('task-0.mp4', 'task-poster.jpg', 'Accepted team hours drive earnings.'),
             ],
             'article' => [
                 ['type' => 'p', 'text' => 'Add US bank info in Shift Settings. Payout scheduling details: Shift team. In Reps, owners use My pay for the shop keep view.'],

@@ -15,7 +15,7 @@ if (!defined('REPS_DASH_LOADED')) {
   <strong>Two layers of truth:</strong>
   <ul class="mb-0 mt-2">
     <li><strong>Partner upstream</strong> — source of hours, workers, and team invites.</li>
-    <li><strong>Reps book</strong> — seats, shop/operator scope, match links, money pulse, API keys. Ingest copies upstream rows into the book; match is attribution, not a gate on ingest.</li>
+    <li><strong>Reps data</strong> — seats, shop/operator scope, match links, money pulse, API keys. Ingest copies upstream rows into Reps; match is attribution, not a gate on ingest.</li>
   </ul>
 </div>
 

@@ -6,7 +6,7 @@ if (!defined('REPS_DASH_LOADED')) {
 $base = 'https://reps.decisionsciencecorp.com/dashboard/api';
 ?>
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-  <h2 class="h4 mb-0"><i class="bi bi-code-slash me-2"></i>HTTP API — Reps book</h2>
+  <h2 class="h4 mb-0"><i class="bi bi-code-slash me-2"></i>HTTP API</h2>
   <span class="badge text-bg-primary">REST · JSON · v1</span>
 </div>
 
@@ -17,7 +17,7 @@ $base = 'https://reps.decisionsciencecorp.com/dashboard/api';
   <strong>Success:</strong> <code>{"ok": true, …}</code> · <strong>Error:</strong> <code>{"ok": false, "error": "code", "message": "…"}</code> + HTTP status.
 </div>
 
-<p>This chapter covers the <strong>book</strong> endpoints. Partner proxy routes are a separate chapter:
+<p>This chapter covers dashboard data endpoints. Partner proxy routes are a separate chapter:
 <?php if (repsDashCanSeeHelpPage('api-shift')): ?>
   <a href="/dashboard/help.php?page=api-shift">Partner API</a>.
 <?php else: ?>
@@ -32,7 +32,7 @@ $base = 'https://reps.decisionsciencecorp.com/dashboard/api';
       <h4 class="h6">API key</h4>
       <pre class="bg-light p-2 small mb-2"><code>X-API-Key: rd_live_…</code></pre>
       <pre class="bg-light p-2 small mb-0"><code>Authorization: Bearer rd_live_…</code></pre>
-      <p class="small text-muted mt-2 mb-0">If a key is present it wins over the session cookie. Prefer keys on the <strong>agent</strong> seat. Agent keys elevate to ops-equivalent book scope for reads.</p>
+      <p class="small text-muted mt-2 mb-0">If a key is present it wins over the session cookie. Prefer keys on the <strong>agent</strong> seat. Agent keys elevate to ops-equivalent read scope.</p>
     </div>
   </div>
   <div class="col-md-6">

@@ -26,7 +26,7 @@ $base = 'https://reps.decisionsciencecorp.com/dashboard/api/v1/shift';
           <tbody>
             <tr>
               <td><code>GET hours-feed.php</code></td>
-              <td>Mapped MicroPS hours (same JSON shape as the old hours-feed). Optional <code>?ingest=1</code> refreshes the local book and JoinShift team roster.</td>
+              <td>Mapped MicroPS hours (same JSON shape as the old hours-feed). Optional <code>?ingest=1</code> refreshes local session data and JoinShift team roster.</td>
             </tr>
             <tr>
               <td><code>GET workers.php</code></td>

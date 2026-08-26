@@ -95,7 +95,7 @@ function repsDashWizardStepsForRole(string $role, ?array $user = null): array
             [
                 'id' => 'welcome',
                 'title' => 'Welcome — your personal desk',
-                'body' => 'You’re capturing on your own (not under a shop book). This tour covers sessions, payout setup, and where to learn the basics.',
+                'body' => 'You’re capturing on your own (not on a shop team). This tour covers sessions, payout setup, and where to learn the basics.',
             ],
             [
                 'id' => 'sessions',
@@ -177,7 +177,7 @@ function repsDashSalesWizardSteps(?array $user): array
         [
             'id' => 'welcome',
             'title' => 'Welcome to Reps',
-            'body' => 'You’re on the affiliate / sales seat. This tour covers how you recruit operators and shops, where your links live, and how money shows up in your book.',
+            'body' => 'You’re on the affiliate / sales seat. This tour covers how you recruit operators and shops, where your links live, and how earnings show on Money.',
         ],
         [
             'id' => 'affiliate_intro',
@@ -227,7 +227,7 @@ function repsDashSalesWizardSteps(?array $user): array
         ],
         [
             'id' => 'money',
-            'title' => 'Money is your book view',
+            'title' => 'Money is your earnings view',
             'body' => 'Earnings estimates for shops you own and individuals you sourced live under Money. Your landing-page panel is also at the top of this screen.',
             'cta' => 'Open Money',
             'href' => '/dashboard/money.php',

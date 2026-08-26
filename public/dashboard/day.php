@@ -33,7 +33,7 @@ if ($operatorId > 0) {
     if (!repsDashCanOpenBookWideDay($user)) {
         http_response_code(403);
         repsDashRenderHeader('Day', 'home');
-        echo '<div class="alert alert-danger">Open a worker from Money (or Team) to view a day — no book-wide day inbox for this seat.</div>';
+        echo '<div class="alert alert-danger">Open a worker from Money (or Team) to view a day — this seat has no network-wide day inbox.</div>';
         echo '<a class="btn btn-outline-primary btn-sm" href="/dashboard/">Back home</a>';
         repsDashRenderFooter();
         exit;

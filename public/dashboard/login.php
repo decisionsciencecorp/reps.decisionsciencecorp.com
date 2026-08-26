@@ -33,7 +33,8 @@ $skin = repsDashSkinEffectiveSlug(null);
 $navLight = in_array($skin, ['hey', 'ledger'], true);
 $devMode = repsDashIsDevMode();
 $demoPassword = REPS_DASH_SEED_PASSWORD;
-$demoAccounts = repsDashDemoAccounts();
+$demoAccounts = repsDashDevSwitchableSeats();
+$liveBook = repsDashDemoSeedLocked();
 ?>
 <!DOCTYPE html>
 <html lang="en" data-skin-comp="<?php echo htmlspecialchars($skin); ?>">
@@ -64,16 +65,21 @@ $demoAccounts = repsDashDemoAccounts();
       <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
     <?php endif; ?>
 
-    <?php if ($devMode): ?>
+    <?php if ($devMode && $demoAccounts !== []): ?>
     <div class="surface p-3 mb-3">
-      <p class="mb-2 fw-semibold">Demo usernames &amp; passwords</p>
-      <p class="small text-muted mb-3">Shared password for every seed seat: <code><?php echo htmlspecialchars($demoPassword); ?></code></p>
+      <?php if ($liveBook): ?>
+        <p class="mb-2 fw-semibold">Active seats (Dev Mode)</p>
+        <p class="small text-muted mb-3">Quick switch below, or sign in with each seat’s real password.</p>
+      <?php else: ?>
+        <p class="mb-2 fw-semibold">Demo usernames &amp; passwords</p>
+        <p class="small text-muted mb-3">Shared password for every seed seat: <code><?php echo htmlspecialchars($demoPassword); ?></code></p>
+      <?php endif; ?>
       <div class="table-responsive">
         <table class="table table-sm align-middle mb-0">
           <thead>
             <tr>
               <th>Username</th>
-              <th>Password</th>
+              <?php if (!$liveBook): ?><th>Password</th><?php endif; ?>
               <th>Role</th>
               <th>Name</th>
             </tr>
@@ -82,7 +88,9 @@ $demoAccounts = repsDashDemoAccounts();
           <?php foreach ($demoAccounts as $acct): ?>
             <tr>
               <td><code><?php echo htmlspecialchars($acct['username']); ?></code></td>
-              <td><code><?php echo htmlspecialchars($demoPassword); ?></code></td>
+              <?php if (!$liveBook): ?>
+                <td><code><?php echo htmlspecialchars($demoPassword); ?></code></td>
+              <?php endif; ?>
               <td><span class="badge text-bg-secondary"><?php echo htmlspecialchars(repsDashRoleLabel((string) $acct['role'])); ?></span></td>
               <td><?php echo htmlspecialchars($acct['display_name']); ?></td>
             </tr>
@@ -108,10 +116,10 @@ $demoAccounts = repsDashDemoAccounts();
       </form>
     </div>
 
-    <?php if ($devMode): ?>
+    <?php if ($devMode && $demoAccounts !== []): ?>
     <div class="surface p-3 mb-3 border border-warning">
       <p class="mb-2 fw-semibold"><i class="bi bi-tools me-1"></i>Quick seat (no password)</p>
-      <p class="small text-muted mb-3">Dev Mode one-click switch. Turn off with <code>REPS_DASH_DEV_MODE=0</code>.</p>
+      <p class="small text-muted mb-3">Dev Mode one-click switch<?php echo $liveBook ? ' between live seats' : ''; ?>. Turn off with app meta <code>dash.dev_mode=0</code> or <code>REPS_DASH_DEV_MODE=0</code>.</p>
       <div class="d-grid gap-2">
         <?php foreach ($demoAccounts as $acct): ?>
           <form method="post" class="m-0">

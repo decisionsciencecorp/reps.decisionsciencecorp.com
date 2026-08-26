@@ -92,12 +92,7 @@ $workers = $pdo->query(
        display_name COLLATE NOCASE"
 )->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
-$users = $pdo->query(
-    "SELECT id, username, display_name, role, shop_id, operator_id
-     FROM users
-     WHERE is_active = 1 AND role IN ('individual','employee','business_owner')
-     ORDER BY display_name COLLATE NOCASE"
-)->fetchAll(PDO::FETCH_ASSOC) ?: [];
+$users = repsDashMatchableWorkerSeats();
 
 $userById = [];
 foreach ($users as $u) {

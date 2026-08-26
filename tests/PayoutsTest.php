@@ -66,6 +66,41 @@ final class PayoutsTest extends TestCase
         $this->assertFalse(repsDashIsDevMode());
     }
 
+    public function testDevSwitchableSeatsHideFixturesOnLiveBook(): void
+    {
+        repsDashAppMetaSet('dash.skip_demo_seed', '1');
+        $pdo = repsDashDb();
+        $hash = password_hash(REPS_DASH_SEED_PASSWORD, PASSWORD_DEFAULT);
+        $pdo->prepare(
+            'INSERT INTO users (username, email, password_hash, display_name, role, is_active)
+             SELECT ?, ?, ?, ?, ?, 1
+             WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = ? COLLATE NOCASE)'
+        )->execute(['jim', 'jim@example.com', $hash, 'Jim', 'sales', 'jim']);
+
+        $names = array_map(
+            static fn(array $a): string => (string) $a['username'],
+            repsDashDevSwitchableSeats()
+        );
+        $this->assertNotContains('jim', $names);
+        $this->assertNotContains('mark', $names);
+        $this->assertContains('chuck', $names);
+
+        $pdo->prepare('DELETE FROM users WHERE username = ? COLLATE NOCASE')->execute(['jim']);
+        repsDashAppMetaSet('dash.skip_demo_seed', '0');
+    }
+
+    public function testDevSwitchableSeatsNoSeedFallbackWhenLiveBookLocked(): void
+    {
+        repsDashAppMetaSet('dash.skip_demo_seed', '1');
+        $names = array_map(
+            static fn(array $a): string => (string) $a['username'],
+            repsDashDevSwitchableSeats()
+        );
+        $this->assertNotContains('mark', $names);
+        $this->assertNotContains('ops', $names);
+        repsDashAppMetaSet('dash.skip_demo_seed', '0');
+    }
+
     public function testSkipDemoSeedDoesNotRecreateDeletedFixture(): void
     {
         $pdo = repsDashDb();

@@ -38,7 +38,7 @@ function repsDashRenderDevModeBar(?array $user): void
     if (!repsDashIsDevMode() || !$user) {
         return;
     }
-    $accounts = repsDashDemoAccounts();
+    $accounts = repsDashDevSwitchableSeats();
     $return = $_SERVER['REQUEST_URI'] ?? '/dashboard/';
     ?>
   <div class="rd-dev-bar" role="region" aria-label="Dev Mode role picker">

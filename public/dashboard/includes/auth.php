@@ -39,21 +39,77 @@ function repsDashIsDevMode(): bool
 }
 
 /**
- * Seed account defs for smoke tests / Dev Mode list (same shape as session user).
- * Prefer DB rows when available; fall back to seed defs with synthetic ids.
+ * Slice A fixture usernames — never offered in Dev Mode once demo seed is locked.
+ *
+ * @return list<string>
+ */
+function repsDashFixtureUsernames(): array
+{
+    return [
+        'mark',
+        'ops',
+        'agent',
+        'maria',
+        'alex',
+        'pat',
+        'jim',
+        'jim-work',
+        'seven-work',
+    ];
+}
+
+/**
+ * Worker seats eligible for Partner worker match (admin / ops).
  *
  * @return list<array<string, mixed>>
  */
-function repsDashDemoAccounts(): array
+function repsDashMatchableWorkerSeats(): array
 {
+    $rows = repsDashDb()->query(
+        "SELECT id, username, display_name, role, shop_id, operator_id
+         FROM users
+         WHERE is_active = 1 AND role IN ('individual','employee','business_owner')
+         ORDER BY display_name COLLATE NOCASE, username COLLATE NOCASE"
+    )->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+    return array_values(array_filter(array_map(
+        static fn(array $row): ?array => repsDashUserRowToSessionShape($row),
+        $rows
+    )));
+}
+
+/**
+ * Dev Mode seat picker + quick login — active DB seats only on a live book.
+ * Local demo may fall back to seed defs when the DB is empty and seed is not locked.
+ *
+ * @return list<array<string, mixed>>
+ */
+function repsDashDevSwitchableSeats(): array
+{
+    $fromDb = [];
+    $dbOk = false;
     try {
         $fromDb = repsDashListUsers(true);
-        if ($fromDb !== []) {
-            return $fromDb;
-        }
+        $dbOk = true;
     } catch (Throwable $e) {
-        // fall through to seed defs
+        $fromDb = [];
     }
+
+    if ($dbOk) {
+        if (repsDashDemoSeedLocked()) {
+            $deny = array_flip(array_map('strtolower', repsDashFixtureUsernames()));
+            $fromDb = array_values(array_filter(
+                $fromDb,
+                static fn(array $acct): bool => !isset($deny[strtolower((string) ($acct['username'] ?? ''))])
+            ));
+        }
+        return $fromDb;
+    }
+
+    if (repsDashDemoSeedLocked()) {
+        return [];
+    }
+
     $out = [];
     $i = 1;
     foreach (repsDashSeedAccountDefs() as $row) {
@@ -61,6 +117,12 @@ function repsDashDemoAccounts(): array
         $out[] = $row;
     }
     return $out;
+}
+
+/** @return list<array<string, mixed>> */
+function repsDashDemoAccounts(): array
+{
+    return repsDashDevSwitchableSeats();
 }
 
 function repsDashFindAccount(string $username): ?array

@@ -27,4 +27,4 @@ if (!defined('REPS_DASH_LOADED')) {
   <li>Never put keys in query strings, Tasks bodies, or chat.</li>
 </ul>
 
-<p class="mb-0">See <a href="/dashboard/help.php?page=api">HTTP API (book)</a> for programmatic key create/revoke (admin only).</p>
+<p class="mb-0">See <a href="/dashboard/help.php?page=api">HTTP API</a> for programmatic key create/revoke (admin only).</p>

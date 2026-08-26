@@ -14,10 +14,9 @@ if (!defined('REPS_DASH_LOADED')) {
 
 <h3 class="h5 mt-4">Hours sync (admin / ops)</h3>
 <ul>
-  <li>When live hours are on, the desk shows Partner sync data — not demo numbers.</li>
   <li>Hours come from MicroPS; team roster / invite from JoinShift.</li>
   <li>Login cookies for those services live in the dashboard database (same pattern as Stripe keys).</li>
-  <li>The footer notes whether hours are from Partner sync or demo mode.</li>
+  <li>Admin/ops can pull hours from Worker match; the footer shows whether sync is on.</li>
   <li>Partner code (JoinShift matching identity) may be stored in app meta. MicroPS GM code is stored separately.</li>
 </ul>
 

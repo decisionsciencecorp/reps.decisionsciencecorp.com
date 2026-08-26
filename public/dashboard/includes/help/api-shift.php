@@ -114,11 +114,11 @@ $base = 'https://reps.decisionsciencecorp.com/dashboard/api/v1/shift';
 
   <div class="accordion-item">
     <h3 class="accordion-header">
-      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#rdShC6">Derived (local book)</button>
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#rdShC6">Derived (local data)</button>
     </h3>
     <div id="rdShC6" class="accordion-collapse collapse" data-bs-parent="#rdApiShift">
       <div class="accordion-body">
-        <p>Computed from ingested book data — no Partner mutation:</p>
+        <p>Computed from ingested Reps data — no Partner mutation:</p>
         <ul class="mb-0">
           <li><code>GET derived/worker.php?id=</code> — operator stats</li>
           <li><code>GET derived/day.php?date=YYYY-MM-DD</code></li>

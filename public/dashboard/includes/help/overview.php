@@ -9,7 +9,7 @@ if (!defined('REPS_DASH_LOADED')) {
   <span class="badge text-bg-primary">Reps Dashboard</span>
 </div>
 
-<p class="lead">Reps is Decision Science Corp’s operator desk for the Partner capture program: shops and people in the book, hours, money views, and (for staff) sync and worker matching.</p>
+<p class="lead">Reps is Decision Science Corp’s operator desk for the Partner capture program: shops, operators, hours, money views, and (for staff) sync and worker matching.</p>
 
 <div class="alert alert-info">
   <strong>Two layers of truth:</strong>
@@ -31,7 +31,7 @@ if (!defined('REPS_DASH_LOADED')) {
   <li><a href="/dashboard/settings.php">Settings</a> — theme; sync controls for admin/ops; affiliate links for sales</li>
   <li><a href="/dashboard/help.php?page=roles">Roles &amp; access</a> — what each badge means</li>
   <?php if (repsDashCanSeeHelpPage('api')): ?>
-    <li><a href="/dashboard/help.php?page=api">HTTP API (book)</a> — programmatic access</li>
+    <li><a href="/dashboard/help.php?page=api">HTTP API</a> — programmatic access</li>
   <?php endif; ?>
   <?php if (repsDashCanSeeHelpPage('api-shift')): ?>
     <li><a href="/dashboard/help.php?page=api-shift">Partner API</a> — proxy routes</li>

@@ -200,7 +200,7 @@ function repsDashRenderMoneyAdmin(array $user, array $shops, ?string $repFilter 
   </div>
   <div class="col-6 col-lg-3">
     <div class="surface p-3 h-100">
-      <div class="text-muted small">Gross book</div>
+      <div class="text-muted small">Gross volume (7d)</div>
       <div class="fs-3 fw-semibold">$<?php echo number_format($totGross, 2); ?></div>
     </div>
   </div>
@@ -402,7 +402,7 @@ function repsDashRenderMoneyOps(array $user, array $shops): void
 </div>
 
 <div class="surface p-3">
-  <h2 class="h5 mb-3">Rest of book</h2>
+  <h2 class="h5 mb-3">Other producers</h2>
   <div class="table-responsive">
     <table class="table table-sm align-middle mb-0">
       <thead><tr><th>Shop</th><th>Hours</th><th>Reject %</th><th>Active ops</th></tr></thead>
@@ -488,7 +488,7 @@ function repsDashRenderMoneySales(array $user, array $shops): void
     ));
 
     repsDashRenderHeader('Money', 'money');
-    repsDashRenderPageHeader('Money', 'Your book — shops and sourced operators · ' . repsDashMoneyPieCaption());
+    repsDashRenderPageHeader('Money', 'Your territory — shops and sourced operators · ' . repsDashMoneyPieCaption());
     ?>
 <?php repsDashRenderAffiliatePagePanel($user); ?>
 <div class="alert alert-light border mb-3">
@@ -506,7 +506,7 @@ function repsDashRenderMoneySales(array $user, array $shops): void
   </div>
   <div class="col-6 col-md-3">
     <div class="surface p-3 h-100">
-      <div class="text-muted small">Book hours (7d)</div>
+      <div class="text-muted small">Territory hours (7d)</div>
       <div class="fs-3 fw-semibold"><?php echo htmlspecialchars((string) round($bookHours, 1)); ?></div>
     </div>
   </div>
@@ -571,9 +571,9 @@ function repsDashRenderMoneySales(array $user, array $shops): void
 </div>
 
 <?php if ($shopBlocks === []): ?>
-  <div class="surface p-3 text-muted">No shops in your book yet.</div>
+  <div class="surface p-3 text-muted">No shops assigned to you yet.</div>
 <?php else: ?>
-  <h2 class="h5 mb-3">Shops in your book</h2>
+  <h2 class="h5 mb-3">Your shops</h2>
 <?php endif; ?>
 
 <?php foreach ($shopBlocks as $block):

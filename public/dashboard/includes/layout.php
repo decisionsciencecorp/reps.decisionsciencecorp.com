@@ -162,7 +162,7 @@ function repsDashRenderFooter(): void
         }
         $partnerCode = ' · Partner code ' . $code;
     }
-    $dataLabel = repsDashLiveDataEnabled() ? 'hours from Partner sync' : 'demo data (sync off)';
+    $dataLabel = repsDashLiveDataEnabled() ? 'Partner-synced hours' : 'Hours sync paused';
     ?>
   </main>
   <footer class="container-fluid px-3 px-lg-4 pb-4">

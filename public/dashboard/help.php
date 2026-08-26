@@ -47,7 +47,7 @@ function repsDashHelpPageMeta(): array
             'icon' => 'bi-cash-coin',
         ],
         'api' => [
-            'label' => 'HTTP API (book)',
+            'label' => 'HTTP API',
             'deck' => 'Auth, shops, operators, sessions, money, keys',
             'icon' => 'bi-code-slash',
         ],

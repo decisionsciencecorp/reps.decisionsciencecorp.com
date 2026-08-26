@@ -15,8 +15,8 @@ $subtitle = match ($role) {
     'employee', 'individual' => 'Your hours and recent capture',
     'business_owner' => 'Your shop at a glance',
     'agent' => 'API service account — use an API key with /dashboard/api/',
-    'sales' => 'Your book and open leads',
-    'ops' => 'Production health across the book',
+    'sales' => 'Your territory and open leads',
+    'ops' => 'Production health across the network',
     'admin' => 'Portfolio overview'
         . (repsDashCanSeePartnerCode($user) ? ' · Partner ' . $pulse['partner_code'] : ''),
     default => 'Overview for your seat',
@@ -121,13 +121,18 @@ repsDashRenderPageHeader('Home', $subtitle);
   <?php repsDashRenderAffiliatePagePanel($user); ?>
 <?php endif; ?>
 
-<?php if (!empty($pulse['demo_banner'])): ?>
+<?php if (!empty($pulse['sync_warning'])): ?>
 <div class="alert alert-warning border-0 mb-3">
-  <strong>Hours aren’t syncing yet.</strong>
-  Figures on this screen may be incomplete until the next successful sync.
-  <?php if (in_array($role, ['admin', 'ops'], true)): ?>
-    Last attempt: <?php echo htmlspecialchars($pulse['last_sync']); ?>.
-    Use <a href="/dashboard/shift-match.php">Worker match</a> to pull hours.
+  <?php if (($pulse['sync_warning_reason'] ?? '') === 'poll_error'): ?>
+    <strong>Latest hours pull did not finish.</strong>
+    Your existing session data is unchanged.
+    <?php if (in_array($role, ['admin', 'ops'], true)): ?>
+      Last issue: <code><?php echo htmlspecialchars((string) ($pulse['last_poll_error'] ?? 'unknown')); ?></code>.
+      Check credentials on <a href="/dashboard/shift-match.php">Worker match</a> and pull again.
+    <?php endif; ?>
+  <?php else: ?>
+    <strong>Partner hours sync is off.</strong>
+    Turn sync on in Settings or ask admin before trusting hour totals.
   <?php endif; ?>
 </div>
 <?php elseif (in_array($role, ['admin', 'ops'], true) && repsDashCanSeePartnerCode($user)): ?>
@@ -140,13 +145,13 @@ repsDashRenderPageHeader('Home', $subtitle);
 <div class="row g-3 mb-4">
   <div class="col-6 col-md-3">
     <div class="surface p-3 h-100">
-      <div class="text-muted small">Accepted hours (sample)</div>
-      <div class="fs-3 fw-semibold"><?php echo htmlspecialchars((string) $pulse['accepted_hours_sample']); ?></div>
+      <div class="text-muted small">Accepted hours</div>
+      <div class="fs-3 fw-semibold"><?php echo htmlspecialchars((string) $pulse['accepted_hours_total']); ?></div>
     </div>
   </div>
   <div class="col-6 col-md-3">
     <div class="surface p-3 h-100">
-      <div class="text-muted small"><?php echo $role === 'sales' ? 'Reject signals (book)' : 'Rejected sessions'; ?></div>
+      <div class="text-muted small"><?php echo $role === 'sales' ? 'Rejected in your territory' : 'Rejected sessions'; ?></div>
       <div class="fs-3 fw-semibold"><?php echo (int) $pulse['rejected_sessions']; ?></div>
     </div>
   </div>
@@ -169,8 +174,8 @@ repsDashRenderPageHeader('Home', $subtitle);
 <div class="row g-3 mb-4">
   <div class="col-6 col-md-4">
     <div class="surface p-3 h-100">
-      <div class="text-muted small">Your accepted hours (sample)</div>
-      <div class="fs-3 fw-semibold"><?php echo htmlspecialchars((string) $pulse['accepted_hours_sample']); ?></div>
+      <div class="text-muted small">Your accepted hours</div>
+      <div class="fs-3 fw-semibold"><?php echo htmlspecialchars((string) $pulse['accepted_hours_total']); ?></div>
     </div>
   </div>
   <div class="col-6 col-md-4">

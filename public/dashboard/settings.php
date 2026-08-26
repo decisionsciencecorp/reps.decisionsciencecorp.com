@@ -62,7 +62,7 @@ repsDashRenderPageHeader('Settings', match ($role) {
       <dl class="row mb-0 small">
         <dt class="col-5">Partner code</dt><dd class="col-7"><code><?php echo htmlspecialchars($pulse['partner_code']); ?></code></dd>
         <dt class="col-5">Last sync</dt><dd class="col-7"><?php echo htmlspecialchars($pulse['last_sync']); ?></dd>
-        <dt class="col-5">Using live hours</dt><dd class="col-7"><?php echo !empty($pulse['live_data']) ? 'Yes' : 'No — demo data only'; ?></dd>
+        <dt class="col-5">Partner hours sync</dt><dd class="col-7"><?php echo !empty($pulse['live_data']) ? 'On' : 'Off'; ?></dd>
         <dt class="col-5">Pull hours</dt><dd class="col-7"><a href="/dashboard/shift-match.php">Worker match</a></dd>
       </dl>
     </div>

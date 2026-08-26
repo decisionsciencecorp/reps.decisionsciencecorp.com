@@ -169,8 +169,11 @@ function repsDashPulseForUser(array $user): array
     ));
     $live = repsDashLiveDataEnabled();
     $lastSync = repsDashAppMetaGet('shift.last_sync_at', '');
+    $lastPollError = trim((string) repsDashAppMetaGet('shift.last_poll_error', ''));
     if ($lastSync === '') {
-        $lastSync = $live ? 'Sync time unavailable' : 'Demo data (Partner sync off)';
+        $lastSync = $live
+            ? ($lastPollError !== '' ? 'Last pull incomplete — see Worker match' : 'Not recorded yet')
+            : 'Partner sync is off';
     }
     $partner = repsDashAppMetaGet('shift.partner_code', '');
     if ($partner === '') {
@@ -179,7 +182,7 @@ function repsDashPulseForUser(array $user): array
     return [
         'last_sync' => $lastSync,
         'partner_code' => $partner,
-        'accepted_hours_sample' => round($accepted, 1),
+        'accepted_hours_total' => round($accepted, 1),
         'rejected_sessions' => $rejected,
         'pending_sessions' => $pending,
         'shops_visible' => count($shops),
@@ -188,7 +191,9 @@ function repsDashPulseForUser(array $user): array
         'apply_leads_open' => in_array($user['role'], ['admin', 'ops', 'sales'], true)
             ? repsDashCountOpenApplyLeads()
             : 0,
-        'demo_banner' => !$live,
+        'sync_warning' => !$live || $lastPollError !== '',
+        'sync_warning_reason' => !$live ? 'sync_off' : ($lastPollError !== '' ? 'poll_error' : ''),
+        'last_poll_error' => $lastPollError,
         'live_data' => $live,
     ];
 }

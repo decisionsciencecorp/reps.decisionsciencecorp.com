@@ -60,8 +60,8 @@ if (!defined('REPS_DASH_LOADED')) {
       <td>Verify host Stripe webhook secret; check logs</td>
     </tr>
     <tr>
-      <td>Footer says demo data</td>
-      <td>Live hours sync is off</td>
+      <td>Footer says hours sync paused</td>
+      <td>Partner hours sync is off</td>
       <td>Settings → Hours sync (admin/ops)</td>
     </tr>
   </tbody>

@@ -29,10 +29,11 @@ function repsDashShopsForUser(array $user): array
         return $shops;
     }
     if ($role === 'sales') {
+        // Own shops only — no unassigned pool, no other reps' shops (Mark 2026-09-02).
+        $username = (string) ($user['username'] ?? '');
         return array_values(array_filter(
             $shops,
-            static fn(array $s): bool => ($s['assigned_sales_rep'] ?? null) === $user['username']
-                || ($s['assigned_sales_rep'] ?? null) === null
+            static fn(array $s): bool => ($s['assigned_sales_rep'] ?? null) === $username
         ));
     }
     if ($role === 'business_owner' && isset($user['shop_id'])) {

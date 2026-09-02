@@ -20,11 +20,12 @@ if ($shop === null || !repsDashCanViewShop($user, $id)) {
 $flash = '';
 $flashErr = '';
 $canEditNotes = repsDashCanEditShopNotes($user, $id);
+$canReassign = in_array((string) ($user['role'] ?? ''), ['admin', 'ops'], true);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $canEditNotes) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($canEditNotes || $canReassign)) {
     repsDashRequireCsrf();
     $action = (string) ($_POST['action'] ?? '');
-    if ($action === 'save_notes') {
+    if ($action === 'save_notes' && $canEditNotes) {
         $notes = trim((string) ($_POST['notes'] ?? ''));
         if (strlen($notes) > 4000) {
             $flashErr = 'Notes must be 4000 characters or fewer.';
@@ -32,6 +33,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $canEditNotes) {
             repsDashSaveShopNotes($id, $notes, (int) $user['id']);
             $shop = repsDashFindShop($id) ?? $shop;
             $flash = 'Notes saved.';
+        }
+    } elseif ($action === 'reassign_sales' && $canReassign) {
+        $to = trim((string) ($_POST['assigned_sales_rep'] ?? ''));
+        $note = trim((string) ($_POST['reassign_note'] ?? ''));
+        $res = repsDashReassignShopSalesRep($id, $to === '' ? null : $to, $user, $note);
+        if (!empty($res['ok'])) {
+            $shop = $res['shop'] ?? (repsDashFindShop($id) ?? $shop);
+            $flash = 'Sales assignment updated.';
+        } else {
+            $flashErr = (string) ($res['error'] ?? 'Reassign failed.');
         }
     }
 }
@@ -71,6 +82,53 @@ repsDashRenderPageHeader(
     <?php echo htmlspecialchars((string) ($shop['assigned_sales_rep'] ?? '— unassigned')); ?>
   </span>
 </div>
+
+<?php if ($canReassign): ?>
+  <?php $salesPool = repsDashSalesUsernames(); ?>
+  <div class="surface p-3 mb-4">
+    <h2 class="h6 mb-2">Reassign sales rep</h2>
+    <p class="small text-muted mb-3">Admin/ops only. Moves this shop into another affiliate’s territory (audited).</p>
+    <form method="post" class="row g-2 align-items-end">
+      <?php echo repsDashCsrfField(); ?>
+      <input type="hidden" name="action" value="reassign_sales">
+      <div class="col-md-4">
+        <label class="form-label small" for="assigned_sales_rep">Sales seat</label>
+        <select class="form-select" name="assigned_sales_rep" id="assigned_sales_rep">
+          <option value="">— unassigned —</option>
+          <?php foreach ($salesPool as $uname): ?>
+            <option value="<?php echo htmlspecialchars($uname); ?>"
+              <?php echo (($shop['assigned_sales_rep'] ?? '') === $uname) ? 'selected' : ''; ?>>
+              <?php echo htmlspecialchars($uname); ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="col-md-5">
+        <label class="form-label small" for="reassign_note">Note (optional)</label>
+        <input class="form-control" type="text" name="reassign_note" id="reassign_note" maxlength="240" placeholder="Why reassign?">
+      </div>
+      <div class="col-md-3">
+        <button type="submit" class="btn btn-outline-primary w-100">Save assignment</button>
+      </div>
+    </form>
+    <?php $assignEvents = repsDashListShopAssignEvents($id, 5); ?>
+    <?php if ($assignEvents !== []): ?>
+      <ul class="small text-muted mt-3 mb-0">
+        <?php foreach ($assignEvents as $ev): ?>
+          <li>
+            <?php echo htmlspecialchars((string) ($ev['created_at'] ?? '')); ?>:
+            <?php echo htmlspecialchars((string) ($ev['from_rep'] ?? '—')); ?>
+            →
+            <?php echo htmlspecialchars((string) ($ev['to_rep'] ?? '—')); ?>
+            <?php if (trim((string) ($ev['note'] ?? '')) !== ''): ?>
+              — <?php echo htmlspecialchars((string) $ev['note']); ?>
+            <?php endif; ?>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+    <?php endif; ?>
+  </div>
+<?php endif; ?>
 
 <div class="row g-3 mb-4">
   <div class="col-6 col-md-3">

@@ -47,6 +47,77 @@ function repsDashNextRoundRobinSalesUsername(): ?string
     return $pick;
 }
 
+/**
+ * Admin/ops may reassign a shop’s sales rep. Audited in shop_assign_events.
+ *
+ * @return array{ok:bool,error?:string,shop?:array<string,mixed>}
+ */
+function repsDashReassignShopSalesRep(int $shopId, ?string $toRep, array $actor, string $note = ''): array
+{
+    $role = (string) ($actor['role'] ?? '');
+    if (!in_array($role, ['admin', 'ops'], true)) {
+        return ['ok' => false, 'error' => 'Only admin/ops can reassign shops.'];
+    }
+    $shop = repsDashFindShop($shopId);
+    if ($shop === null) {
+        return ['ok' => false, 'error' => 'Shop not found.'];
+    }
+    $to = $toRep !== null ? trim($toRep) : '';
+    if ($to === '') {
+        $to = null;
+    } elseif (!repsDashIsActiveSalesUsername($to)) {
+        return ['ok' => false, 'error' => 'Not an active sales username.'];
+    } else {
+        foreach (repsDashSalesUsernames() as $u) {
+            if (strtolower($u) === strtolower($to)) {
+                $to = $u;
+                break;
+            }
+        }
+    }
+    $from = $shop['assigned_sales_rep'] ?? null;
+    $from = $from !== null && $from !== '' ? (string) $from : null;
+    if ($from === $to) {
+        return ['ok' => true, 'shop' => $shop];
+    }
+
+    // Prefer live shops table when present; mock-only IDs fall through as no-op write.
+    try {
+        $stmt = repsDashDb()->prepare('UPDATE shops SET assigned_sales_rep = ? WHERE id = ?');
+        $stmt->execute([$to, $shopId]);
+    } catch (Throwable $e) {
+        return ['ok' => false, 'error' => 'Could not update shop assignment.'];
+    }
+
+    $ins = repsDashDb()->prepare(
+        'INSERT INTO shop_assign_events (shop_id, from_rep, to_rep, actor_user_id, note)
+         VALUES (?, ?, ?, ?, ?)'
+    );
+    $ins->execute([
+        $shopId,
+        $from,
+        $to,
+        (int) ($actor['id'] ?? 0) ?: null,
+        trim($note),
+    ]);
+
+    $fresh = repsDashFindShop($shopId) ?? $shop;
+    $fresh['assigned_sales_rep'] = $to;
+    return ['ok' => true, 'shop' => $fresh];
+}
+
+/**
+ * @return list<array<string, mixed>>
+ */
+function repsDashListShopAssignEvents(int $shopId, int $limit = 20): array
+{
+    $stmt = repsDashDb()->prepare(
+        'SELECT * FROM shop_assign_events WHERE shop_id = ? ORDER BY id DESC LIMIT ?'
+    );
+    $stmt->execute([$shopId, max(1, min(100, $limit))]);
+    return $stmt->fetchAll() ?: [];
+}
+
 function repsDashJoinKindFromPath(string $path): string
 {
     return $path === 'company' ? 'shop' : 'operator';

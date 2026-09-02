@@ -360,4 +360,46 @@ final class LeadsCrmTest extends TestCase
         $r = repsDashGraduateLeadToUser(999999, $admin);
         $this->assertFalse($r['ok']);
     }
+
+    public function testSalesShopsExcludeUnassignedAndOthers(): void
+    {
+        $jim = repsDashFindUserByUsername('jim');
+        $seven = repsDashFindUserByUsername('seven');
+        $this->assertNotNull($jim);
+        $jimIds = array_map(static fn($s) => (int) $s['id'], repsDashShopsForUser($jim));
+        $this->assertContains(104, $jimIds); // Fleet Wash assigned jim
+        $this->assertNotContains(999, $jimIds);
+        // Unassigned pool shop (mock id 109 typically) must not appear for sales
+        foreach (repsDashShopsForUser($jim) as $s) {
+            $this->assertSame('jim', $s['assigned_sales_rep'] ?? null);
+        }
+        foreach (repsDashShopsForUser($seven) as $s) {
+            $this->assertSame('seven', $s['assigned_sales_rep'] ?? null);
+            $this->assertNotSame('jim', $s['assigned_sales_rep'] ?? null);
+        }
+        // Sales A cannot see sales B shop
+        $sevenIds = array_map(static fn($s) => (int) $s['id'], repsDashShopsForUser($seven));
+        $this->assertNotContains(104, $sevenIds);
+    }
+
+    public function testAdminCanReassignShopSalesRepWithAudit(): void
+    {
+        $admin = repsDashFindUserByUsername('mark');
+        $sales = repsDashFindUserByUsername('jim');
+        $this->assertNotNull($admin);
+        $this->assertFalse(repsDashReassignShopSalesRep(104, 'jim', $sales)['ok']);
+
+        $r = repsDashReassignShopSalesRep(104, 'seven', $admin, 'ops move');
+        $this->assertTrue($r['ok']);
+        $this->assertSame('seven', $r['shop']['assigned_sales_rep'] ?? null);
+        $events = repsDashListShopAssignEvents(104, 5);
+        $this->assertNotEmpty($events);
+        $this->assertSame('seven', $events[0]['to_rep'] ?? null);
+        $this->assertSame('ops move', $events[0]['note'] ?? null);
+
+        // Move back for other tests that expect jim on 104
+        $back = repsDashReassignShopSalesRep(104, 'jim', $admin, 'restore');
+        $this->assertTrue($back['ok']);
+        $this->assertSame('jim', $back['shop']['assigned_sales_rep'] ?? null);
+    }
 }

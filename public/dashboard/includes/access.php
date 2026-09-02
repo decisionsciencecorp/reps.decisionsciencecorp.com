@@ -205,7 +205,7 @@ function repsDashViewsRolesMatrix(): array
             'cells' => $cells([
                 'admin' => 'All shops',
                 'ops' => 'All shops',
-                'sales' => 'Assigned + unassigned',
+                'sales' => 'Assigned to this seat only',
                 'business_owner' => 'Own shop (read)',
                 'employee' => '—',
                 'individual' => '—',

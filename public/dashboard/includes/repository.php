@@ -22,16 +22,22 @@ function repsDashAllShops(): array
     $shops = repsDashMockShops();
     try {
         $overlays = repsDashShopNotesMap();
+        $repMap = [];
+        foreach (repsDashDb()->query('SELECT id, assigned_sales_rep FROM shops') as $row) {
+            $repMap[(int) $row['id']] = $row['assigned_sales_rep'] !== null && $row['assigned_sales_rep'] !== ''
+                ? (string) $row['assigned_sales_rep']
+                : null;
+        }
     } catch (Throwable $e) {
-        return $shops;
-    }
-    if ($overlays === []) {
         return $shops;
     }
     foreach ($shops as &$shop) {
         $id = (int) $shop['id'];
         if (array_key_exists($id, $overlays)) {
             $shop['notes'] = $overlays[$id];
+        }
+        if (array_key_exists($id, $repMap)) {
+            $shop['assigned_sales_rep'] = $repMap[$id];
         }
     }
     unset($shop);

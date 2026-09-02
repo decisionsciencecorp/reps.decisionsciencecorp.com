@@ -430,6 +430,19 @@ function repsDashMigrate006ShiftSync(PDO $pdo): void
         )'
     );
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_op_match_op ON operator_match_events(operator_id)');
+
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS shop_assign_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            shop_id INTEGER NOT NULL,
+            from_rep TEXT,
+            to_rep TEXT,
+            actor_user_id INTEGER,
+            note TEXT NOT NULL DEFAULT \'\',
+            created_at TEXT NOT NULL DEFAULT (datetime(\'now\'))
+        )'
+    );
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_shop_assign_shop ON shop_assign_events(shop_id)');
 }
 
 function repsDashDemoSeedLocked(?PDO $pdo = null): bool

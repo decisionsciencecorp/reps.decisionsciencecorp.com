@@ -116,6 +116,25 @@ assertTrue(repsDashCanOpenBookWideDay($by['alex']), 'employee can open self day 
 assertTrue(repsDashCanViewOperator($by['jim'], 1), 'sales Money drill-down Alex OK');
 assertTrue(repsDashCanOpenOperatorDesk($by['jim']), 'sales can open operator desk');
 
+// --- Sales shops: assigned only (no unassigned pool) ---
+foreach (repsDashShopsForUser($by['jim']) as $s) {
+    assertEq($s['assigned_sales_rep'] ?? null, 'jim', 'jim shop must be assigned to jim');
+}
+foreach (repsDashShopsForUser($by['seven']) as $s) {
+    assertEq($s['assigned_sales_rep'] ?? null, 'seven', 'seven shop must be assigned to seven');
+}
+$jimShopIds = array_map(static fn($s) => (int) $s['id'], repsDashShopsForUser($by['jim']));
+assertTrue(in_array(104, $jimShopIds, true), 'jim sees Fleet Wash');
+assertTrue(!in_array(106, $jimShopIds, true), 'jim does not see unassigned pool shop');
+assertTrue(repsDashCanViewShop($by['mark'], 106), 'admin sees unassigned shop');
+
+// --- Admin reassign ---
+$re = repsDashReassignShopSalesRep(106, 'chuck', $by['mark'], 'scope-smoke');
+assertTrue(!empty($re['ok']), 'admin can assign unassigned shop to chuck');
+assertTrue(repsDashCanViewShop($by['chuck'], 106), 'chuck sees shop after reassign');
+assertTrue(!repsDashCanViewShop($by['jim'], 106), 'jim still cannot see chuck shop');
+repsDashReassignShopSalesRep(106, null, $by['mark'], 'restore unassigned');
+
 // --- Nav education matrix ---
 assertTrue(in_array('education', repsDashNavKeysForRole('sales'), true), 'sales has education');
 assertTrue(in_array('education', repsDashNavKeysForRole('business_owner'), true), 'owner has education');

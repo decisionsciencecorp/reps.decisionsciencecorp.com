@@ -18,7 +18,7 @@ if (!defined('REPS_DASH_LOADED')) {
 
 <h3 class="h5 mt-4">Stripe</h3>
 <ul>
-  <li>Connect onboarding for payout seats (owner / individual) lives on Money.</li>
+  <li>Connect onboarding for payout seats (owner / individual / <strong>sales</strong>) lives on Money.</li>
   <li>Webhook endpoint: <code>POST /dashboard/api/stripe-webhook.php</code> (Stripe signature; not session auth).</li>
   <li>Sandbox vs live is controlled by host env / Square-style Stripe keys on the server — never paste secrets into the UI.</li>
 </ul>

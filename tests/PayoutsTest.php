@@ -753,6 +753,26 @@ final class PayoutsTest extends TestCase
         $this->assertSame(104, $t['entity_id']);
         $this->assertSame('shop', $t['audience']);
 
+        $sales = [
+            'id' => 77,
+            'role' => 'sales',
+            'email' => 'aff@example.com',
+            'display_name' => 'Affiliate Jim',
+            'username' => 'jim',
+        ];
+        $this->assertTrue(repsStripeUserMayStartConnect($sales));
+        $this->assertContains('sales', repsStripeConnectStartRoles());
+        $tSales = repsStripePayeeTargetForUser($sales);
+        $this->assertNotNull($tSales);
+        $this->assertSame('user', $tSales['entity_type']);
+        $this->assertSame(77, $tSales['entity_id']);
+        $this->assertSame('affiliate', $tSales['audience']);
+
+        $ops = ['id' => 2, 'role' => 'ops', 'username' => 'ops', 'email' => 'ops@example.com'];
+        $this->assertFalse(repsStripeUserMayStartConnect($ops));
+        $emp = ['id' => 3, 'role' => 'employee', 'username' => 'emp', 'email' => 'e@example.com'];
+        $this->assertFalse(repsStripeUserMayStartConnect($emp));
+
         $solo = [
             'id' => 51,
             'role' => 'individual',

@@ -12,15 +12,9 @@ $user = repsDashRequireLogin();
 repsDashRequireCsrf();
 
 $role = (string) ($user['role'] ?? '');
-if (!in_array($role, ['business_owner', 'individual'], true)) {
+if (!repsStripeUserMayStartConnect($user)) {
     http_response_code(403);
-    echo 'Payout setup is for business owners and solo operators.';
-    exit;
-}
-
-if (!in_array('money', repsDashNavKeysForRole($role), true)) {
-    http_response_code(403);
-    echo 'Money is not available for this seat.';
+    echo 'Payout setup is for business owners, solo operators, and sales affiliates.';
     exit;
 }
 

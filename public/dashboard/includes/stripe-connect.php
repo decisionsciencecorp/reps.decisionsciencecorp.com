@@ -13,6 +13,31 @@ require_once __DIR__ . '/stripe-client.php';
 require_once __DIR__ . '/operators.php';
 
 /**
+ * Roles allowed to POST /dashboard/connect/start.php for Stripe Express onboarding.
+ *
+ * @return list<string>
+ */
+function repsStripeConnectStartRoles(): array
+{
+    return ['business_owner', 'individual', 'sales'];
+}
+
+/**
+ * Whether this seat may start Connect onboarding (role allowlist + Money nav).
+ */
+function repsStripeUserMayStartConnect(array $user): bool
+{
+    $role = (string) ($user['role'] ?? '');
+    if (!in_array($role, repsStripeConnectStartRoles(), true)) {
+        return false;
+    }
+    if (!function_exists('repsDashNavKeysForRole')) {
+        return true;
+    }
+    return in_array('money', repsDashNavKeysForRole($role), true);
+}
+
+/**
  * Who this dashboard user is paid as.
  * Linked worker+affiliate seats share entity_type=user on the affiliate so one
  * Connect KYC covers both the 25% book cut and the 50% capture cut.

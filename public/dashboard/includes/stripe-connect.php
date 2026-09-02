@@ -389,6 +389,133 @@ function repsStripeCreateSandboxReadyRecipient(string $email, string $country = 
  * @param 'user'|'shop'|'operator' $entityType
  * @return array{ok: bool, payee_id?: int, account_id?: string, error?: string}
  */
+/**
+ * Pull Connect account from Stripe and update payout_payees (return.php path).
+ *
+ * @return array{ok: bool, payee?: array<string, mixed>|null, error?: string, account_id?: string}
+ */
+function repsStripeRefreshPayeeFromAccount(int $payeeId): array
+{
+    $payee = $payeeId > 0 ? repsStripePayeeById($payeeId) : null;
+    if ($payee === null) {
+        return ['ok' => false, 'payee' => null, 'error' => 'payee_not_found'];
+    }
+    $accountId = (string) ($payee['stripe_account_id'] ?? '');
+    if ($accountId === '') {
+        return ['ok' => true, 'payee' => $payee, 'error' => 'missing_account_id'];
+    }
+    if (!repsStripeConfigured()) {
+        return ['ok' => true, 'payee' => $payee, 'error' => 'stripe_not_configured'];
+    }
+    $acct = repsStripeRequest('GET', '/v1/accounts/' . rawurlencode($accountId));
+    if (!($acct['ok'] ?? false)) {
+        return [
+            'ok' => false,
+            'payee' => $payee,
+            'account_id' => $accountId,
+            'error' => $acct['error'] ?? 'account_fetch_failed',
+        ];
+    }
+    repsStripeMarkPayeeFromAccountObject($acct['body'] ?? []);
+    $fresh = repsStripePayeeById($payeeId);
+    return [
+        'ok' => true,
+        'payee' => $fresh,
+        'account_id' => $accountId,
+    ];
+}
+
+/**
+ * Verify Stripe-Signature (platform or Connect secret). Optional insecure decode
+ * when REPS_STRIPE_WEBHOOK_INSECURE=1 (dev/tests only — never on prod).
+ *
+ * @return array{ok: bool, event?: array<string, mixed>, error?: string}
+ */
+function repsStripeAcceptWebhookPayload(string $payload, string $sigHeader): array
+{
+    if ($payload === '') {
+        return ['ok' => false, 'error' => 'empty_body'];
+    }
+    $secret = repsStripeWebhookSecret(false);
+    $connectSecret = repsStripeWebhookSecret(true);
+    $event = repsStripeVerifyWebhook($payload, $sigHeader, $secret);
+    if ($event === null && $connectSecret !== '' && $connectSecret !== $secret) {
+        $event = repsStripeVerifyWebhook($payload, $sigHeader, $connectSecret);
+    }
+    if ($event === null && filter_var(getenv('REPS_STRIPE_WEBHOOK_INSECURE') ?: '0', FILTER_VALIDATE_BOOLEAN)) {
+        $decoded = json_decode($payload, true);
+        $event = is_array($decoded) ? $decoded : null;
+    }
+    if ($event === null) {
+        return ['ok' => false, 'error' => 'invalid_signature'];
+    }
+    return ['ok' => true, 'event' => $event];
+}
+
+/**
+ * Idempotent webhook dispatch (records event_id, applies side effects).
+ *
+ * @param array<string, mixed> $event
+ * @return array{received: bool, type: string, duplicate?: bool}
+ */
+function repsStripeHandleWebhookEvent(array $event): array
+{
+    $eventId = (string) ($event['id'] ?? '');
+    $type = (string) ($event['type'] ?? '');
+    $livemode = !empty($event['livemode']) ? 1 : 0;
+
+    $pdo = repsDashDb();
+    if ($eventId !== '') {
+        try {
+            $pdo->prepare(
+                'INSERT INTO stripe_webhook_events (event_id, type, livemode) VALUES (?, ?, ?)'
+            )->execute([$eventId, $type, $livemode]);
+        } catch (Throwable $e) {
+            return ['received' => true, 'type' => $type, 'duplicate' => true];
+        }
+    }
+
+    $obj = $event['data']['object'] ?? [];
+    if (!is_array($obj)) {
+        $obj = [];
+    }
+
+    switch ($type) {
+        case 'account.updated':
+            repsStripeMarkPayeeFromAccountObject($obj);
+            break;
+        case 'balance.available':
+            repsSettlementReconcileStripeBalance('webhook_balance_available');
+            break;
+        case 'transfer.created':
+        case 'transfer.updated':
+            $trId = (string) ($obj['id'] ?? '');
+            if ($trId !== '') {
+                repsDisburseMarkTransferFromWebhook($trId, 'created');
+            }
+            break;
+        case 'transfer.reversed':
+            $trId = (string) ($obj['id'] ?? '');
+            if ($trId !== '') {
+                repsDisburseMarkTransferFromWebhook($trId, 'reversed');
+            }
+            break;
+        case 'topup.succeeded':
+            $tuId = (string) ($obj['id'] ?? '');
+            $amt = (int) ($obj['amount'] ?? 0);
+            if ($tuId !== '') {
+                repsSettlementRecord('stripe_topup', $tuId, $amt, (string) ($obj['currency'] ?? 'usd'), 'available', [
+                    'description' => $obj['description'] ?? '',
+                ]);
+            }
+            break;
+        default:
+            break;
+    }
+
+    return ['received' => true, 'type' => $type];
+}
+
 function repsStripeEnsureSandboxPayee(
     string $entityType,
     int $entityId,

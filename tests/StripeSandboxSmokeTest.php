@@ -82,6 +82,8 @@ final class StripeSandboxSmokeTest extends TestCase
     {
         putenv('STRIPE_SECRET_KEY');
         unset($_ENV['STRIPE_SECRET_KEY']);
+        // Clear DB-stored key so live_test cannot fall through to a prior test's sk_test_*
+        repsDashAppMetaSet(REPS_STRIPE_META_KEYS['secret'], '');
         $r = repsStripeSandboxConnectHarness([
             'username' => 'jim',
             'mock' => false,

@@ -54,9 +54,13 @@ php tools/deposit-stripe-secrets.php
 
 Confirm `stripe.mode=test` and secret starts with `sk_test_` / `rk_test_`.
 
-## Done criteria (#3220)
+## Webhook security
 
-- [x] One command yields an onboarding URL (mock or test)
-- [x] Mock path simulates signed `account.updated` and marks payee ready
-- [x] No live keys required for default run
-- [x] Docs + unit coverage for harness
+| Mode | Behavior |
+|------|----------|
+| Normal | `Stripe-Signature` verified with `stripe.webhook_secret` (and Connect secret if set) |
+| `REPS_STRIPE_WEBHOOK_INSECURE=1` | Accepts unsigned JSON — **local/PHPUnit only** |
+
+**Never** set `REPS_STRIPE_WEBHOOK_INSECURE` on multihost prod. The webhook endpoint is `POST /dashboard/api/stripe-webhook.php`.
+
+Return/refresh helpers: `repsStripeRefreshPayeeFromAccount()`, `repsStripeAcceptWebhookPayload()`, `repsStripeHandleWebhookEvent()` — covered by `tests/StripeWebhookReturnTest.php`.

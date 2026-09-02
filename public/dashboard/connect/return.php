@@ -5,16 +5,8 @@ require_once dirname(__DIR__) . '/includes/bootstrap.php';
 $user = repsDashRequireLogin();
 
 $payeeId = (int) ($_GET['payee_id'] ?? 0);
-$payee = $payeeId > 0 ? repsStripePayeeById($payeeId) : null;
-
-// Refresh readiness from Stripe when possible (webhook may lag).
-if ($payee && repsStripeConfigured() && !empty($payee['stripe_account_id'])) {
-    $acct = repsStripeRequest('GET', '/v1/accounts/' . rawurlencode((string) $payee['stripe_account_id']));
-    if ($acct['ok'] ?? false) {
-        repsStripeMarkPayeeFromAccountObject($acct['body']);
-        $payee = repsStripePayeeById($payeeId);
-    }
-}
+$synced = repsStripeRefreshPayeeFromAccount($payeeId);
+$payee = $synced['payee'] ?? null;
 
 repsDashRenderHeader('Connect', 'money');
 repsDashRenderPageHeader('Payout setup', 'Back from Stripe');
@@ -30,6 +22,9 @@ repsDashRenderPageHeader('Payout setup', 'Back from Stripe');
     <div class="small">Account: <code><?php echo htmlspecialchars((string) ($payee['stripe_account_id'] ?? '—')); ?></code></div>
     <div class="small">Status: <?php echo htmlspecialchars((string) ($payee['onboarding_status'] ?? '—')); ?>
       · payouts_enabled=<?php echo (int) ($payee['payouts_enabled'] ?? 0); ?></div>
+    <?php if (!empty($synced['error'])): ?>
+      <div class="small text-muted mt-1">Refresh note: <?php echo htmlspecialchars((string) $synced['error']); ?></div>
+    <?php endif; ?>
   </div>
   <?php if ((int) ($payee['payouts_enabled'] ?? 0) !== 1): ?>
   <form method="post" action="/dashboard/connect/start.php" class="mb-3">

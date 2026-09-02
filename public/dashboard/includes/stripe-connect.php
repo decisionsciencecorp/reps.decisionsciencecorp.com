@@ -425,3 +425,177 @@ function repsStripeEnsureSandboxPayee(
     }
     return ['ok' => true, 'payee_id' => $payeeId, 'account_id' => $accountId];
 }
+
+/**
+ * Stripe-Signature header for a payload (test / harness use).
+ */
+function repsStripeSignWebhookPayload(string $payload, string $secret, ?int $timestamp = null): string
+{
+    $t = $timestamp ?? time();
+    $sig = hash_hmac('sha256', $t . '.' . $payload, $secret);
+    return 't=' . $t . ',v1=' . $sig;
+}
+
+/**
+ * Connect Express sandbox harness: sales (or named) seat → Account Link URL →
+ * optional signed account.updated webhook → payee readiness.
+ *
+ * Default is HTTP-mocked (no network). Pass live_test=true with test-mode keys
+ * to hit Stripe test API for a real onboarding URL.
+ *
+ * @param array{
+ *   username?: string,
+ *   mock?: bool,
+ *   live_test?: bool,
+ *   simulate_webhook?: bool,
+ *   webhook_secret?: string,
+ *   account_id?: string,
+ *   onboarding_url?: string
+ * } $opts
+ * @return array<string, mixed>
+ */
+function repsStripeSandboxConnectHarness(array $opts = []): array
+{
+    $username = trim((string) ($opts['username'] ?? 'jim'));
+    $liveTest = !empty($opts['live_test']);
+    $mock = array_key_exists('mock', $opts) ? (bool) $opts['mock'] : !$liveTest;
+    $simulateWebhook = array_key_exists('simulate_webhook', $opts)
+        ? (bool) $opts['simulate_webhook']
+        : true;
+    $webhookSecret = (string) ($opts['webhook_secret'] ?? 'whsec_reps_sandbox_harness');
+    $mockAccountId = (string) ($opts['account_id'] ?? ('acct_sandbox_' . substr(sha1($username . microtime(true)), 0, 10)));
+    $mockUrl = (string) ($opts['onboarding_url'] ?? ('https://connect.stripe.com/setup/s/' . $mockAccountId));
+
+    $out = [
+        'ok' => false,
+        'mode' => $liveTest ? 'live_test' : ($mock ? 'mock' : 'unknown'),
+        'username' => $username,
+    ];
+
+    $user = repsDashFindUserByUsername($username);
+    if ($user === null) {
+        $out['error'] = 'user_not_found';
+        return $out;
+    }
+    if (!repsStripeUserMayStartConnect($user)) {
+        $out['error'] = 'user_may_not_start_connect';
+        $out['role'] = (string) ($user['role'] ?? '');
+        return $out;
+    }
+    $out['user_id'] = (int) ($user['id'] ?? 0);
+    $out['role'] = (string) ($user['role'] ?? '');
+
+    if ($liveTest) {
+        $key = repsStripeSecretKey();
+        if ($key === '' || (!str_starts_with($key, 'sk_test_') && !str_starts_with($key, 'rk_test_'))) {
+            $out['error'] = 'live_test_requires_test_key';
+            return $out;
+        }
+        // Explicit mock=true still allowed (unit tests); default live_test turns mock off.
+        if (!array_key_exists('mock', $opts)) {
+            $mock = false;
+        }
+        $out['mode'] = 'live_test';
+    }
+
+    if ($mock) {
+        putenv('STRIPE_SECRET_KEY=sk_test_sandbox_harness');
+        $_ENV['STRIPE_SECRET_KEY'] = 'sk_test_sandbox_harness';
+        repsStripeSetHttpMock(static function (string $method, string $path) use ($mockAccountId, $mockUrl) {
+            if ($path === '/v1/accounts') {
+                return [
+                    'ok' => true,
+                    'status' => 200,
+                    'body' => ['id' => $mockAccountId, 'type' => 'express'],
+                    'raw' => '{}',
+                ];
+            }
+            if ($path === '/v1/account_links') {
+                return [
+                    'ok' => true,
+                    'status' => 200,
+                    'body' => ['url' => $mockUrl, 'object' => 'account_link'],
+                    'raw' => '{}',
+                ];
+            }
+            return [
+                'ok' => false,
+                'status' => 404,
+                'body' => [],
+                'raw' => '',
+                'error' => 'unexpected ' . $method . ' ' . $path,
+            ];
+        });
+    }
+
+    try {
+        $started = repsStripeStartOnboardingForUser($user);
+        $out['onboarding'] = [
+            'ok' => (bool) ($started['ok'] ?? false),
+            'payee_id' => (int) ($started['payee_id'] ?? 0),
+            'account_id' => (string) ($started['account_id'] ?? ''),
+            'onboarding_url' => (string) ($started['onboarding_url'] ?? ''),
+            'error' => $started['error'] ?? null,
+        ];
+        if (!($started['ok'] ?? false) || empty($started['onboarding_url'])) {
+            $out['error'] = $started['error'] ?? 'onboarding_failed';
+            return $out;
+        }
+
+        $payeeId = (int) ($started['payee_id'] ?? 0);
+        $accountId = (string) ($started['account_id'] ?? '');
+        $base = rtrim((string) (getenv('REPS_PUBLIC_BASE') ?: 'https://reps.decisionsciencecorp.com'), '/');
+        $out['return_url'] = $base . '/dashboard/connect/return.php?payee_id=' . $payeeId;
+        $out['refresh_url'] = $base . '/dashboard/connect/refresh.php?payee_id=' . $payeeId;
+
+        if ($simulateWebhook && $accountId !== '') {
+            $eventId = 'evt_sandbox_' . substr(sha1($accountId . microtime(true)), 0, 12);
+            $payload = json_encode([
+                'id' => $eventId,
+                'object' => 'event',
+                'type' => 'account.updated',
+                'livemode' => false,
+                'data' => [
+                    'object' => [
+                        'id' => $accountId,
+                        'object' => 'account',
+                        'payouts_enabled' => true,
+                        'charges_enabled' => true,
+                    ],
+                ],
+            ], JSON_UNESCAPED_SLASHES);
+            $header = repsStripeSignWebhookPayload((string) $payload, $webhookSecret);
+            $event = repsStripeVerifyWebhook((string) $payload, $header, $webhookSecret);
+            if ($event === null) {
+                $out['error'] = 'webhook_verify_failed';
+                return $out;
+            }
+            repsStripeMarkPayeeFromAccountObject($event['data']['object'] ?? []);
+            $out['webhook'] = [
+                'ok' => true,
+                'event_id' => $eventId,
+                'type' => 'account.updated',
+                'signed' => true,
+            ];
+        }
+
+        $payee = $payeeId > 0 ? repsStripePayeeById($payeeId) : null;
+        $out['payee'] = $payee ? [
+            'id' => (int) ($payee['id'] ?? 0),
+            'entity_type' => (string) ($payee['entity_type'] ?? ''),
+            'entity_id' => (int) ($payee['entity_id'] ?? 0),
+            'stripe_account_id' => (string) ($payee['stripe_account_id'] ?? ''),
+            'onboarding_status' => (string) ($payee['onboarding_status'] ?? ''),
+            'payouts_enabled' => (int) ($payee['payouts_enabled'] ?? 0),
+        ] : null;
+        $out['ok'] = true;
+        $out['onboarding_url'] = (string) ($started['onboarding_url'] ?? '');
+        return $out;
+    } finally {
+        if ($mock) {
+            repsStripeClearHttpMock();
+            putenv('STRIPE_SECRET_KEY');
+            unset($_ENV['STRIPE_SECRET_KEY']);
+        }
+    }
+}

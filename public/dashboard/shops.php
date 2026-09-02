@@ -9,7 +9,8 @@ $shops = repsDashShopsForUser($user);
 $subtitle = match ((string) $user['role']) {
     'admin', 'ops' => 'All shops — open a shop for notes and team',
     'business_owner' => 'Your shop — open it to update notes',
-    default => 'Your assigned shops plus the unassigned pool — open a shop for notes and team',
+    'sales' => 'Shops assigned to you — open a shop for notes and team',
+    default => 'Your shops — open a shop for notes and team',
 };
 $title = (string) $user['role'] === 'business_owner' ? 'My shop' : 'Shops';
 

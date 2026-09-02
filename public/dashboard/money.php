@@ -7,9 +7,8 @@ require_once __DIR__ . '/includes/money-views.php';
 $user = repsDashRequireLogin();
 repsDashRequireNavKey('money', $user);
 
-// Bootstrap ledger from fixtures only when live Shift data is not in play.
-$ledgerEmpty = (int) repsDashDb()->query('SELECT COUNT(*) FROM ledger_lines')->fetchColumn() === 0;
-if ($ledgerEmpty && !repsDashLiveDataEnabled()) {
+// Bootstrap ledger from fixtures only when explicitly allowed (never on prod / skip_demo_seed).
+if (repsDashShouldSeedMockLedgerOnMoney()) {
     repsLedgerSeedFromMockShops();
 }
 repsSettlementReconcileStripeBalance('money_page_open');

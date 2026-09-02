@@ -114,6 +114,62 @@ function repsLedgerPostAcceptedHour(array $input): array
 }
 
 /**
+ * True when this process is serving (or simulating) production Reps.
+ * Hard-blocks demo/mock auto-seed paths that must never invent dollars on multihost.
+ */
+function repsDashIsProductionHost(): bool
+{
+    if (getenv('APP_ENV') === 'production') {
+        return true;
+    }
+    $host = (string) ($_SERVER['HTTP_HOST'] ?? '');
+    if ($host === '') {
+        $host = (string) (getenv('REPS_PUBLIC_HOST') ?: '');
+    }
+    $host = strtolower(preg_replace('/:\d+$/', '', $host) ?? $host);
+    return $host === 'reps.decisionsciencecorp.com';
+}
+
+/**
+ * Whether Money (and similar) may auto-call repsLedgerSeedFromMockShops().
+ *
+ * Default: allow only on non-prod hosts when dash.skip_demo_seed is not locked.
+ * Explicit override: REPS_DASH_ALLOW_MOCK_LEDGER=1 (dev/demo only — never set on multihost).
+ */
+function repsDashAllowMockLedgerSeed(): bool
+{
+    if (getenv('REPS_DASH_ALLOW_MOCK_LEDGER') === '1') {
+        return true;
+    }
+    if (function_exists('repsDashDemoSeedLocked') && repsDashDemoSeedLocked()) {
+        return false;
+    }
+    if (repsDashIsProductionHost()) {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Money-page gate: seed mock ledger only when empty, live data off, and mock seed is allowed.
+ */
+function repsDashShouldSeedMockLedgerOnMoney(): bool
+{
+    if (function_exists('repsDashLiveDataEnabled') && repsDashLiveDataEnabled()) {
+        return false;
+    }
+    if (!repsDashAllowMockLedgerSeed()) {
+        return false;
+    }
+    try {
+        $n = (int) repsDashDb()->query('SELECT COUNT(*) FROM ledger_lines')->fetchColumn();
+        return $n === 0;
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
+/**
  * Build ledger from mock shop/operator accepted hours (bootstrap until Slice C).
  *
  * @return array{ok: bool, posted: int, skipped: int}

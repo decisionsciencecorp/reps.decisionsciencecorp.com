@@ -21,6 +21,7 @@ require_once __DIR__ . '/economics.php';
  *   affiliate_username?: string|null,
  *   has_shop: bool,
  *   has_affiliate: bool,
+ *   chuck_tree?: bool,
  *   settlement_id?: int|null,
  *   accepted_at?: string|null
  * } $input
@@ -46,12 +47,25 @@ function repsLedgerPostAcceptedHour(array $input): array
     }
 
     $hours = (float) ($input['hours'] ?? 0);
+    $affUser = isset($input['affiliate_user_id']) ? (int) $input['affiliate_user_id'] : null;
+    $affName = isset($input['affiliate_username']) ? (string) $input['affiliate_username'] : null;
+    $chuckTree = !empty($input['chuck_tree']);
+    if (!$chuckTree && $affUser) {
+        $affRow = repsDashFindUserById($affUser);
+        $chuckTree = is_array($affRow) && !empty($affRow['chuck_tree']);
+    } elseif (!$chuckTree && $affName) {
+        $affRow = repsDashFindUserByUsername($affName);
+        $chuckTree = is_array($affRow) && !empty($affRow['chuck_tree']);
+    }
+
     if (isset($input['gross_cents'])) {
         $split = repsDashSplitGrossCents(
             (int) $input['gross_cents'],
             (bool) ($input['has_shop'] ?? false),
             (bool) ($input['has_affiliate'] ?? false),
-            $hours
+            $hours,
+            null,
+            $chuckTree
         );
     } else {
         $rate = isset($input['hourly_rate']) ? (float) $input['hourly_rate'] : null;
@@ -59,13 +73,12 @@ function repsLedgerPostAcceptedHour(array $input): array
             $hours,
             (bool) ($input['has_shop'] ?? false),
             (bool) ($input['has_affiliate'] ?? false),
-            $rate
+            $rate,
+            $chuckTree
         );
     }
     $shopId = isset($input['shop_id']) ? (int) $input['shop_id'] : null;
     $opId = isset($input['operator_id']) ? (int) $input['operator_id'] : null;
-    $affUser = isset($input['affiliate_user_id']) ? (int) $input['affiliate_user_id'] : null;
-    $affName = isset($input['affiliate_username']) ? (string) $input['affiliate_username'] : null;
     $settlementId = isset($input['settlement_id']) ? (int) $input['settlement_id'] : null;
     $acceptedAt = (string) ($input['accepted_at'] ?? gmdate('Y-m-d H:i:s'));
 
@@ -87,6 +100,15 @@ function repsLedgerPostAcceptedHour(array $input): array
             'retained', $acceptedAt,
         ]);
         $lineIds[] = (int) $pdo->lastInsertId();
+
+        if (($split['chuck_holdback_cents'] ?? 0) > 0) {
+            $insert->execute([
+                $hourKey, 'dsc_chuck_holdback', $split['chuck_holdback_cents'], $hours, $shopId, $opId,
+                $affUser, $affName, $split['capture_payee'], $settlementId,
+                'retained', $acceptedAt,
+            ]);
+            $lineIds[] = (int) $pdo->lastInsertId();
+        }
 
         if ($split['affiliate_cents'] > 0) {
             $insert->execute([
@@ -240,7 +262,8 @@ function repsLedgerTotals(): array
          WHERE bucket IN ('affiliate','capture') AND status IN ('pending','owed')"
     )->fetchColumn();
     $retained = (int) $pdo->query(
-        "SELECT COALESCE(SUM(amount_cents),0) FROM ledger_lines WHERE bucket = 'dsc'"
+        "SELECT COALESCE(SUM(amount_cents),0) FROM ledger_lines
+         WHERE bucket IN ('dsc','dsc_chuck_holdback')"
     )->fetchColumn();
     $transferred = (int) $pdo->query(
         "SELECT COALESCE(SUM(amount_cents),0) FROM ledger_lines WHERE status = 'transferred'"

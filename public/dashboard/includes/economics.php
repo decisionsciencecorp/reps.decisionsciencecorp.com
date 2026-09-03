@@ -61,7 +61,32 @@ function repsDashMoneyHourlyRate(): float
 }
 
 /**
- * Split a known gross (cents) into ledger buckets.
+ * Locked fixed cents per accepted hour (Doc #1236). Do not grow with real rate;
+ * excess over $20/hr is booked at settlement, not here.
+ */
+function repsDashMoneyCaptureCentsPerHour(): int
+{
+    return 1000; // $10
+}
+
+function repsDashMoneyAffiliateCentsPerHour(bool $chuckTree = false): int
+{
+    return $chuckTree ? 300 : 500; // $3 Chuck-tree · $5 standard
+}
+
+function repsDashMoneyDscCentsPerHour(): int
+{
+    return 500; // $5
+}
+
+function repsDashMoneyChuckHoldbackCentsPerHour(): int
+{
+    return 200; // $2 — DSC accounting only
+}
+
+/**
+ * Split a known gross (cents) into ledger buckets (legacy percentage path).
+ * Prefer repsDashSplitAcceptedHours() for accrual (fixed $/hr).
  *
  * @return array{
  *   hours: float,
@@ -69,21 +94,34 @@ function repsDashMoneyHourlyRate(): float
  *   dsc_cents: int,
  *   affiliate_cents: int,
  *   capture_cents: int,
+ *   chuck_holdback_cents: int,
  *   capture_payee: 'shop'|'operator',
  *   affiliate_to_dsc: bool,
+ *   chuck_tree: bool,
  *   hourly_rate: float|null
  * }
  */
-function repsDashSplitGrossCents(int $grossCents, bool $hasShop, bool $hasAffiliate, float $hours = 0.0, ?float $hourlyRate = null): array
-{
+function repsDashSplitGrossCents(
+    int $grossCents,
+    bool $hasShop,
+    bool $hasAffiliate,
+    float $hours = 0.0,
+    ?float $hourlyRate = null,
+    bool $chuckTree = false
+): array {
     $grossCents = max(0, $grossCents);
     $dsc = (int) floor($grossCents * repsDashMoneyShareDsc());
     $aff = (int) floor($grossCents * repsDashMoneyShareAffiliate());
     $capture = $grossCents - $dsc - $aff;
+    $holdback = 0;
     $affiliateToDsc = !$hasAffiliate;
     if ($affiliateToDsc) {
         $dsc += $aff;
         $aff = 0;
+    } elseif ($chuckTree && $aff > 0) {
+        // Map 25% affiliate slice into $3 equiv + $2 holdback by ratio of locked rates.
+        $holdback = (int) floor($aff * 2 / 5);
+        $aff = $aff - $holdback;
     }
 
     return [
@@ -92,14 +130,16 @@ function repsDashSplitGrossCents(int $grossCents, bool $hasShop, bool $hasAffili
         'dsc_cents' => $dsc,
         'affiliate_cents' => $aff,
         'capture_cents' => $capture,
+        'chuck_holdback_cents' => $holdback,
         'capture_payee' => $hasShop ? 'shop' : 'operator',
         'affiliate_to_dsc' => $affiliateToDsc,
+        'chuck_tree' => $chuckTree && $hasAffiliate,
         'hourly_rate' => $hourlyRate,
     ];
 }
 
 /**
- * Split accepted hours. Optional $hourlyRate / omit to use current partner estimate.
+ * Split accepted hours using locked fixed $/hr (preferred accrual path).
  *
  * @return array{
  *   hours: float,
@@ -107,17 +147,50 @@ function repsDashSplitGrossCents(int $grossCents, bool $hasShop, bool $hasAffili
  *   dsc_cents: int,
  *   affiliate_cents: int,
  *   capture_cents: int,
+ *   chuck_holdback_cents: int,
  *   capture_payee: 'shop'|'operator',
  *   affiliate_to_dsc: bool,
+ *   chuck_tree: bool,
  *   hourly_rate: float|null
  * }
  */
-function repsDashSplitAcceptedHours(float $hours, bool $hasShop, bool $hasAffiliate, ?float $hourlyRate = null): array
-{
+function repsDashSplitAcceptedHours(
+    float $hours,
+    bool $hasShop,
+    bool $hasAffiliate,
+    ?float $hourlyRate = null,
+    bool $chuckTree = false
+): array {
     $hours = max(0.0, $hours);
     $rate = $hourlyRate ?? repsDashMoneyHourlyRate();
-    $grossCents = (int) round($hours * $rate * 100);
-    return repsDashSplitGrossCents($grossCents, $hasShop, $hasAffiliate, $hours, $rate);
+    $capture = (int) round($hours * repsDashMoneyCaptureCentsPerHour());
+    $dsc = (int) round($hours * repsDashMoneyDscCentsPerHour());
+    $aff = 0;
+    $holdback = 0;
+    $affiliateToDsc = !$hasAffiliate;
+    if ($hasAffiliate) {
+        $aff = (int) round($hours * repsDashMoneyAffiliateCentsPerHour($chuckTree));
+        if ($chuckTree) {
+            $holdback = (int) round($hours * repsDashMoneyChuckHoldbackCentsPerHour());
+        }
+    } else {
+        // No affiliate → standard $5/hr affiliate slice stays with DSC (not Chuck holdback).
+        $dsc += (int) round($hours * repsDashMoneyAffiliateCentsPerHour(false));
+    }
+    $grossCents = $dsc + $aff + $capture + $holdback;
+
+    return [
+        'hours' => $hours,
+        'gross_cents' => $grossCents,
+        'dsc_cents' => $dsc,
+        'affiliate_cents' => $aff,
+        'capture_cents' => $capture,
+        'chuck_holdback_cents' => $holdback,
+        'capture_payee' => $hasShop ? 'shop' : 'operator',
+        'affiliate_to_dsc' => $affiliateToDsc,
+        'chuck_tree' => $chuckTree && $hasAffiliate,
+        'hourly_rate' => $rate,
+    ];
 }
 
 function repsDashShopHasAffiliate(array $shop): bool
@@ -132,6 +205,17 @@ function repsDashShopHasAffiliate(array $shop): bool
         return false;
     }
     return true;
+}
+
+/** True when the sales username has the admin-only Chuck-tree flag. */
+function repsDashAffiliateIsChuckTree(?string $username): bool
+{
+    $rep = trim((string) ($username ?? ''));
+    if ($rep === '' || strcasecmp($rep, 'unassigned') === 0) {
+        return false;
+    }
+    $u = repsDashFindUserByUsername($rep);
+    return is_array($u) && !empty($u['chuck_tree']);
 }
 
 /**
@@ -152,10 +236,11 @@ function repsDashMoneyShopEconomics(array $shop, float $rate): array
     unset($rate); // pie uses current partner estimate unless shop carries gross
     $hours = (float) ($shop['accepted_hours_7d'] ?? 0);
     $hasAff = repsDashShopHasAffiliate($shop);
-    $split = repsDashSplitAcceptedHours($hours, true, $hasAff);
+    $chuck = $hasAff && repsDashAffiliateIsChuckTree((string) ($shop['assigned_sales_rep'] ?? ''));
+    $split = repsDashSplitAcceptedHours($hours, true, $hasAff, null, $chuck);
     $gross = $split['gross_cents'] / 100.0;
     $capture = $split['capture_cents'] / 100.0;
-    $dsc = $split['dsc_cents'] / 100.0;
+    $dsc = ($split['dsc_cents'] + ($split['chuck_holdback_cents'] ?? 0)) / 100.0;
     $aff = $split['affiliate_cents'] / 100.0;
 
     return [
@@ -195,13 +280,14 @@ function repsDashMoneyIndividualEconomics(array $op, float $rate): array
     $hours = (float) ($op['accepted_7d'] ?? 0);
     $rep = trim((string) ($op['assigned_sales_rep'] ?? ''));
     $hasAff = $rep !== '' && strcasecmp($rep, 'unassigned') !== 0;
-    $split = repsDashSplitAcceptedHours($hours, false, $hasAff);
+    $chuck = $hasAff && repsDashAffiliateIsChuckTree($rep);
+    $split = repsDashSplitAcceptedHours($hours, false, $hasAff, null, $chuck);
 
     return [
         'hours' => $hours,
         'gross' => $split['gross_cents'] / 100.0,
         'your_affiliate' => $split['affiliate_cents'] / 100.0,
         'capture_pay' => $split['capture_cents'] / 100.0,
-        'dsc_pay' => $split['dsc_cents'] / 100.0,
+        'dsc_pay' => ($split['dsc_cents'] + ($split['chuck_holdback_cents'] ?? 0)) / 100.0,
     ];
 }

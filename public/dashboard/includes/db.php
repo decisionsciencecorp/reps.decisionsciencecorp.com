@@ -291,9 +291,26 @@ function repsDashDbMigrate(PDO $pdo): void
         $pdo->prepare('INSERT INTO schema_migrations (version) VALUES (?)')->execute(['008_linked_seats']);
     }
 
+    if (!in_array('009_chuck_tree', $applied, true)) {
+        repsDashMigrate009ChuckTree($pdo);
+        $pdo->prepare('INSERT INTO schema_migrations (version) VALUES (?)')->execute(['009_chuck_tree']);
+    }
+
     repsDashDbSeedUsers($pdo);
     repsDashDbSeedApplyLeads($pdo);
     repsDashDbSeedShops($pdo);
+}
+
+/**
+ * Admin-only Chuck-tree affiliate lane ($3/hr + $2/hr DSC holdback).
+ */
+function repsDashMigrate009ChuckTree(PDO $pdo): void
+{
+    $userCols = $pdo->query('PRAGMA table_info(users)')->fetchAll(PDO::FETCH_ASSOC);
+    $userNames = array_map(static fn($c) => (string) $c['name'], $userCols ?: []);
+    if (!in_array('chuck_tree', $userNames, true)) {
+        $pdo->exec('ALTER TABLE users ADD COLUMN chuck_tree INTEGER NOT NULL DEFAULT 0');
+    }
 }
 
 /**
@@ -617,6 +634,7 @@ function repsDashUserRowToSessionShape(?array $row): ?array
     if (isset($row['linked_user_id']) && $row['linked_user_id'] !== null && $row['linked_user_id'] !== '') {
         $out['linked_user_id'] = (int) $row['linked_user_id'];
     }
+    $out['chuck_tree'] = (int) ($row['chuck_tree'] ?? 0) === 1;
     return $out;
 }
 
@@ -768,12 +786,19 @@ function repsDashUpdateUser(int $id, array $data): array
     $skin = array_key_exists('skin_slug', $data)
         ? ($data['skin_slug'] !== '' && $data['skin_slug'] !== null ? (string) $data['skin_slug'] : null)
         : ($existing['skin_slug'] ?? null);
+    $chuckTree = array_key_exists('chuck_tree', $data)
+        ? ((int) $data['chuck_tree'] === 1 ? 1 : 0)
+        : (!empty($existing['chuck_tree']) ? 1 : 0);
+    // Chuck-tree only meaningful for sales affiliates; clear for other roles.
+    if ($role !== 'sales') {
+        $chuckTree = 0;
+    }
 
     $stmt = repsDashDb()->prepare(
         'UPDATE users SET display_name = ?, email = ?, role = ?, skin_slug = ?, shop_id = ?, operator_id = ?,
-         linked_user_id = ?, is_active = ?, updated_at = datetime(\'now\') WHERE id = ?'
+         linked_user_id = ?, chuck_tree = ?, is_active = ?, updated_at = datetime(\'now\') WHERE id = ?'
     );
-    $stmt->execute([$display, $email, $role, $skin, $shopId, $operatorId, $linkedUserId, $isActive, $id]);
+    $stmt->execute([$display, $email, $role, $skin, $shopId, $operatorId, $linkedUserId, $chuckTree, $isActive, $id]);
     return ['ok' => true];
 }
 

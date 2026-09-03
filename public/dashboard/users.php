@@ -47,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'shop_id' => $_POST['shop_id'] ?? '',
             'operator_id' => $_POST['operator_id'] ?? '',
             'is_active' => isset($_POST['is_active']) ? 1 : 0,
+            'chuck_tree' => isset($_POST['chuck_tree']) ? 1 : 0,
         ]);
         if ($result['ok']) {
             $flash = 'User updated.';
@@ -209,6 +210,7 @@ repsDashRenderPageHeader(
         }
         $scopeLabel = $scopeBits !== [] ? implode(' · ', $scopeBits) : '—';
         $activeOn = !empty($acct['is_active']);
+        $chuckOn = !empty($acct['chuck_tree']);
         $affSlug = strtolower((string) ($acct['username'] ?? ''));
         $showAff = ($acct['role'] ?? '') === 'sales' && $activeOn && reps_affiliate_slug_valid($affSlug);
         ?>
@@ -221,7 +223,12 @@ repsDashRenderPageHeader(
           </td>
           <td class="fw-medium"><?php echo htmlspecialchars((string) $acct['display_name']); ?></td>
           <td><code class="small">@<?php echo htmlspecialchars((string) $acct['username']); ?></code></td>
-          <td><span class="badge text-bg-secondary"><?php echo htmlspecialchars(repsDashRoleLabel((string) $acct['role'])); ?></span></td>
+          <td>
+            <span class="badge text-bg-secondary"><?php echo htmlspecialchars(repsDashRoleLabel((string) $acct['role'])); ?></span>
+            <?php if ($chuckOn && ($acct['role'] ?? '') === 'sales'): ?>
+              <span class="badge text-bg-dark ms-1" title="Chuck-tree affiliate rates">Chuck-tree</span>
+            <?php endif; ?>
+          </td>
           <td class="small text-muted"><?php echo htmlspecialchars($scopeLabel); ?></td>
           <td>
             <?php if ($activeOn): ?>
@@ -274,6 +281,13 @@ repsDashRenderPageHeader(
                           <input class="form-check-input" type="checkbox" name="is_active" id="active-<?php echo $uid; ?>" <?php echo $activeOn ? 'checked' : ''; ?>>
                           <label class="form-check-label small" for="active-<?php echo $uid; ?>">Active</label>
                         </div>
+                      </div>
+                      <div class="col-md-3">
+                        <div class="form-check mt-4">
+                          <input class="form-check-input" type="checkbox" name="chuck_tree" id="chuck-<?php echo $uid; ?>" value="1" <?php echo $chuckOn ? 'checked' : ''; ?>>
+                          <label class="form-check-label small" for="chuck-<?php echo $uid; ?>">Chuck-tree</label>
+                        </div>
+                        <div class="form-text small">Admin only · sales seats · $3/hr affiliate + $2/hr DSC holdback</div>
                       </div>
                       <div class="col-md-3">
                         <button type="submit" class="btn btn-sm btn-primary">Save</button>

@@ -12,9 +12,13 @@ final class PayoutsTest extends TestCase
         $this->assertSame(500, $s['dsc_cents']);
         $this->assertSame(500, $s['affiliate_cents']);
         $this->assertSame(1000, $s['capture_cents']);
+        $this->assertSame(0, $s['chuck_holdback_cents']);
         $this->assertSame('shop', $s['capture_payee']);
         $this->assertFalse($s['affiliate_to_dsc']);
-        $this->assertSame(2000, $s['dsc_cents'] + $s['affiliate_cents'] + $s['capture_cents']);
+        $this->assertSame(
+            2000,
+            $s['dsc_cents'] + $s['affiliate_cents'] + $s['capture_cents'] + $s['chuck_holdback_cents']
+        );
     }
 
     public function testSplitNoAffiliateRollsToDsc(): void
@@ -23,6 +27,7 @@ final class PayoutsTest extends TestCase
         $this->assertSame(1000, $s['dsc_cents']);
         $this->assertSame(0, $s['affiliate_cents']);
         $this->assertSame(1000, $s['capture_cents']);
+        $this->assertSame(0, $s['chuck_holdback_cents']);
         $this->assertSame('operator', $s['capture_payee']);
         $this->assertTrue($s['affiliate_to_dsc']);
     }
@@ -33,28 +38,138 @@ final class PayoutsTest extends TestCase
         $this->assertSame(3000, $s['gross_cents']);
         $this->assertSame(
             $s['gross_cents'],
-            $s['dsc_cents'] + $s['affiliate_cents'] + $s['capture_cents']
+            $s['dsc_cents'] + $s['affiliate_cents'] + $s['capture_cents'] + $s['chuck_holdback_cents']
         );
     }
 
-    public function testSplitFollowsPartnerRateNotHardTwenty(): void
+    public function testSplitUsesFixedRatesIgnoringPartnerHourlyArg(): void
     {
         $s = repsDashSplitAcceptedHours(1.0, true, true, 30.0);
-        $this->assertSame(3000, $s['gross_cents']);
-        $this->assertSame(750, $s['dsc_cents']);
-        $this->assertSame(750, $s['affiliate_cents']);
-        $this->assertSame(1500, $s['capture_cents']);
-        $this->assertSame(3000, $s['dsc_cents'] + $s['affiliate_cents'] + $s['capture_cents']);
+        $this->assertSame(2000, $s['gross_cents']);
+        $this->assertSame(500, $s['dsc_cents']);
+        $this->assertSame(500, $s['affiliate_cents']);
+        $this->assertSame(1000, $s['capture_cents']);
+        $this->assertSame(0, $s['chuck_holdback_cents']);
+        $this->assertSame(30.0, $s['hourly_rate']);
     }
 
-    public function testSplitGrossCentsIgnoresHourlyAssumption(): void
+    public function testSplitChuckTreeOneHour(): void
     {
-        $s = repsDashSplitGrossCents(12345, false, true, 1.0);
-        $this->assertSame(12345, $s['gross_cents']);
-        $this->assertSame(3086, $s['dsc_cents']); // floor(12345 * 0.25)
-        $this->assertSame(3086, $s['affiliate_cents']);
-        $this->assertSame(6173, $s['capture_cents']);
-        $this->assertSame(12345, $s['dsc_cents'] + $s['affiliate_cents'] + $s['capture_cents']);
+        $s = repsDashSplitAcceptedHours(1.0, true, true, null, true);
+        $this->assertSame(2000, $s['gross_cents']);
+        $this->assertSame(500, $s['dsc_cents']);
+        $this->assertSame(300, $s['affiliate_cents']);
+        $this->assertSame(200, $s['chuck_holdback_cents']);
+        $this->assertSame(1000, $s['capture_cents']);
+        $this->assertTrue($s['chuck_tree']);
+        $this->assertSame(
+            2000,
+            $s['dsc_cents'] + $s['affiliate_cents'] + $s['capture_cents'] + $s['chuck_holdback_cents']
+        );
+    }
+
+    public function testSplitGrossCentsChuckTreeMapsAffiliateSlice(): void
+    {
+        $s = repsDashSplitGrossCents(2000, true, true, 1.0, null, true);
+        $this->assertSame(2000, $s['gross_cents']);
+        $this->assertSame(500, $s['dsc_cents']);
+        $this->assertSame(300, $s['affiliate_cents']); // 500 - holdback
+        $this->assertSame(200, $s['chuck_holdback_cents']);
+        $this->assertSame(1000, $s['capture_cents']);
+        $this->assertTrue($s['chuck_tree']);
+        $this->assertSame(
+            2000,
+            $s['dsc_cents'] + $s['affiliate_cents'] + $s['capture_cents'] + $s['chuck_holdback_cents']
+        );
+    }
+
+    public function testAffiliateIsChuckTreeHelper(): void
+    {
+        $this->assertFalse(repsDashAffiliateIsChuckTree(null));
+        $this->assertFalse(repsDashAffiliateIsChuckTree(''));
+        $this->assertFalse(repsDashAffiliateIsChuckTree('unassigned'));
+        $this->assertFalse(repsDashAffiliateIsChuckTree('jim'));
+        $jim = repsDashFindUserByUsername('jim');
+        $this->assertNotNull($jim);
+        repsDashUpdateUser((int) $jim['id'], ['chuck_tree' => 1, 'role' => 'sales']);
+        $this->assertTrue(repsDashAffiliateIsChuckTree('jim'));
+        repsDashUpdateUser((int) $jim['id'], ['chuck_tree' => 0, 'role' => 'sales']);
+        $this->assertFalse(repsDashAffiliateIsChuckTree('jim'));
+    }
+
+    public function testShopEconomicsChuckTreeAffiliateRate(): void
+    {
+        $jim = repsDashFindUserByUsername('jim');
+        $this->assertNotNull($jim);
+        repsDashUpdateUser((int) $jim['id'], ['chuck_tree' => 1, 'role' => 'sales']);
+        $shop = [
+            'accepted_hours_7d' => 2.0,
+            'assigned_sales_rep' => 'jim',
+            'agreed_shop_split' => 0.5,
+            'name' => 'Fleet',
+        ];
+        $e = repsDashMoneyShopEconomics($shop, 999.0);
+        $this->assertSame(40.0, $e['gross']);
+        $this->assertSame(14.0, $e['dsc_pay']); // $5 + $2 holdback × 2h
+        $this->assertSame(6.0, $e['your_affiliate']); // $3 × 2h
+        $this->assertSame(20.0, $e['shop_pay']);
+        repsDashUpdateUser((int) $jim['id'], ['chuck_tree' => 0, 'role' => 'sales']);
+    }
+
+    public function testIndividualEconomicsChuckTree(): void
+    {
+        $jim = repsDashFindUserByUsername('jim');
+        $this->assertNotNull($jim);
+        repsDashUpdateUser((int) $jim['id'], ['chuck_tree' => 1, 'role' => 'sales']);
+        $op = [
+            'accepted_7d' => 1.0,
+            'assigned_sales_rep' => 'jim',
+        ];
+        $e = repsDashMoneyIndividualEconomics($op, 20.0);
+        $this->assertSame(3.0, $e['your_affiliate']);
+        $this->assertSame(7.0, $e['dsc_pay']);
+        $this->assertSame(10.0, $e['capture_pay']);
+        repsDashUpdateUser((int) $jim['id'], ['chuck_tree' => 0, 'role' => 'sales']);
+    }
+
+    public function testSplitGrossCentsNoAffiliateRollsToDsc(): void
+    {
+        $s = repsDashSplitGrossCents(2000, true, false, 1.0);
+        $this->assertSame(1000, $s['dsc_cents']); // 500 + rolled affiliate 500
+        $this->assertSame(0, $s['affiliate_cents']);
+        $this->assertSame(1000, $s['capture_cents']);
+        $this->assertSame(0, $s['chuck_holdback_cents']);
+        $this->assertTrue($s['affiliate_to_dsc']);
+    }
+
+    public function testLedgerMissingHourKeyFails(): void
+    {
+        $r = repsLedgerPostAcceptedHour([
+            'hours' => 1.0,
+            'has_shop' => true,
+            'has_affiliate' => false,
+        ]);
+        $this->assertFalse($r['ok']);
+        $this->assertSame('missing_hour_key', $r['error']);
+    }
+
+    public function testLedgerResolvesChuckFromAffiliateUserId(): void
+    {
+        $jim = repsDashFindUserByUsername('jim');
+        $this->assertNotNull($jim);
+        repsDashUpdateUser((int) $jim['id'], ['chuck_tree' => 1, 'role' => 'sales']);
+        $key = 'chuck_uid_only_' . uniqid('', true);
+        $a = repsLedgerPostAcceptedHour([
+            'hour_key' => $key,
+            'hours' => 1.0,
+            'has_shop' => true,
+            'has_affiliate' => true,
+            'affiliate_user_id' => (int) $jim['id'],
+            // no chuck_tree in input — must resolve from user row
+        ]);
+        $this->assertTrue($a['ok']);
+        $this->assertCount(4, $a['line_ids']);
+        repsDashUpdateUser((int) $jim['id'], ['chuck_tree' => 0, 'role' => 'sales']);
     }
 
     public function testSkipDemoSeedDoesNotRecreateDeletedFixture(): void
@@ -111,6 +226,97 @@ final class PayoutsTest extends TestCase
         $this->assertTrue($b['ok']);
         $this->assertFalse($b['created']);
         $this->assertSame($a['line_ids'], $b['line_ids']);
+    }
+
+    public function testLedgerPostChuckTreeHoldbackLine(): void
+    {
+        $jim = repsDashFindUserByUsername('jim');
+        $this->assertNotNull($jim);
+        $upd = repsDashUpdateUser((int) $jim['id'], ['chuck_tree' => 1, 'role' => 'sales']);
+        $this->assertTrue($upd['ok']);
+        $jim = repsDashFindUserByUsername('jim');
+        $this->assertTrue(!empty($jim['chuck_tree']));
+
+        $key = 'chuck_hour_' . uniqid('', true);
+        $a = repsLedgerPostAcceptedHour([
+            'hour_key' => $key,
+            'hours' => 1.0,
+            'shop_id' => 104,
+            'has_shop' => true,
+            'has_affiliate' => true,
+            'affiliate_username' => 'jim',
+        ]);
+        $this->assertTrue($a['ok']);
+        $this->assertTrue($a['created']);
+        $this->assertCount(4, $a['line_ids']);
+
+        $rows = repsDashDb()->prepare(
+            'SELECT bucket, amount_cents, status FROM ledger_lines WHERE hour_key = ? ORDER BY id'
+        );
+        $rows->execute([$key]);
+        $byBucket = [];
+        foreach ($rows->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $byBucket[(string) $row['bucket']] = $row;
+        }
+        $this->assertSame(500, (int) $byBucket['dsc']['amount_cents']);
+        $this->assertSame(200, (int) $byBucket['dsc_chuck_holdback']['amount_cents']);
+        $this->assertSame('retained', (string) $byBucket['dsc_chuck_holdback']['status']);
+        $this->assertSame(300, (int) $byBucket['affiliate']['amount_cents']);
+        $this->assertSame(1000, (int) $byBucket['capture']['amount_cents']);
+
+        $totals = repsLedgerTotals();
+        $this->assertGreaterThanOrEqual(700, $totals['retained_cents']); // dsc + holdback at least
+
+        // Explicit chuck_tree input + affiliate_user_id path
+        $key2 = 'chuck_hour_uid_' . uniqid('', true);
+        $b = repsLedgerPostAcceptedHour([
+            'hour_key' => $key2,
+            'hours' => 1.0,
+            'shop_id' => 104,
+            'has_shop' => true,
+            'has_affiliate' => true,
+            'affiliate_user_id' => (int) $jim['id'],
+            'chuck_tree' => true,
+        ]);
+        $this->assertTrue($b['ok']);
+        $this->assertCount(4, $b['line_ids']);
+
+        // Clear flag so later tests keep standard jim economics.
+        repsDashUpdateUser((int) $jim['id'], ['chuck_tree' => 0, 'role' => 'sales']);
+    }
+
+    public function testLedgerPostGrossCentsChuckPath(): void
+    {
+        $key = 'chuck_gross_' . uniqid('', true);
+        $a = repsLedgerPostAcceptedHour([
+            'hour_key' => $key,
+            'hours' => 1.0,
+            'gross_cents' => 2000,
+            'has_shop' => true,
+            'has_affiliate' => true,
+            'chuck_tree' => true,
+            'affiliate_username' => 'jim',
+        ]);
+        $this->assertTrue($a['ok']);
+        $this->assertCount(4, $a['line_ids']);
+        $hold = repsDashDb()->prepare(
+            "SELECT amount_cents FROM ledger_lines WHERE hour_key = ? AND bucket = 'dsc_chuck_holdback'"
+        );
+        $hold->execute([$key]);
+        $this->assertSame(200, (int) $hold->fetchColumn());
+    }
+
+    public function testChuckTreeClearedForNonSalesRole(): void
+    {
+        $jim = repsDashFindUserByUsername('jim');
+        $this->assertNotNull($jim);
+        repsDashUpdateUser((int) $jim['id'], ['chuck_tree' => 1, 'role' => 'sales']);
+        $r = repsDashUpdateUser((int) $jim['id'], ['chuck_tree' => 1, 'role' => 'ops']);
+        $this->assertTrue($r['ok']);
+        $jim = repsDashFindUserById((int) $jim['id']);
+        $this->assertFalse(!empty($jim['chuck_tree']));
+        // Restore sales seat for other tests.
+        repsDashUpdateUser((int) $jim['id'], ['role' => 'sales', 'chuck_tree' => 0]);
     }
 
     public function testSettlementIdempotent(): void
